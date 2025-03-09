@@ -1,0 +1,189 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id            Int       @id @default(autoincrement())
+  name          String
+  email         String    @unique
+  password      String
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  landlord      Landlord?
+  tenant        Tenant?
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+// Landlord model
+model Landlord {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName   String?
+  phone         String
+  address       String
+  properties    Property[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// Tenant model
+model Tenant {
+  id               Int       @id @default(autoincrement())
+  userId           Int       @unique
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone            String
+  emergencyContact String?
+  leases           Lease[]
+  payments         Payment[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+// Property model
+model Property {
+  id            Int       @id @default(autoincrement())
+  landlordId    Int
+  landlord      Landlord  @relation(fields: [landlordId], references: [id], onDelete: Cascade)
+  name          String
+  address       String
+  type          PropertyType
+  units         Unit[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  COMMERCIAL
+  OTHER
+}
+
+// Unit model
+model Unit {
+  id            Int       @id @default(autoincrement())
+  propertyId    Int
+  property      Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unitNumber    String
+  bedrooms      Int
+  bathrooms     Int
+  squareFeet    Int
+  leases        Lease[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([propertyId, unitNumber])
+}
+
+// Lease model
+model Lease {
+  id            Int       @id @default(autoincrement())
+  unitId        Int
+  unit          Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  tenantId      Int
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  startDate     DateTime
+  endDate       DateTime
+  rentAmount    Decimal   @db.Decimal(10, 2)
+  depositAmount Decimal   @db.Decimal(10, 2)
+  paymentDay    Int       // Day of month when payment is due
+  status        LeaseStatus @default(ACTIVE)
+  payments      Payment[]
+  documents     Document[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum LeaseStatus {
+  ACTIVE
+  EXPIRED
+  TERMINATED
+}
+
+// Payment model
+model Payment {
+  id            Int       @id @default(autoincrement())
+  leaseId       Int
+  lease         Lease     @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  tenantId      Int
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  amount        Decimal   @db.Decimal(10, 2)
+  dueDate       DateTime
+  paidDate      DateTime?
+  status        PaymentStatus @default(PENDING)
+  paymentMethod PaymentMethod?
+  transactionId String?
+  voucher       Voucher?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CREDIT_CARD
+  CHECK
+  OTHER
+}
+
+// Voucher model for payment receipts
+model Voucher {
+  id            Int       @id @default(autoincrement())
+  paymentId     Int       @unique
+  payment       Payment   @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  voucherNumber String    @unique
+  generatedDate DateTime  @default(now())
+  sentDate      DateTime?
+  status        VoucherStatus @default(GENERATED)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum VoucherStatus {
+  GENERATED
+  SENT
+  VIEWED
+}
+
+// Document model for lease-related documents
+model Document {
+  id            Int       @id @default(autoincrement())
+  leaseId       Int
+  lease         Lease     @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  name          String
+  type          DocumentType
+  fileUrl       String
+  uploadedAt    DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum DocumentType {
+  LEASE_AGREEMENT
+  ADDENDUM
+  INSPECTION_REPORT
+  NOTICE
+  OTHER
+} 
