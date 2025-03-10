@@ -66,12 +66,17 @@ src/
    npx prisma migrate dev
    ```
 
-5. Start the development server:
+5. Seed the database:
+   ```bash
+   npx prisma db seed
+   ```
+
+6. Start the development server:
    ```bash
    npm run dev
    ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
+7. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Database Schema
 

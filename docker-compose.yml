@@ -10,6 +10,7 @@ services:
       MYSQL_DATABASE: lease_tracker
       MYSQL_USER: maxtec
       MYSQL_PASSWORD: L3@seTr@ck3r2024!
+      MYSQL_GRANT_PRIVILEGES: "GRANT ALL PRIVILEGES ON *.* TO 'maxtec'@'%'; FLUSH PRIVILEGES;"
     ports:
       - "3306:3306"
     volumes:
