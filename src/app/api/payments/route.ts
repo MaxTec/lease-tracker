@@ -3,9 +3,78 @@ import prisma from '@/utils/db';
 import { Prisma } from '@prisma/client';
 
 // GET /api/payments - Get all payments
-export async function GET() {
+// GET /api/payments?leaseId=X - Get last payment for a specific lease
+export async function GET(request: NextRequest) {
     try {
+        const searchParams = request.nextUrl.searchParams;
+        const leaseId = searchParams.get('leaseId');
+
+        if (leaseId) {
+            // Fetch the last payment for the specified lease
+            const paymentsByLease = await prisma.payment.findMany({
+                where: {
+                    leaseId: parseInt(leaseId),
+                    status: 'PAID'
+                },
+                orderBy: {
+                    dueDate: 'desc',
+                },
+                include: {
+                    lease: {
+                        include: {
+                            unit: {
+                                include: {
+                                    property: true
+                                }
+                            },
+                            tenant: {
+                                include: {
+                                    user: {
+                                        select: {
+                                            name: true,
+                                            email: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    voucher: true
+                }
+            });
+            if (paymentsByLease.length > 0) {
+                const serializedPayments = paymentsByLease.map(payment => ({
+                    ...payment,
+                    amount: payment.amount instanceof Prisma.Decimal
+                        ? parseFloat(payment.amount.toString())
+                        : payment.amount,
+                    lease: {
+                        ...payment.lease,
+                        rentAmount: payment.lease.rentAmount instanceof Prisma.Decimal
+                            ? parseFloat(payment.lease.rentAmount.toString())
+                            : payment.lease.rentAmount,
+                        depositAmount: payment.lease.depositAmount instanceof Prisma.Decimal
+                            ? parseFloat(payment.lease.depositAmount.toString())
+                            : payment.lease.depositAmount,
+                        unit: {
+                            ...payment.lease.unit,
+                            property: {
+                                ...payment.lease.unit.property,
+                                name: payment.lease.unit.property.name
+                            }
+                        }
+                    }
+                }));
+                return NextResponse.json(serializedPayments);
+            }
+            return NextResponse.json([]);
+        }
+
+        // Original code for fetching all payments
         const payments = await prisma.payment.findMany({
+            where: {
+                status: 'PAID'
+            },
             include: {
                 lease: {
                     include: {
@@ -31,7 +100,7 @@ export async function GET() {
         });
 
         // Transform Decimal to number for JSON serialization
-        const serializedPayments = payments.map(payment => ({
+        const serializedPayments = payments.length === 0 ? [] : payments.map(payment => ({
             ...payment,
             amount: payment.amount instanceof Prisma.Decimal
                 ? parseFloat(payment.amount.toString())

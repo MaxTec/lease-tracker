@@ -1,13 +1,30 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
+import { format, setDate, differenceInDays, isAfter } from 'date-fns';
+import Modal from '@/components/ui/Modal';
+import Input from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
+import Button from '@/components/ui/Button';
+import FormGroup from '@/components/ui/FormGroup';
+import DateInput from '@/components/ui/DateInput';
+
+interface LastPayment {
+  id: number;
+  amount: number;
+  dueDate: string;
+  paidDate: string | null;
+  status: PaymentStatus;
+}
 
 interface Lease {
   id: number;
+  rentAmount: number;
+  paymentDay: number;
   unit: {
     unitNumber: string;
     property: {
@@ -15,6 +32,7 @@ interface Lease {
     };
   };
   tenant: {
+    id: number;
     user: {
       name: string;
     };
@@ -42,11 +60,16 @@ export default function NewPaymentModal({ isOpen, onClose, onSuccess }: NewPayme
   const [leases, setLeases] = useState<Lease[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastPayment, setLastPayment] = useState<LastPayment | null>(null);
+  const [overdueInfo, setOverdueInfo] = useState<{ days: number; amount: number } | null>(null);
 
   const {
     register,
     handleSubmit,
     reset,
+    control,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<PaymentFormData>({
     resolver: zodResolver(paymentSchema),
@@ -54,6 +77,9 @@ export default function NewPaymentModal({ isOpen, onClose, onSuccess }: NewPayme
       status: 'PENDING',
     },
   });
+
+  // Watch for changes in leaseId
+  const selectedLeaseId = watch('leaseId');
 
   useEffect(() => {
     const fetchLeases = async () => {
@@ -69,13 +95,106 @@ export default function NewPaymentModal({ isOpen, onClose, onSuccess }: NewPayme
 
     if (isOpen) {
       fetchLeases();
+      // Reset last payment and overdue info when modal opens
+      setLastPayment(null);
+      setOverdueInfo(null);
     }
   }, [isOpen]);
+
+  // Update amount and due date when lease is selected
+  useEffect(() => {
+    if (selectedLeaseId) {
+      const selectedLease = leases.find(lease => lease.id.toString() === selectedLeaseId);
+      if (selectedLease) {
+        // Set the amount to the lease's rent amount
+        setValue('amount', selectedLease.rentAmount.toString());
+
+        // Fetch the last payment for this lease
+        const fetchLastPayment = async () => {
+          try {
+            const response = await fetch(`/api/payments?leaseId=${selectedLeaseId}`);
+            if (!response.ok) throw new Error('Failed to fetch last payment');
+            const lastPaymentData = await response.json();
+
+            if (lastPaymentData) {
+              setLastPayment(lastPaymentData);
+              
+              // Calculate overdue information
+              const dueDate = new Date(lastPaymentData.dueDate);
+              const today = new Date();
+              
+              if (lastPaymentData.status !== 'PAID' && isAfter(today, dueDate)) {
+                setOverdueInfo({
+                  days: differenceInDays(today, dueDate),
+                  amount: lastPaymentData.amount
+                });
+              } else {
+                setOverdueInfo(null);
+              }
+            } else {
+              setLastPayment(null);
+              setOverdueInfo(null);
+            }
+
+            // Calculate the next due date
+            const today = new Date();
+            let nextDueDate: Date;
+
+            if (lastPaymentData) {
+              // Get the last payment's due date
+              const lastDueDate = new Date(lastPaymentData.dueDate);
+              
+              // Set the next due date to one month after the last due date
+              nextDueDate = new Date(lastDueDate);
+              nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+
+              // If the calculated next due date is in the past, increment by months until it's in the future
+              while (nextDueDate < today) {
+                nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+              }
+            } else {
+              // If no previous payments, calculate based on payment day
+              nextDueDate = setDate(today, selectedLease.paymentDay);
+              if (today.getDate() > selectedLease.paymentDay) {
+                nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+              }
+            }
+
+            // Set the due date
+            setValue('dueDate', format(nextDueDate, 'yyyy-MM-dd'));
+          } catch (err) {
+            console.error('Error fetching last payment:', err);
+            setLastPayment(null);
+            setOverdueInfo(null);
+            // Fallback to original calculation if fetch fails
+            const today = new Date();
+            const nextDueDate = setDate(today, selectedLease.paymentDay);
+            if (today.getDate() > selectedLease.paymentDay) {
+              nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+            }
+            setValue('dueDate', format(nextDueDate, 'yyyy-MM-dd'));
+          }
+        };
+
+        fetchLastPayment();
+      }
+    } else {
+      // Reset last payment and overdue info when no lease is selected
+      setLastPayment(null);
+      setOverdueInfo(null);
+    }
+  }, [selectedLeaseId, leases, setValue]);
 
   const onSubmit = async (data: PaymentFormData) => {
     try {
       setLoading(true);
       setError(null);
+
+      // Find the selected lease to get the tenant ID
+      const selectedLease = leases.find(lease => lease.id.toString() === data.leaseId);
+      if (!selectedLease) {
+        throw new Error('Selected lease not found');
+      }
 
       const response = await fetch('/api/payments', {
         method: 'POST',
@@ -85,6 +204,7 @@ export default function NewPaymentModal({ isOpen, onClose, onSuccess }: NewPayme
         body: JSON.stringify({
           ...data,
           leaseId: parseInt(data.leaseId),
+          tenantId: selectedLease.tenant.id,
           amount: parseFloat(data.amount),
         }),
       });
@@ -103,150 +223,151 @@ export default function NewPaymentModal({ isOpen, onClose, onSuccess }: NewPayme
     }
   };
 
-  if (!isOpen) return null;
+  // Convert leases to options format for Select component
+  const leaseOptions = leases.map(lease => ({
+    value: lease.id.toString(),
+    label: `${lease.tenant.user.name} - ${lease.unit.property.name} Unit ${lease.unit.unitNumber}`
+  }));
+
+  // Convert payment status to options
+  const statusOptions = Object.values(PaymentStatus).map(status => ({
+    value: status,
+    label: status
+  }));
+
+  // Convert payment methods to options
+  const methodOptions = Object.values(PaymentMethod).map(method => ({
+    value: method,
+    label: method.replace('_', ' ')
+  }));
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Add New Payment</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+    <Modal isOpen={isOpen} onClose={onClose} title="Add New Payment">
+      {error && (
+        <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4">
+          {error}
         </div>
+      )}
 
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4">
-            {error}
-          </div>
-        )}
+      {selectedLeaseId && (lastPayment || overdueInfo) && (
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-3">Payment History</h3>
+          
+          {lastPayment && (
+            <div className="mb-3">
+              <h4 className="font-medium text-gray-700">Last Payment</h4>
+              <div className="grid grid-cols-2 gap-2 text-sm mt-2">
+                <div>
+                  <span className="text-gray-600">Amount:</span>
+                  <span className="ml-2 font-medium">${lastPayment.amount.toFixed(2)}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Status:</span>
+                  <span className={`ml-2 font-medium ${
+                    lastPayment.status === 'PAID' ? 'text-green-600' :
+                    lastPayment.status === 'OVERDUE' ? 'text-red-600' :
+                    'text-yellow-600'
+                  }`}>
+                    {lastPayment.status}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Due Date:</span>
+                  <span className="ml-2">{format(new Date(lastPayment.dueDate), 'MMM dd, yyyy')}</span>
+                </div>
+                {lastPayment.paidDate && (
+                  <div>
+                    <span className="text-gray-600">Paid Date:</span>
+                    <span className="ml-2">{format(new Date(lastPayment.paidDate), 'MMM dd, yyyy')}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Lease
-            </label>
-            <select
-              {...register('leaseId')}
-              className="w-full p-2 border rounded-md"
-            >
-              <option value="">Select a lease</option>
-              {leases.map((lease) => (
-                <option key={lease.id} value={lease.id}>
-                  {lease.tenant.user.name} - {lease.unit.property.name} Unit {lease.unit.unitNumber}
-                </option>
-              ))}
-            </select>
-            {errors.leaseId && (
-              <p className="text-red-500 text-sm mt-1">{errors.leaseId.message}</p>
+          {overdueInfo && (
+            <div className="mt-3 p-3 bg-red-50 rounded border border-red-200">
+              <h4 className="font-medium text-red-700">Overdue Payment</h4>
+              <div className="text-sm mt-2">
+                <p className="text-red-600">
+                  Payment is overdue by {overdueInfo.days} days
+                </p>
+                <p className="text-red-600 mt-1">
+                  Outstanding amount: ${overdueInfo.amount.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <FormGroup>
+          <Select
+            label="Lease"
+            options={leaseOptions}
+            error={errors.leaseId?.message}
+            {...register('leaseId')}
+          />
+
+          <Input
+            label="Amount"
+            type="number"
+            step="0.01"
+            error={errors.amount?.message}
+            {...register('amount')}
+          />
+
+          <Controller
+            name="dueDate"
+            control={control}
+            render={({ field }) => (
+              <DateInput
+                label="Due Date"
+                value={field.value}
+                onChange={field.onChange}
+                error={errors.dueDate?.message}
+              />
             )}
-          </div>
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Amount
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              {...register('amount')}
-              className="w-full p-2 border rounded-md"
-            />
-            {errors.amount && (
-              <p className="text-red-500 text-sm mt-1">{errors.amount.message}</p>
-            )}
-          </div>
+          <Select
+            label="Status"
+            options={statusOptions}
+            error={errors.status?.message}
+            {...register('status')}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Due Date
-            </label>
-            <input
-              type="date"
-              {...register('dueDate')}
-              className="w-full p-2 border rounded-md"
-            />
-            {errors.dueDate && (
-              <p className="text-red-500 text-sm mt-1">{errors.dueDate.message}</p>
-            )}
-          </div>
+          <Select
+            label="Payment Method"
+            options={methodOptions}
+            error={errors.paymentMethod?.message}
+            {...register('paymentMethod')}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <select
-              {...register('status')}
-              className="w-full p-2 border rounded-md"
-            >
-              {Object.values(PaymentStatus).map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-            {errors.status && (
-              <p className="text-red-500 text-sm mt-1">{errors.status.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Payment Method
-            </label>
-            <select
-              {...register('paymentMethod')}
-              className="w-full p-2 border rounded-md"
-            >
-              <option value="">Select payment method</option>
-              {Object.values(PaymentMethod).map((method) => (
-                <option key={method} value={method}>
-                  {method.replace('_', ' ')}
-                </option>
-              ))}
-            </select>
-            {errors.paymentMethod && (
-              <p className="text-red-500 text-sm mt-1">{errors.paymentMethod.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Transaction ID (Optional)
-            </label>
-            <input
-              type="text"
-              {...register('transactionId')}
-              className="w-full p-2 border rounded-md"
-            />
-            {errors.transactionId && (
-              <p className="text-red-500 text-sm mt-1">{errors.transactionId.message}</p>
-            )}
-          </div>
+          <Input
+            label="Transaction ID (Optional)"
+            error={errors.transactionId?.message}
+            {...register('transactionId')}
+          />
 
           <div className="flex justify-end gap-3 mt-6">
-            <button
-              type="button"
+            <Button 
+              type="button" 
+              variant="outline" 
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={loading}
-              className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:opacity-50"
+              isLoading={loading}
             >
-              {loading ? 'Creating...' : 'Create Payment'}
-            </button>
+              Create Payment
+            </Button>
           </div>
-        </form>
-      </div>
-    </div>
+        </FormGroup>
+      </form>
+    </Modal>
   );
 } 

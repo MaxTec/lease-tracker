@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import NewPaymentModal from "./admin/NewPaymentModal";
+import Button from './ui/Button';
 
 interface Payment {
   id: string;
@@ -37,8 +37,7 @@ interface Payment {
 }
 
 export default function PaymentList() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { data: session } = useSession();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,6 +88,26 @@ export default function PaymentList() {
     }
   };
 
+  const sendBulkEmail = async () => {
+    try {
+      const response = await fetch('/api/payments/send-bulk-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send bulk email');
+      }
+      
+      alert('Bulk email sent successfully!');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to send bulk email. Please try again.');
+    }
+  };
+
   const handleModalSuccess = () => {
     // Refresh the payments list after successful creation
     fetchPayments();
@@ -112,20 +131,24 @@ export default function PaymentList() {
     <div>
       {isAdmin && (
         <div className="mb-6 flex justify-end gap-4">
-          <button
+          <Button 
+            onClick={sendBulkEmail}
+            variant="primary"
+          >
+            Send Email to All
+          </Button>
+          <Button 
             onClick={() => setIsModalOpen(true)}
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm"
+            variant="success"
           >
             Add Payment
-          </button>
+          </Button>
         </div>
       )}
       <NewPaymentModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={() => {
-          handleModalSuccess();
-        }}
+        onSuccess={handleModalSuccess}
       />
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200">
@@ -190,12 +213,13 @@ export default function PaymentList() {
                   {payment.status === "PAID" &&
                     payment.voucher &&
                     payment.voucher.status === "GENERATED" && (
-                      <button
-                        // onClick={() => sendVoucher(payment.voucher!.id)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                      <Button
+                        onClick={() => sendVoucher(payment.voucher!.id)}
+                        variant="primary"
+                        size="sm"
                       >
                         Send Voucher
-                      </button>
+                      </Button>
                     )}
                 </td>
               </tr>

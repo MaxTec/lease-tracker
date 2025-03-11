@@ -7,6 +7,7 @@ export default withAuth(
         const isAuth = !!token;
         const isAuthPage = req.nextUrl.pathname === '/login' ||
             req.nextUrl.pathname === '/';
+        const isAdminRoute = req.nextUrl.pathname.startsWith('/payments');
 
         if (isAuthPage) {
             if (isAuth) {
@@ -31,10 +32,16 @@ export default withAuth(
         if (req.nextUrl.pathname.startsWith('/admin') && token?.role !== 'ADMIN') {
             return NextResponse.redirect(new URL('/dashboard', req.url));
         }
+
+        if (isAdminRoute && token?.role !== 'ADMIN') {
+            return NextResponse.redirect(new URL('/', req.url));
+        }
+
+        return NextResponse.next();
     },
     {
         callbacks: {
-            authorized: () => true, // Let the middleware function handle the auth check
+            authorized: ({ token }) => !!token,
         },
     }
 );
@@ -45,5 +52,6 @@ export const config = {
         '/admin/:path*',
         '/login',
         '/((?!api|_next/static|_next/image|favicon.ico|public|/).*)',
+        '/payments/:path*',
     ],
 }; 
