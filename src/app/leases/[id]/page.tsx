@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import Button from "@/components/ui/Button";
@@ -9,7 +9,8 @@ import Layout from "@/components/layout/Layout";
 import Tabs from "@/components/ui/Tabs";
 import PaymentSchedule from "@/components/payments/PaymentSchedule";
 import CompletedPayments from "@/components/payments/CompletedPayments";
-import { FaPlus, FaHome, FaUser, FaCalendarAlt, FaDollarSign } from "react-icons/fa";
+import { FaHome, FaUser, FaCalendarAlt, FaDollarSign } from "react-icons/fa";
+import Notification from "@/components/ui/Notification";
 
 interface Lease {
   id: number;
@@ -56,7 +57,23 @@ interface Payment {
   } | null;
 }
 
+interface ScheduledPayment {
+  id?: number;
+  dueDate: Date;
+  amount: number;
+  status: 'PENDING' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+  isExisting: boolean;
+  paymentMethod?: 'CASH' | 'BANK_TRANSFER' | 'CREDIT_CARD' | 'CHECK' | 'OTHER';
+  transactionId?: string;
+}
+
+interface SuccessNotification {
+  show: boolean;
+  voucherNumber?: string;
+}
+
 export default function LeaseDetailsPage() {
+  const router = useRouter();
   const { data: session, status: authStatus } = useSession();
   const params = useParams();
   const leaseId = params.id as string;
@@ -65,11 +82,12 @@ export default function LeaseDetailsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<SuccessNotification>({ show: false });
 
   // Redirect if not admin
-//   if (authStatus === "authenticated" && session?.user?.role !== "ADMIN") {
-//     redirect("/");
-//   }
+  if (authStatus === "authenticated" && session?.user?.role !== "ADMIN") {
+    redirect("/");
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -111,18 +129,25 @@ export default function LeaseDetailsPage() {
     }
   }, [leaseId]);
 
-  const handleRecordPayment = async (paymentId: number) => {
+  const handleRecordPayment = async (payment: ScheduledPayment) => {
+    if (!lease) return;
+    
     try {
-      // Update the payment status to PAID
-      const response = await fetch(`/api/payments/${paymentId}`, {
-        method: 'PATCH',
+      // Create a new payment record
+      const response = await fetch('/api/payments', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          status: 'PAID',
+          leaseId: lease.id,
+          tenantId: lease.tenant.id,
+          amount: payment.amount,
+          dueDate: payment.dueDate.toISOString(),
           paidDate: new Date().toISOString(),
-          paymentMethod: 'BANK_TRANSFER', // Default payment method
+          status: 'PAID',
+          paymentMethod: payment.paymentMethod || 'CASH',
+          transactionId: payment.transactionId,
         }),
       });
 
@@ -131,17 +156,21 @@ export default function LeaseDetailsPage() {
       }
 
       // Refresh the payments data
-      const updatedPayment = await response.json();
+      const newPayment = await response.json();
       
       // Update the payments state
-      setPayments(prevPayments => 
-        prevPayments.map(payment => 
-          payment.id === paymentId ? { ...payment, ...updatedPayment } : payment
-        )
-      );
-      
-      // Show success message
-      alert('Payment recorded successfully!');
+      setPayments(prevPayments => [...prevPayments, newPayment]);
+      console.log(newPayment);
+      // Show success notification with voucher link
+      setNotification({ 
+        show: true, 
+        voucherNumber: newPayment.voucher?.voucherNumber 
+      });
+
+      // Hide notification after 5 seconds
+      setTimeout(() => {
+        setNotification({ show: false });
+      }, 10000);
     } catch (error) {
       console.error('Error recording payment:', error);
       alert('Failed to record payment. Please try again.');
@@ -301,14 +330,7 @@ export default function LeaseDetailsPage() {
               <h3 className='text-xl font-semibold text-gray-800 flex items-center'>
                 <FaDollarSign className='mr-2 text-indigo-600' /> Payment Management
               </h3>
-              <Button
-                onClick={() => {/* TODO: Add new payment handler */}}
-              >
-                <FaPlus className='mr-2 inline-block align-middle' />
-                <span className='align-middle'>Record Payment</span>
-              </Button>
             </div>
-
             <Tabs
               tabs={[
                 {
@@ -333,6 +355,19 @@ export default function LeaseDetailsPage() {
             />
           </div>
         </div>
+
+        {notification.show && (
+          <Notification
+            type="success"
+            title="Payment Recorded Successfully"
+            message="The payment has been recorded and a voucher has been generated."
+            action={notification.voucherNumber ? {
+              label: "View Voucher",
+              onClick: () => notification.voucherNumber && router.push(`/vouchers/${encodeURIComponent(notification.voucherNumber)}`)
+            } : undefined}
+            onClose={() => setNotification({ show: false })}
+          />
+        )}
       </div>
     </Layout>
   );

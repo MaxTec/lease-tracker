@@ -65,7 +65,7 @@ export default function RegisterForm({ onToggleForm }: { onToggleForm: () => voi
 
   return (
     <div className="max-w-md w-full mx-auto">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-8">Create your account</h2>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-8 text-center">Create your account</h2>
       
       <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         {error && (
@@ -115,18 +115,20 @@ export default function RegisterForm({ onToggleForm }: { onToggleForm: () => voi
         />
 
         <div className="flex flex-col sm:flex-row gap-4">
-          <Button type="submit" fullWidth disabled={isLoading}>
+          <Button type="submit" fullwidth disabled={isLoading}>
             {isLoading ? 'Creating account...' : 'Sign Up'}
           </Button>
-          <Button
-            variant="secondary"
+        </div>
+
+        <div className="flex justify-center items-center mt-4">
+          <span className="text-sm text-gray-600">Already have an account?</span>
+          <button
             type="button"
-            fullWidth
-            disabled={isLoading}
+            className="text-sm text-blue-600 hover:underline ml-2"
             onClick={onToggleForm}
           >
             Sign In
-          </Button>
+          </button>
         </div>
       </form>
     </div>

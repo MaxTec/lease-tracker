@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import Weather from "./Weather";
-
+import Logo from "../ui/Logo";
 export default function Header() {
   const { data: session, status } = useSession();
 
@@ -15,7 +15,7 @@ export default function Header() {
       <div className='container mx-auto px-4 py-4'>
         <nav className='flex items-center justify-between'>
           <Link href='/' className='text-xl font-bold text-gray-800'>
-            LeaseTracker
+            <Logo size={170} color='black' />
           </Link>
 
           <div className='flex items-center space-x-8'>
@@ -25,14 +25,11 @@ export default function Header() {
               <Link href='/dashboard' className='text-gray-600 hover:text-gray-900'>
                 Dashboard
               </Link>
-              <Link href='/payments' className='text-gray-600 hover:text-gray-900'>
-                Payments
-              </Link>
-              {session?.user?.role === "ADMIN" && (
+              {/* {session?.user?.role === "ADMIN" && (
                 <Link href='/admin' className='text-gray-600 hover:text-gray-900'>
                   Admin
                 </Link>
-              )}
+              )} */}
               <Link href='/settings' className='text-gray-600 hover:text-gray-900'>
                 Settings
               </Link>

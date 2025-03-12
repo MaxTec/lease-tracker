@@ -6,6 +6,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
+  fullwidth?: boolean;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -16,6 +17,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     isLoading = false,
     className = '', 
     disabled,
+    fullwidth = false,
     ...props 
   }, ref) => {
     const variantClasses = {
@@ -40,6 +42,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           ${sizeClasses[size]} 
           rounded-md font-medium transition-colors
           ${disabled || isLoading ? 'opacity-50 cursor-not-allowed' : ''}
+          ${fullwidth ? 'w-full' : ''}
           ${className}
         `}
         disabled={disabled || isLoading}

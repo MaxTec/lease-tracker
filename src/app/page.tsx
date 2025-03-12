@@ -8,7 +8,7 @@ import RegisterForm from '@/components/auth/RegisterForm';
 import LoginForm from '@/components/auth/LoginForm';
 
 export default function Home() {
-  const [showLogin, setShowLogin] = useState(false);
+  const [showLogin, setShowLogin] = useState(true);
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -40,19 +40,16 @@ export default function Home() {
       <div className="w-full lg:w-1/2 bg-gradient-to-br from-blue-600 to-blue-700 p-8 lg:p-12 flex flex-col min-h-[40vh] lg:min-h-screen">
         <div className="mb-8">
           <Logo />
-          <h1 className="text-3xl font-bold text-white mt-4">Welcome to</h1>
-          <h2 className="text-4xl font-bold text-white">LeaseTracker</h2>
         </div>
-        
         <p className="text-blue-100 mb-auto">
           Simplify your property management with our comprehensive lease tracking solution.
           Manage properties, track payments, and generate vouchers all in one place.
         </p>
 
         <div className="text-blue-200 text-sm hidden lg:block">
-          <span>CREATION HERE</span>
+          <span>Developed by <a href="https://github.com/MaxTec" className="text-blue-100 hover:text-blue-200">MaxTec</a></span>
           <span className="mx-2">|</span>
-          <span>DESIGNED HERE</span>
+          <span> All rights reserved {new Date().getFullYear()}</span>
         </div>
       </div>
 

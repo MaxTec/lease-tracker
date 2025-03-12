@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import { FaCalendarAlt } from 'react-icons/fa';
+import { differenceInDays } from 'date-fns';
+import Button from '@/components/ui/Button';
+import PopConfirm from '@/components/ui/PopConfirm';
+import Select from '@/components/ui/Select';
+import Input from '@/components/ui/Input';
 
 interface Lease {
   id: number;
@@ -36,18 +41,31 @@ interface Payment {
 interface PaymentScheduleProps {
   payments: Payment[];
   lease?: Lease; // Optional lease prop if provided directly
-  onRecordPayment: (paymentId: number) => void;
+  onRecordPayment: (payment: ScheduledPayment) => void;
 }
 
 interface ScheduledPayment {
-  id?: number; // Existing payment ID if it exists
+  id?: number;
   dueDate: Date;
   amount: number;
   status: 'PENDING' | 'PAID' | 'OVERDUE' | 'CANCELLED';
   isExisting: boolean;
+  paymentMethod?: 'CASH' | 'BANK_TRANSFER' | 'CREDIT_CARD' | 'CHECK' | 'OTHER';
+  transactionId?: string;
+}
+
+interface PaymentFormData {
+  paymentMethod: 'CASH' | 'BANK_TRANSFER' | 'CREDIT_CARD' | 'CHECK' | 'OTHER';
+  transactionId?: string;
 }
 
 const PaymentSchedule: React.FC<PaymentScheduleProps> = ({ payments, lease, onRecordPayment }) => {
+  const [selectedPayment, setSelectedPayment] = useState<ScheduledPayment | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [paymentForm, setPaymentForm] = useState<PaymentFormData>({
+    paymentMethod: 'CASH'
+  });
+
   // Get current date
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -87,7 +105,7 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({ payments, lease, onRe
     const scheduledPayments: ScheduledPayment[] = [];
     
     // Start from the lease start date
-    let currentDate = new Date(startDate);
+    const currentDate = new Date(startDate);
     
     // If payment day is specified, set the day of the first month
     if (paymentDay) {
@@ -159,6 +177,11 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({ payments, lease, onRe
            p !== nextPayment;
   }).slice(0, 3); // Limit to 3 payments
 
+  // Identify the oldest unpaid payment across all categories
+  const oldestUnpaidPayment = sortedScheduledPayments.find(p => 
+    !p.isExisting && p.status !== 'PAID'
+  );
+
   const getStatusBadge = (status: Payment['status']) => {
     const statusMap = {
       PAID: 'success',
@@ -174,75 +197,71 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({ payments, lease, onRe
     );
   };
 
-  const handleCreatePayment = async (payment: ScheduledPayment) => {
-    try {
-      if (!leaseInfo) return;
-      
-      // Format the payment data for the API
-      const newPayment = {
-        leaseId: leaseInfo.id,
-        amount: payment.amount,
-        dueDate: payment.dueDate.toISOString(),
-        status: payment.status
-      };
-      
-      // TODO: Implement API call to create payment
-      console.log('Creating new payment:', newPayment);
-      
-      // This would be replaced with an actual API call
-      // const response = await fetch('/api/payments', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(newPayment),
-      // });
-      
-      // if (!response.ok) {
-      //   throw new Error('Failed to create payment');
-      // }
-      
-      // Refresh the page or update the state
-      // window.location.reload();
-    } catch (error) {
-      console.error('Error creating payment:', error);
-      alert('Failed to create payment. Please try again.');
+  const handlePaymentMethodChange = (value: string) => {
+    setPaymentForm(prev => ({
+      ...prev,
+      paymentMethod: value as PaymentFormData['paymentMethod'],
+      transactionId: value !== 'BANK_TRANSFER' ? undefined : prev.transactionId
+    }));
+  };
+
+  const handleTransactionIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPaymentForm(prev => ({
+      ...prev,
+      transactionId: e.target.value
+    }));
+  };
+
+  const handleConfirmPayment = () => {
+    if (selectedPayment) {
+      onRecordPayment({
+        ...selectedPayment,
+        paymentMethod: paymentForm.paymentMethod,
+        transactionId: paymentForm.transactionId
+      });
+      setSelectedPayment(null);
+      setPaymentForm({ paymentMethod: 'CASH' });
     }
   };
 
-  const PaymentCard = ({ payment, label }: { payment: ScheduledPayment, label?: string }) => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-      {label && (
-        <div className="text-sm font-medium text-gray-500 mb-2">{label}</div>
-      )}
-      <div className="flex justify-between items-center">
-        <div>
-          <div className="text-lg font-semibold">${payment.amount.toFixed(2)}</div>
-          <div className="text-sm text-gray-500">
-            Due: {payment.dueDate.toLocaleDateString()}
+  const PaymentCard = ({ payment, label }: { payment: ScheduledPayment, label?: string }) => {
+    const today = new Date();
+    const dueDate = new Date(payment.dueDate);
+    const dayDiff = differenceInDays(today, dueDate);
+    const humanReadableDate = dayDiff > 0 ? `(${dayDiff} days late)` : '';
+
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+        {label && (
+          <div className="text-sm font-medium text-gray-500 mb-2">{label}</div>
+        )}
+        <div className="flex justify-between items-center">
+          <div>
+            <div className="text-lg font-semibold">${payment.amount.toFixed(2)}</div>
+            <div className="text-sm text-gray-500">
+              Due: {payment.dueDate.toLocaleDateString()} {humanReadableDate}
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            {getStatusBadge(payment.status)}
+            {!payment.isExisting && payment === oldestUnpaidPayment ? (
+              <Button
+                onClick={() => {
+                  setSelectedPayment(payment);
+                  setIsConfirmOpen(true);
+                }}
+                variant="secondary"
+                size="sm"
+                className="ml-2"
+              >
+                Track Payment
+              </Button>
+            ) : null}
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          {getStatusBadge(payment.status)}
-          {payment.isExisting && payment.id && payment.status !== 'PAID' ? (
-            <button
-              onClick={() => onRecordPayment(payment.id!)}
-              className="ml-2 px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700"
-            >
-              Record Payment
-            </button>
-          ) : !payment.isExisting ? (
-            <button
-              onClick={() => handleCreatePayment(payment)}
-              className="ml-2 px-3 py-1 bg-indigo-500 text-white text-sm rounded hover:bg-indigo-600"
-            >
-              Create Payment
-            </button>
-          ) : null}
-        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   if (allScheduledPayments.length === 0) {
     return (
@@ -289,6 +308,48 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({ payments, lease, onRe
           </div>
         </div>
       )}
+
+      {/* Payment Confirmation Dialog */}
+      <PopConfirm
+        isOpen={isConfirmOpen}
+        onClose={() => {
+          setIsConfirmOpen(false);
+          setSelectedPayment(null);
+          setPaymentForm({ paymentMethod: 'CASH' });
+        }}
+        onConfirm={handleConfirmPayment}
+        title="Record Payment"
+        confirmText="Record Payment"
+      >
+        <div className="space-y-4">
+          <div>
+            <Select
+              value={paymentForm.paymentMethod}
+              onChange={(e) => handlePaymentMethodChange(e.target.value)}
+              options={[
+                { value: 'CASH', label: 'Cash' },
+                { value: 'BANK_TRANSFER', label: 'Bank Transfer' },
+                { value: 'CREDIT_CARD', label: 'Credit Card' },
+                { value: 'CHECK', label: 'Check' },
+                { value: 'OTHER', label: 'Other' }
+              ]}
+              label="Payment Method"
+            />
+          </div>
+
+          {paymentForm.paymentMethod === 'BANK_TRANSFER' && (
+            <div>
+              <Input
+                type="text"
+                value={paymentForm.transactionId || ''}
+                onChange={handleTransactionIdChange}
+                placeholder="Enter transaction ID"
+                label="Transaction ID"
+              />
+            </div>
+          )}
+        </div>
+      </PopConfirm>
     </div>
   );
 };

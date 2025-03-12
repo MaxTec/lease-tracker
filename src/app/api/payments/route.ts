@@ -170,7 +170,8 @@ export async function POST(request: NextRequest) {
                             }
                         }
                     }
-                }
+                },
+                voucher: true
             }
         });
 
@@ -195,14 +196,17 @@ export async function POST(request: NextRequest) {
         if (payment.status === 'PAID' && payment.paidDate) {
             const voucherNumber = `VCH-${Date.now()}-${payment.id}`;
 
-            await prisma.voucher.create({
+            const voucher = await prisma.voucher.create({
                 data: {
                     paymentId: payment.id,
                     voucherNumber,
                     status: 'GENERATED'
                 }
             });
+            // update serializedPayment with voucher
+            serializedPayment.voucher = voucher;
         }
+
 
         return NextResponse.json(serializedPayment, { status: 201 });
     } catch (error) {
