@@ -14,10 +14,10 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
     console.log("Received data:", data);
-    if (!data.voucherId) {
-      console.log("Missing voucher ID");
+    if (!data.voucherId || !data.pdfBase64) {
+      console.log("Missing required data");
       return NextResponse.json(
-        { error: "Missing voucher ID" },
+        { error: "Missing required data" },
         { status: 400 }
       );
     }
@@ -53,14 +53,8 @@ export async function POST(request: NextRequest) {
     const tenantName = voucher.payment.lease.tenant.user.name;
     const propertyName = voucher.payment.lease.unit.property.name;
     const unitNumber = voucher.payment.lease.unit.unitNumber;
-    const amount = voucher.payment.amount;
+    const amount = Number(voucher.payment.amount);
     const voucherUrl = `${process.env.NEXT_PUBLIC_APP_URL}/vouchers/${voucher.voucherNumber}`;
-    console.log("Sending email to:", tenantEmail);
-    console.log("Tenant name:", tenantName);
-    console.log("Property name:", propertyName);
-    console.log("Unit number:", unitNumber);
-    console.log("Amount:", amount);
-    console.log("Voucher URL:", voucherUrl);
 
     await sgMail.send({
       to: tenantEmail,
@@ -72,11 +66,21 @@ export async function POST(request: NextRequest) {
                 <p>Dear ${tenantName},</p>
                 <p>Your payment voucher for ${propertyName} - Unit ${unitNumber} is ready.</p>
                 <p>Amount: $${amount}</p>
-                <p>You can view your voucher at: <a href="${voucherUrl}">${voucherUrl}</a></p>
+                <p>Please find your payment voucher attached to this email.</p>
+                <p>You can also view your voucher online at: <a href="${voucherUrl}">${voucherUrl}</a></p>
                 <p>Thank you for your payment!</p>
             `,
+      attachments: [
+        {
+          content: data.pdfBase64,
+          filename: `voucher-${voucher.voucherNumber}.pdf`,
+          type: 'application/pdf',
+          disposition: 'attachment'
+        }
+      ]
     });
-    // // Update voucher status
+
+    // Update voucher status
     const updatedVoucher = await prisma.voucher.update({
       where: { id: data.voucherId },
       data: {

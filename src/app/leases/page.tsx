@@ -36,9 +36,9 @@ export default function LeasesPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Redirect if not admin
-//   if (authStatus === "authenticated" && session?.user?.role !== "ADMIN") {
-//     redirect("/");
-//   }
+  if (authStatus === "authenticated" && session?.user?.role !== "ADMIN") {
+    redirect("/");
+  }
 
   useEffect(() => {
     const fetchLeases = async () => {
@@ -68,14 +68,17 @@ export default function LeasesPage() {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusClass = {
-      ACTIVE: "bg-green-100 text-green-800",
-      EXPIRED: "bg-yellow-100 text-yellow-800",
-      TERMINATED: "bg-red-100 text-red-800",
-    }[status] || "bg-gray-100 text-gray-800";
+    const statusClass =
+      {
+        ACTIVE: "bg-green-100 text-green-800",
+        EXPIRED: "bg-yellow-100 text-yellow-800",
+        TERMINATED: "bg-red-100 text-red-800",
+      }[status] || "bg-gray-100 text-gray-800";
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}
+      >
         {status}
       </span>
     );
@@ -85,7 +88,8 @@ export default function LeasesPage() {
     {
       key: "property",
       label: "Property",
-      render: (lease: Lease) => `${lease.unit.property.name} - Unit ${lease.unit.unitNumber}`,
+      render: (lease: Lease) =>
+        `${lease.unit.property.name} - Unit ${lease.unit.unitNumber}`,
     },
     {
       key: "tenant",
@@ -116,10 +120,7 @@ export default function LeasesPage() {
       label: "Actions",
       render: (lease: Lease) => (
         <div className="flex space-x-2">
-          <Button
-            size="sm"
-            onClick={() => handleViewLease(lease.id)}
-          >
+          <Button size="sm" onClick={() => handleViewLease(lease.id)}>
             View Details
           </Button>
           <Button
@@ -159,9 +160,7 @@ export default function LeasesPage() {
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-gray-800">Leases</h2>
-              <Button
-                onClick={() => router.push("/leases/new")}
-              >
+              <Button onClick={() => router.push("/leases/new")}>
                 <FaPlus className="mr-2 inline-block align-middle" />
                 <span className="align-middle">Add New Lease</span>
               </Button>
@@ -172,7 +171,12 @@ export default function LeasesPage() {
                 data={leases}
                 columns={columns}
                 searchable={true}
-                searchKeys={["unit.property.name", "unit.unitNumber", "tenant.user.name", "status"]}
+                searchKeys={[
+                  "unit.property.name",
+                  "unit.unitNumber",
+                  "tenant.user.name",
+                  "status",
+                ]}
                 pageSize={10}
               />
             ) : (
@@ -189,4 +193,4 @@ export default function LeasesPage() {
       </div>
     </Layout>
   );
-} 
+}

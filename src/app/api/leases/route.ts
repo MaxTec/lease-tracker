@@ -91,4 +91,87 @@ export async function GET(request: NextRequest) {
             { status: 500 }
         );
     }
+}
+
+export async function POST(request: NextRequest) {
+    try {
+        const body = await request.json();
+        const {
+            unitId,
+            tenantId,
+            startDate,
+            endDate,
+            rentAmount,
+            depositAmount,
+            paymentDay,
+        } = body;
+
+        // Validate required fields
+        if (!unitId || !tenantId || !startDate || !endDate || !rentAmount || !depositAmount || !paymentDay) {
+            return NextResponse.json(
+                { error: 'Missing required fields' },
+                { status: 400 }
+            );
+        }
+
+        // Create the lease
+        const lease = await prisma.lease.create({
+            data: {
+                unitId: parseInt(unitId),
+                tenantId: parseInt(tenantId),
+                startDate: new Date(startDate),
+                endDate: new Date(endDate),
+                rentAmount: new Prisma.Decimal(rentAmount),
+                depositAmount: new Prisma.Decimal(depositAmount),
+                paymentDay: parseInt(paymentDay),
+                status: 'ACTIVE',
+            },
+            include: {
+                tenant: {
+                    include: {
+                        user: true,
+                    },
+                },
+                unit: {
+                    include: {
+                        property: true,
+                    },
+                },
+            },
+        });
+
+        console.log(lease);
+
+        // Create initial payment records for the lease period
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const payments = [];
+
+        for (let date = new Date(start); date <= end; date.setMonth(date.getMonth() + 1)) {
+            const dueDate = new Date(date);
+            dueDate.setDate(paymentDay);
+
+            if (dueDate >= start && dueDate <= end) {
+                payments.push({
+                    leaseId: lease.id,
+                    tenantId: parseInt(tenantId),
+                    amount: rentAmount,
+                    dueDate,
+                    status: 'PENDING' as const,
+                });
+            }
+        }
+
+        await prisma.payment.createMany({
+            data: payments,
+        });
+
+        return NextResponse.json(lease);
+    } catch (error) {
+        console.error('Error creating lease:', error);
+        return NextResponse.json(
+            { error: 'Failed to create lease' },
+            { status: 500 }
+        );
+    }
 } 

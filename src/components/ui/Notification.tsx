@@ -42,7 +42,7 @@ const Notification: React.FC<NotificationProps> = ({
           <div className="flex-shrink-0">
             <Icon className={`h-5 w-5 ${textColor}`} />
           </div>
-          <div className="ml-3 w-0 flex-1">
+          <div className="ml-3 w-0 flex-1 text-left">
             <p className={`text-sm font-medium ${textColor}`}>{title}</p>
             <p className={`mt-1 text-sm ${type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
               {message}

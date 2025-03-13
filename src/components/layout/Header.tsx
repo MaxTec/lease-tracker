@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import Weather from "./Weather";
 import Logo from "../ui/Logo";
+
 export default function Header() {
   const { data: session, status } = useSession();
 
@@ -25,11 +26,16 @@ export default function Header() {
               <Link href='/dashboard' className='text-gray-600 hover:text-gray-900'>
                 Dashboard
               </Link>
-              {/* {session?.user?.role === "ADMIN" && (
-                <Link href='/admin' className='text-gray-600 hover:text-gray-900'>
-                  Admin
-                </Link>
-              )} */}
+              {session?.user?.role === "ADMIN" && (
+                <>
+                  <Link href='/properties' className='text-gray-600 hover:text-gray-900'>
+                    Properties
+                  </Link>
+                  <Link href='/tenants' className='text-gray-600 hover:text-gray-900'>
+                    Tenants
+                  </Link>
+                </>
+              )}
               <Link href='/settings' className='text-gray-600 hover:text-gray-900'>
                 Settings
               </Link>

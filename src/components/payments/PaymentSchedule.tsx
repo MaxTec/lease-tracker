@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import PopConfirm from '@/components/ui/PopConfirm';
 import Select from '@/components/ui/Select';
 import Input from '@/components/ui/Input';
+import DateInput from '@/components/ui/DateInput';
 
 interface Lease {
   id: number;
@@ -52,23 +53,32 @@ interface ScheduledPayment {
   isExisting: boolean;
   paymentMethod?: 'CASH' | 'BANK_TRANSFER' | 'CREDIT_CARD' | 'CHECK' | 'OTHER';
   transactionId?: string;
+  paidDate?: Date;
 }
 
 interface PaymentFormData {
   paymentMethod: 'CASH' | 'BANK_TRANSFER' | 'CREDIT_CARD' | 'CHECK' | 'OTHER';
   transactionId?: string;
+  paymentDate: string;
 }
 
 const PaymentSchedule: React.FC<PaymentScheduleProps> = ({ payments, lease, onRecordPayment }) => {
   const [selectedPayment, setSelectedPayment] = useState<ScheduledPayment | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [paymentForm, setPaymentForm] = useState<PaymentFormData>({
-    paymentMethod: 'CASH'
+    paymentMethod: 'CASH',
+    paymentDate: new Date().toISOString().split('T')[0]
   });
+  const [paymentDateError, setPaymentDateError] = useState<string>('');
 
   // Get current date
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  // Get the last payment date
+  const lastPaymentDate = payments
+    .filter(p => p.status === 'PAID')
+    .sort((a, b) => new Date(b.paidDate!).getTime() - new Date(a.paidDate!).getTime())[0]?.paidDate;
 
   // Get lease information from the lease prop or from the first payment
   const leaseInfo = lease || (payments.length > 0 && payments[0].lease 
@@ -212,15 +222,49 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({ payments, lease, onRe
     }));
   };
 
+  const handlePaymentDateChange = (value: string) => {
+    const selectedDate = new Date(value);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    // Validate the selected date
+    if (selectedDate > today) {
+      setPaymentDateError('Payment date cannot be in the future');
+      return;
+    }
+
+    if (lastPaymentDate && selectedDate < new Date(lastPaymentDate)) {
+      setPaymentDateError('Payment date cannot be before the last payment date');
+      return;
+    }
+
+    // Validate against lease start date
+    const leaseStartDate = new Date(leaseInfo.startDate);
+    leaseStartDate.setHours(0, 0, 0, 0);
+    if (selectedDate < leaseStartDate) {
+      setPaymentDateError('Payment date cannot be before the lease start date');
+      return;
+    }
+
+    setPaymentDateError('');
+    setPaymentForm(prev => ({
+      ...prev,
+      paymentDate: value
+    }));
+  };
+
   const handleConfirmPayment = () => {
-    if (selectedPayment) {
+    if (selectedPayment && !paymentDateError) {
       onRecordPayment({
         ...selectedPayment,
         paymentMethod: paymentForm.paymentMethod,
-        transactionId: paymentForm.transactionId
+        transactionId: paymentForm.transactionId,
+        paidDate: new Date(paymentForm.paymentDate)
       });
       setSelectedPayment(null);
-      setPaymentForm({ paymentMethod: 'CASH' });
+      setPaymentForm({ 
+        paymentMethod: 'CASH',
+        paymentDate: new Date().toISOString().split('T')[0]
+      });
     }
   };
 
@@ -315,13 +359,26 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({ payments, lease, onRe
         onClose={() => {
           setIsConfirmOpen(false);
           setSelectedPayment(null);
-          setPaymentForm({ paymentMethod: 'CASH' });
+          setPaymentForm({ 
+            paymentMethod: 'CASH',
+            paymentDate: new Date().toISOString().split('T')[0]
+          });
+          setPaymentDateError('');
         }}
         onConfirm={handleConfirmPayment}
         title="Record Payment"
         confirmText="Record Payment"
       >
         <div className="space-y-4">
+          <div>
+            <DateInput
+              label="Payment Date"
+              value={paymentForm.paymentDate}
+              onChange={handlePaymentDateChange}
+              error={paymentDateError}
+            />
+          </div>
+
           <div>
             <Select
               value={paymentForm.paymentMethod}

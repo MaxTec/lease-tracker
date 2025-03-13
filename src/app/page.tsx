@@ -39,7 +39,7 @@ export default function Home() {
       {/* Left Section */}
       <div className="w-full lg:w-1/2 bg-gradient-to-br from-blue-600 to-blue-700 p-8 lg:p-12 flex flex-col min-h-[40vh] lg:min-h-screen">
         <div className="mb-8">
-          <Logo />
+          <Logo size={250} color='white'/>
         </div>
         <p className="text-blue-100 mb-auto">
           Simplify your property management with our comprehensive lease tracking solution.
