@@ -1,8 +1,34 @@
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Button from '@/components/ui/Button';
-import Layout from '@/components/layout/Layout';
-import { PDFViewer, Document, Page, Text, StyleSheet } from '@react-pdf/renderer';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import Button from "@/components/ui/Button";
+import Layout from "@/components/layout/Layout";
+import {
+  PDFViewer,
+  Document,
+  Page,
+  Text,
+  StyleSheet,
+} from "@react-pdf/renderer";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import DateInput from "@/components/ui/DateInput";
+
+// Define the validation schema using zod
+const leaseSchema = z.object({
+  unitId: z.string().nonempty("Unit is required"),
+  tenantId: z.string().nonempty("Tenant is required"),
+  startDate: z.string().nonempty("Start date is required"),
+  endDate: z.string().nonempty("End date is required"),
+  rentAmount: z.string().nonempty("Rent amount is required").transform(Number),
+  depositAmount: z
+    .string()
+    .nonempty("Deposit amount is required")
+    .transform(Number),
+  paymentDay: z.string().nonempty("Payment day is required").transform(Number),
+});
 
 interface Property {
   id: number;
@@ -42,16 +68,6 @@ interface LeaseData {
   };
 }
 
-interface FormData {
-  unitId: string;
-  tenantId: string;
-  startDate: string;
-  endDate: string;
-  rentAmount: string;
-  depositAmount: string;
-  paymentDay: string;
-}
-
 const styles = StyleSheet.create({
   page: {
     padding: 30,
@@ -59,7 +75,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   section: {
     marginBottom: 10,
@@ -72,43 +88,38 @@ const styles = StyleSheet.create({
 
 export default function NewLeaseForm() {
   const router = useRouter();
-  const [properties, setProperties] = useState<Property[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [showPdf, setShowPdf] = useState(false);
   const [leaseData, setLeaseData] = useState<LeaseData | null>(null);
-  const [formData, setFormData] = useState<FormData>({
-    unitId: '',
-    tenantId: '',
-    startDate: '',
-    endDate: '',
-    rentAmount: '',
-    depositAmount: '',
-    paymentDay: '1',
-  });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Initialize react-hook-form
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(leaseSchema),
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [propertiesRes, tenantsRes] = await Promise.all([
-          fetch('/api/properties'),
-          fetch('/api/tenants'),
+          fetch("/api/properties"),
+          fetch("/api/tenants"),
         ]);
 
         if (!propertiesRes.ok || !tenantsRes.ok) {
-          throw new Error('Failed to fetch data');
+          throw new Error("Failed to fetch data");
         }
 
-        const [propertiesData, tenantsData] = await Promise.all([
-          propertiesRes.json(),
-          tenantsRes.json(),
-        ]);
-
-        setProperties(propertiesData);
+        const tenantsData = await tenantsRes.json();
         setTenants(tenantsData);
       } catch (err) {
-        setError('Failed to load form data');
+        setError("Failed to load form data");
         console.error(err);
       }
     };
@@ -116,37 +127,31 @@ export default function NewLeaseForm() {
     fetchData();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFormSubmit = async (data: any) => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/leases', {
-        method: 'POST',
+      const response = await fetch("/api/leases", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create lease');
+        throw new Error("Failed to create lease");
       }
 
-      const data = await response.json();
-      setLeaseData(data);
+      const leaseData = await response.json();
+      setLeaseData(leaseData);
       setShowPdf(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create lease');
+      setError(err instanceof Error ? err.message : "Failed to create lease");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const LeaseAgreement = () => (
@@ -154,15 +159,31 @@ export default function NewLeaseForm() {
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>Lease Agreement</Text>
         <Text style={styles.text}>This lease agreement is made between:</Text>
-        <Text style={styles.text}>Landlord: {leaseData?.unit.property.name}</Text>
-        <Text style={styles.text}>Tenant: {leaseData?.tenant.user.name}</Text>
-        <Text style={styles.text}>Property: {leaseData?.unit.property.name} - Unit {leaseData?.unit.unitNumber}</Text>
         <Text style={styles.text}>
-          Lease Period: {leaseData?.startDate ? new Date(leaseData.startDate).toLocaleDateString() : ''} to {leaseData?.endDate ? new Date(leaseData.endDate).toLocaleDateString() : ''}
+          Landlord: {leaseData?.unit.property.name}
+        </Text>
+        <Text style={styles.text}>Tenant: {leaseData?.tenant.user.name}</Text>
+        <Text style={styles.text}>
+          Property: {leaseData?.unit.property.name} - Unit{" "}
+          {leaseData?.unit.unitNumber}
+        </Text>
+        <Text style={styles.text}>
+          Lease Period:{" "}
+          {leaseData?.startDate
+            ? new Date(leaseData.startDate).toLocaleDateString()
+            : ""}{" "}
+          to{" "}
+          {leaseData?.endDate
+            ? new Date(leaseData.endDate).toLocaleDateString()
+            : ""}
         </Text>
         <Text style={styles.text}>Monthly Rent: ${leaseData?.rentAmount}</Text>
-        <Text style={styles.text}>Security Deposit: ${leaseData?.depositAmount}</Text>
-        <Text style={styles.text}>Payment Due Day: {leaseData?.paymentDay}</Text>
+        <Text style={styles.text}>
+          Security Deposit: ${leaseData?.depositAmount}
+        </Text>
+        <Text style={styles.text}>
+          Payment Due Day: {leaseData?.paymentDay}
+        </Text>
       </Page>
     </Document>
   );
@@ -179,7 +200,7 @@ export default function NewLeaseForm() {
               </PDFViewer>
             </div>
             <div className="mt-4 flex justify-end">
-              <Button onClick={() => router.push('/leases')}>
+              <Button onClick={() => router.push("/leases")}>
                 Back to Leases
               </Button>
             </div>
@@ -195,146 +216,92 @@ export default function NewLeaseForm() {
         <div className="bg-white rounded-lg shadow">
           <div className="p-6">
             <h2 className="text-2xl font-semibold mb-6">Add New Lease</h2>
-            
+
             {error && (
               <div className="bg-red-50 text-red-600 p-4 rounded-md mb-6">
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Property Unit
-                </label>
-                <select
-                  name="unitId"
-                  value={formData.unitId}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                >
-                  <option value="">Select a unit</option>
-                  {properties.map(property => (
-                    property.units.map(unit => (
-                      <option key={unit.id} value={unit.id}>
-                        {property.name} - Unit {unit.unitNumber}
-                      </option>
-                    ))
-                  ))}
-                </select>
-              </div>
+            <form
+              onSubmit={handleSubmit(handleFormSubmit)}
+              className="space-y-6"
+            >
+              <Input
+                {...register("unitId")}
+                label="Unit"
+                error={errors.unitId?.message}
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Tenant
-                </label>
-                <select
-                  name="tenantId"
-                  value={formData.tenantId}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                >
-                  <option value="">Select a tenant</option>
-                  {tenants.map(tenant => (
-                    <option key={tenant.id} value={tenant.id}>
-                      {tenant.user.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                {...register("tenantId")}
+                label="Tenant"
+                options={tenants.map((tenant) => ({
+                  value: tenant.id.toString(),
+                  label: tenant.user.name,
+                }))}
+                error={errors.tenantId?.message}
+              />
+     
+              <div className="grid grid-cols-2 gap-4">
+                <Controller
+                  name="startDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DateInput
+                      label="Start Date"
+                      value={field.value}
+                      onChange={field.onChange}
+                      error={errors.startDate?.message}
+                    />
+                  )}
+                />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    name="startDate"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    name="endDate"
-                    value={formData.endDate}
-                    onChange={handleChange}
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Monthly Rent
-                  </label>
-                  <input
-                    type="number"
-                    name="rentAmount"
-                    value={formData.rentAmount}
-                    onChange={handleChange}
-                    required
-                    min="0"
-                    step="0.01"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Security Deposit
-                  </label>
-                  <input
-                    type="number"
-                    name="depositAmount"
-                    value={formData.depositAmount}
-                    onChange={handleChange}
-                    required
-                    min="0"
-                    step="0.01"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Payment Due Day (1-31)
-                </label>
-                <input
-                  type="number"
-                  name="paymentDay"
-                  value={formData.paymentDay}
-                  onChange={handleChange}
-                  required
-                  min="1"
-                  max="31"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                <Controller
+                  name="endDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DateInput
+                      label="End Date"
+                      value={field.value}
+                      onChange={field.onChange}
+                      error={errors.endDate?.message}
+                    />
+                  )}
                 />
               </div>
+
+              <Input
+                {...register("rentAmount")}
+                label="Rent Amount"
+                type="number"
+                error={errors.rentAmount?.message}
+              />
+
+              <Input
+                {...register("depositAmount")}
+                label="Deposit Amount"
+                type="number"
+                error={errors.depositAmount?.message}
+              />
+
+              <Input
+                {...register("paymentDay")}
+                label="Payment Day"
+                type="number"
+                error={errors.paymentDay?.message}
+              />
 
               <div className="flex justify-end space-x-4">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => router.push('/leases')}
+                  onClick={() => router.push("/leases")}
                 >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={loading}>
-                  {loading ? 'Creating...' : 'Create Lease'}
+                  {loading ? "Creating..." : "Create Lease"}
                 </Button>
               </div>
             </form>
@@ -343,4 +310,4 @@ export default function NewLeaseForm() {
       </div>
     </Layout>
   );
-} 
+}

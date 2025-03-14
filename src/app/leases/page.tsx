@@ -8,6 +8,8 @@ import Layout from "@/components/layout/Layout";
 import Table from "@/components/ui/Table";
 import EmptyState from "@/components/ui/EmptyState";
 import { FaPlus, FaBuilding } from "react-icons/fa";
+import NewLeaseModal from "@/components/admin/NewLeaseModal";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 interface Lease {
   id: number;
@@ -34,6 +36,8 @@ export default function LeasesPage() {
   const [leases, setLeases] = useState<Lease[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tenants, setTenants] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Redirect if not admin
   if (authStatus === "authenticated" && session?.user?.role !== "ADMIN") {
@@ -57,6 +61,16 @@ export default function LeasesPage() {
     };
 
     fetchLeases();
+  }, []);
+
+  useEffect(() => {
+    const fetchTenants = async () => {
+      const response = await fetch("/api/tenants");
+      const data = await response.json();
+      setTenants(data);
+    };
+
+    fetchTenants();
   }, []);
 
   const handleViewLease = (leaseId: number) => {
@@ -135,11 +149,26 @@ export default function LeasesPage() {
     },
   ];
 
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleSubmitLease = async (data: any) => {
+    // Handle lease creation logic here
+    console.log(data);
+    // After successful submission, close the modal
+    handleCloseModal();
+  };
+
   if (loading) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[200px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          <LoadingSpinner size={32} color="indigo-600" />
         </div>
       </Layout>
     );
@@ -160,7 +189,7 @@ export default function LeasesPage() {
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-gray-800">Leases</h2>
-              <Button onClick={() => router.push("/leases/new")}>
+              <Button onClick={handleOpenModal}>
                 <FaPlus className="mr-2 inline-block align-middle" />
                 <span className="align-middle">Add New Lease</span>
               </Button>
@@ -185,11 +214,18 @@ export default function LeasesPage() {
                 title="No Leases Found"
                 description="There are no leases in the system yet. Click the button below to create your first lease."
                 actionLabel="Add New Lease"
-                onAction={() => router.push("/leases/new")}
+                onAction={handleOpenModal}
               />
             )}
           </div>
         </div>
+
+        <NewLeaseModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSubmit={handleSubmitLease}
+          tenants={tenants}
+        />
       </div>
     </Layout>
   );
