@@ -9,6 +9,7 @@ import Table from "@/components/ui/Table";
 import EmptyState from "@/components/ui/EmptyState";
 import { FaPlus, FaBuilding } from "react-icons/fa";
 import PropertyForm from "@/components/properties/PropertyForm";
+import { PropertyFormProps } from "@/components/properties/PropertyForm";
 
 interface Property {
   id: number;
@@ -46,7 +47,9 @@ export default function PropertiesPage() {
         setProperties(data);
       } catch (err) {
         console.error("Error fetching properties:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch properties");
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch properties"
+        );
       } finally {
         setLoading(false);
       }
@@ -60,8 +63,6 @@ export default function PropertiesPage() {
     setSelectedProperty(propertyId);
     setIsModalOpen(true);
   };
-
-
 
   const handleDeleteProperty = async (propertyId: number) => {
     if (!confirm("Are you sure you want to delete this property?")) return;
@@ -78,6 +79,10 @@ export default function PropertiesPage() {
       console.error("Error deleting property:", err);
       alert("Failed to delete property");
     }
+  };
+
+  const handleUpdateProperties = (data: Property[]) => {
+    setProperties(data);
   };
 
   const columns = [
@@ -149,8 +154,15 @@ export default function PropertiesPage() {
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-gray-800">Properties</h2>
-              <Button onClick={() => setIsModalOpen(true)}>
+              <h2 className="text-2xl font-semibold text-gray-800">
+                Properties
+              </h2>
+              <Button
+                onClick={() => {
+                  setSelectedProperty(null);
+                  setIsModalOpen(true);
+                }}
+              >
                 <FaPlus className="mr-2 inline-block align-middle" />
                 <span className="align-middle">Add New Property</span>
               </Button>
@@ -176,7 +188,12 @@ export default function PropertiesPage() {
           </div>
         </div>
       </div>
-      <PropertyForm isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} propertyId={selectedProperty ?? undefined} />
+      <PropertyForm
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        propertyId={selectedProperty ?? undefined}
+        onUpdate={handleUpdateProperties}
+      />
     </Layout>
   );
-} 
+}
