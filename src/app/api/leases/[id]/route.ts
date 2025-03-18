@@ -132,7 +132,7 @@ export async function PATCH(
     }
 }
 
-// DELETE /api/leases/[id] - Delete a lease
+// DELETE /api/leases/[id] - Terminate a lease
 export async function DELETE(
     request: NextRequest,
     { params }: { params: { id: string } }
@@ -165,16 +165,17 @@ export async function DELETE(
             return NextResponse.json({ error: 'Lease not found' }, { status: 404 });
         }
 
-        // Delete the lease
-        await prisma.lease.delete({
+        // Update the lease status to 'TERMINATED'
+        const updatedLease = await prisma.lease.update({
             where: { id: leaseId },
+            data: { status: 'TERMINATED' },
         });
 
-        return NextResponse.json({ message: 'Lease deleted successfully' });
+        return NextResponse.json(updatedLease);
     } catch (error) {
-        console.error('Error deleting lease:', error);
+        console.error('Error terminating lease:', error);
         return NextResponse.json(
-            { error: 'Failed to delete lease' },
+            { error: 'Failed to terminate lease' },
             { status: 500 }
         );
     }

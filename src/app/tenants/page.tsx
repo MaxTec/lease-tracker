@@ -8,6 +8,8 @@ import Layout from "@/components/layout/Layout";
 import Table from "@/components/ui/Table";
 import EmptyState from "@/components/ui/EmptyState";
 import { FaPlus, FaUsers } from "react-icons/fa";
+import TenantForm from "@/components/tenants/TenantForm";
+import Modal from "@/components/ui/Modal";
 
 interface Tenant {
   id: number;
@@ -25,6 +27,8 @@ export default function TenantsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
 
   // Redirect if not admin
   if (authStatus === "authenticated" && session?.user?.role !== "ADMIN") {
@@ -54,8 +58,9 @@ export default function TenantsPage() {
     router.push(`/tenants/${tenantId}`);
   };
 
-  const handleEditTenant = (tenantId: number) => {
-    router.push(`/tenants/${tenantId}/edit`);
+  const handleEditTenant = (tenant: Tenant) => {
+    setCurrentTenant(tenant);
+    setIsModalOpen(true);
   };
 
   const handleDeleteTenant = async (tenantId: number) => {
@@ -73,6 +78,16 @@ export default function TenantsPage() {
       console.error("Error deleting tenant:", err);
       alert("Failed to delete tenant");
     }
+  };
+
+  const handleAddTenant = () => {
+    setCurrentTenant(null);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setCurrentTenant(null);
   };
 
   const columns = [
@@ -101,13 +116,10 @@ export default function TenantsPage() {
       label: "Actions",
       render: (tenant: Tenant) => (
         <div className="flex space-x-2">
-          <Button size="sm" onClick={() => handleViewTenant(tenant.id)}>
-            View
-          </Button>
           <Button
             size="sm"
             variant="outline"
-            onClick={() => handleEditTenant(tenant.id)}
+            onClick={() => handleEditTenant(tenant)}
           >
             Edit
           </Button>
@@ -148,7 +160,7 @@ export default function TenantsPage() {
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-gray-800">Tenants</h2>
-              <Button onClick={() => router.push("/tenants/new")}>
+              <Button onClick={handleAddTenant}>
                 <FaPlus className="mr-2 inline-block align-middle" />
                 <span className="align-middle">Add New Tenant</span>
               </Button>
@@ -168,12 +180,22 @@ export default function TenantsPage() {
                 title="No Tenants Found"
                 description="There are no tenants in the system yet. Click the button below to add your first tenant."
                 actionLabel="Add New Tenant"
-                onAction={() => router.push("/tenants/new")}
+                onAction={handleAddTenant}
               />
             )}
           </div>
         </div>
       </div>
+
+      <Modal title="Add New Tenant" isOpen={isModalOpen} onClose={handleModalClose}>
+        <TenantForm 
+          tenantId={currentTenant?.id} 
+          onClose={handleModalClose} 
+          onSuccess={() => {
+            handleModalClose();
+          }} 
+        />
+      </Modal>
     </Layout>
   );
 } 

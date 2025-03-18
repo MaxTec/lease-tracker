@@ -40,10 +40,10 @@ export async function POST(request: NextRequest) {
                 landlordId: parseInt(landlordId),
                 units: {
                     create: units.map((unit: any) => ({
-                        unitNumber: unit.unitNumber,
-                        bedrooms: unit.bedrooms,
-                        bathrooms: unit.bathrooms,
-                        squareFeet: unit.squareFeet,
+                        unitNumber: unit.unitNumber.toString(),
+                        bedrooms: parseInt(unit.bedrooms),
+                        bathrooms: parseInt(unit.bathrooms),
+                        squareFeet: parseInt(unit.squareFeet),
                     })),
                 },
             },

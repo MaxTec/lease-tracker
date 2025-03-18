@@ -3,7 +3,7 @@
 import { forwardRef } from 'react';
 
 interface SelectOption {
-  value: string;
+  value: string | number;
   label: string;
 }
 
@@ -15,6 +15,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, options, error, className = '', ...props }, ref) => {
+    console.log(options);
     return (
       <div className="w-full">
         <label className="block text-sm font-medium text-gray-700 mb-1">

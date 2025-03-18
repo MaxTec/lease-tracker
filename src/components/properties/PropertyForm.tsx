@@ -1,16 +1,41 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { FaTrash } from 'react-icons/fa';
 import Button from '@/components/ui/Button';
-import Layout from '@/components/layout/Layout';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
+import Fieldset from '@/components/ui/Fieldset';
+import Modal from '@/components/ui/Modal';
+
+// Define the Zod schema for Property
+const propertySchema = z.object({
+  name: z.string().min(1, "Property name is required"),
+  address: z.string().min(1, "Address is required"),
+  type: z.string().min(1, "Property type is required"),
+  landlordId: z.string().min(1, "Landlord is required"),
+  units: z.array(z.object({
+    unitNumber: z.string().min(1, "required"),
+    bedrooms: z.string().min(0, "Bedrooms cannot be negative"),
+    bathrooms: z.string().min(0, "Bathrooms cannot be negative"),
+    squareFeet: z.string().min(0, "Square feet cannot be negative"),
+  })).min(1, "At least one unit is required"),
+});
 
 interface Property {
   id?: number;
   name: string;
   address: string;
   type: string;
-  landlordId: number;
+  landlordId: string;
+  units: {
+    unitNumber: string;
+    bedrooms: number;
+    bathrooms: number;
+    squareFeet: number;
+  }[];
 }
 
 interface Landlord {
@@ -20,20 +45,32 @@ interface Landlord {
   };
 }
 
-export default function PropertyForm({ propertyId }: { propertyId?: number }) {
+interface PropertyFormProps {
+  propertyId?: number;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function PropertyForm({ propertyId, isOpen, onClose }: PropertyFormProps) {
   const router = useRouter();
-  const [landlords, setLandlords] = useState<Landlord[]>([]);
-  const [formData, setFormData] = useState<Property>({
-    name: '',
-    address: '',
-    type: '',
-    landlordId: 0,
+  const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<Property>({
+    resolver: zodResolver(propertySchema),
+    defaultValues: {
+      name: '',
+      address: '',
+      type: '',
+      landlordId: '',
+      units: [{ unitNumber: '', bedrooms: 0, bathrooms: 0, squareFeet: 0 }],
+    },
   });
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "units", // Name of the field array
+  });
+  
+  const [landlords, setLandlords] = useState<Landlord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [units, setUnits] = useState<{ unitNumber: string; bedrooms: number; bathrooms: number; squareFeet: number }[]>([
-    { unitNumber: '', bedrooms: 0, bathrooms: 0, squareFeet: 0 },
-  ]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,7 +86,15 @@ export default function PropertyForm({ propertyId }: { propertyId?: number }) {
           const propertyRes = await fetch(`/api/properties/${propertyId}`);
           if (!propertyRes.ok) throw new Error('Failed to fetch property');
           const propertyData = await propertyRes.json();
-          setFormData(propertyData);
+          // setValue('name', propertyData.name);
+          // setValue('address', propertyData.address);
+          // setValue('type', propertyData.type);
+          // setValue('landlordId', propertyData.landlordId);
+          // Set units if editing
+          // remove all units before
+          console.log(propertyData.units);
+          remove();
+          propertyData.units.forEach(unit => append(unit));
         }
       } catch (err) {
         setError('Failed to load form data');
@@ -58,22 +103,9 @@ export default function PropertyForm({ propertyId }: { propertyId?: number }) {
     };
 
     fetchData();
-  }, [propertyId]);
+  }, [propertyId, setValue, append]);
 
-  const handleUnitChange = (index: number, field: string, value: string | number) => {
-    const newUnits = [...units];
-    newUnits[index] = { ...newUnits[index], [field]: value };
-    setUnits(newUnits);
-  };
-
-  const addUnit = () => {
-    if (units.length < 5) {
-      setUnits([...units, { unitNumber: '', bedrooms: 0, bathrooms: 0, squareFeet: 0 }]);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: Property) => {
     setLoading(true);
     setError(null);
 
@@ -86,7 +118,7 @@ export default function PropertyForm({ propertyId }: { propertyId?: number }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...formData, units }),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
@@ -94,6 +126,7 @@ export default function PropertyForm({ propertyId }: { propertyId?: number }) {
       }
 
       router.push('/properties');
+      onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save property');
     } finally {
@@ -101,140 +134,90 @@ export default function PropertyForm({ propertyId }: { propertyId?: number }) {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
   return (
-    <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6">
-            <h2 className="text-2xl font-semibold mb-6">
-              {propertyId ? 'Edit Property' : 'Add New Property'}
-            </h2>
-            
-            {error && (
-              <div className="bg-red-50 text-red-600 p-4 rounded-md mb-6">
-                {error}
-              </div>
-            )}
+    <Modal isOpen={isOpen} onClose={onClose} title={propertyId ? "Edit Property" : "Add New Property"}>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <Input
+          {...register("name")}
+          label="Property Name"
+          error={errors.name?.message}
+        />
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <Input
-                  id="name"
-                  name="name"
-                  label="Property Name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+        <Input
+          {...register("address")}
+          label="Address"
+          error={errors.address?.message}
+        />
 
-              <div>
-                <Input
-                  id="address"
-                  name="address"
-                  label="Address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Select
+            {...register("type")}
+            label="Property Type"
+            options={[
+              { value: 'APARTMENT', label: 'Apartment' },
+              { value: 'HOUSE', label: 'House' },
+              { value: 'COMMERCIAL', label: 'Commercial' },
+              { value: 'OTHER', label: 'Other' },
+            ]}
+            error={errors.type?.message}
+          />
 
-              <div>
-                <Select
-                  name="type"
-                  label="Property Type"
-                  value={formData.type}
-                  onChange={handleChange}
-                  required
-                  options={[
-                    { value: 'APARTMENT', label: 'Apartment' },
-                    { value: 'HOUSE', label: 'House' },
-                    { value: 'COMMERCIAL', label: 'Commercial' },
-                    { value: 'OTHER', label: 'Other' },
-                  ]}
-                >
-                </Select>
-              </div>
-
-              <div>
-                <Select
-                  options={landlords.map(landlord => ({
-                    value: landlord.id.toString(),
-                    label: landlord.user.name
-                  }))}
-                  label="Landlord"
-                  name="landlordId"
-                  value={formData.landlordId}
-                  onChange={handleChange}
-                  required
-                >
-                  
-                </Select>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium">Units</h3>
-                {units.map((unit, index) => (
-                  <div key={index} className="mb-4">
-                    <Input
-                      id={`unitNumber-${index}`}
-                      name="unitNumber"
-                      label="Unit Number"
-                      value={unit.unitNumber}
-                      onChange={(e) => handleUnitChange(index, 'unitNumber', e.target.value)}
-                    />
-                    <Input
-                      id={`bedrooms-${index}`}
-                      name="bedrooms"
-                      label="Bedrooms"
-                      type="number"
-                      value={unit.bedrooms}
-                      onChange={(e) => handleUnitChange(index, 'bedrooms', Number(e.target.value))}
-                    />
-                    <Input
-                      id={`bathrooms-${index}`}
-                      name="bathrooms"
-                      label="Bathrooms"
-                      type="number"
-                      value={unit.bathrooms}
-                      onChange={(e) => handleUnitChange(index, 'bathrooms', Number(e.target.value))}
-                    />
-                    <Input
-                      id={`squareFeet-${index}`}
-                      name="squareFeet"
-                      label="Square Feet"
-                      type="number"
-                      value={unit.squareFeet}
-                      onChange={(e) => handleUnitChange(index, 'squareFeet', Number(e.target.value))}
-                    />
-                  </div>
-                ))}
-                <button type="button" onClick={addUnit} className="text-blue-500">
-                  Add Unit
-                </button>
-              </div>
-
-              <div className="flex justify-end space-x-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push('/properties')}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? 'Saving...' : propertyId ? 'Update Property' : 'Create Property'}
-                </Button>
-              </div>
-            </form>
-          </div>
+          <Select
+            {...register("landlordId")}
+            label="Landlord"
+            options={landlords.map((landlord) => ({
+              value: landlord.id,
+              label: landlord.user.name
+            }))}
+            error={errors.landlordId?.message}
+          />
         </div>
-      </div>
-    </Layout>
+
+        <Fieldset legend="Units">
+          {fields.map((unit, index) => (
+            <div key={unit.id} className="flex space-x-4 mb-4 relative pr-20">
+              <Input
+                {...register(`units.${index}.unitNumber`)}
+                label="Number"
+                error={errors.units?.[index]?.unitNumber?.message}
+              />
+              <Input
+                {...register(`units.${index}.bedrooms`)}
+                label="Bedrooms"
+                min={0}
+                type="number"
+                error={errors.units?.[index]?.bedrooms?.message}
+              />
+              <Input
+                {...register(`units.${index}.bathrooms`)}
+                label="Bathrooms"
+                min={0}
+                type="number"
+                error={errors.units?.[index]?.bathrooms?.message}
+              />
+              <Input
+                {...register(`units.${index}.squareFeet`)}
+                label="m2"
+                min={0}
+                type="number"
+                error={errors.units?.[index]?.squareFeet?.message}
+              />
+              <Button disabled={fields.length === 1} className="absolute right-0 top-[23px]" size="lg" variant="danger" onClick={() => remove(index)}>
+                <FaTrash />
+              </Button>
+            </div>
+          ))}
+        </Fieldset>
+
+        <div className="flex justify-end space-x-4">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? 'Saving...' : propertyId ? 'Update Property' : 'Create Property'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 } 

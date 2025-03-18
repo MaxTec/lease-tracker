@@ -61,15 +61,17 @@ interface ScheduledPayment {
   id?: number;
   dueDate: Date;
   amount: number;
-  status: 'PENDING' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+  status: "PENDING" | "PAID" | "OVERDUE" | "CANCELLED";
   isExisting: boolean;
-  paymentMethod?: 'CASH' | 'BANK_TRANSFER' | 'CREDIT_CARD' | 'CHECK' | 'OTHER';
+  paymentMethod?: "CASH" | "BANK_TRANSFER" | "CREDIT_CARD" | "CHECK" | "OTHER";
   transactionId?: string;
 }
 
 interface SuccessNotification {
   show: boolean;
   voucherNumber?: string;
+  type?: string;
+  message?: string;
 }
 
 export default function LeaseDetailsPage() {
@@ -93,28 +95,28 @@ export default function LeaseDetailsPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch lease information
         const leaseResponse = await fetch(`/api/leases/${leaseId}`);
         if (!leaseResponse.ok) throw new Error("Failed to fetch lease information");
         const leaseData = await leaseResponse.json();
         setLease(leaseData);
-        
+
         // Fetch payments
         const paymentsResponse = await fetch(`/api/payments?leaseId=${leaseId}`);
         if (!paymentsResponse.ok) throw new Error("Failed to fetch payments");
         const paymentsData = await paymentsResponse.json();
-        
+
         // Ensure we have the full lease information in each payment
         const paymentsWithLease = Array.isArray(paymentsData) ? paymentsData : [paymentsData];
-        
+
         // Add lease information to each payment if not already present
         paymentsWithLease.forEach((payment) => {
           if (!payment.lease) {
             payment.lease = leaseData;
           }
         });
-        
+
         setPayments(paymentsWithLease);
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -131,13 +133,13 @@ export default function LeaseDetailsPage() {
 
   const handleRecordPayment = async (payment: ScheduledPayment) => {
     if (!lease) return;
-    
+
     try {
       // Create a new payment record
-      const response = await fetch('/api/payments', {
-        method: 'POST',
+      const response = await fetch("/api/payments", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           leaseId: lease.id,
@@ -145,35 +147,72 @@ export default function LeaseDetailsPage() {
           amount: payment.amount,
           dueDate: payment.dueDate.toISOString(),
           paidDate: new Date().toISOString(),
-          status: 'PAID',
-          paymentMethod: payment.paymentMethod || 'CASH',
+          status: "PAID",
+          paymentMethod: payment.paymentMethod || "CASH",
           transactionId: payment.transactionId,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to record payment');
+        throw new Error("Failed to record payment");
       }
 
       // Refresh the payments data
       const newPayment = await response.json();
-      
+
       // Update the payments state
-      setPayments(prevPayments => [...prevPayments, newPayment]);
+      setPayments((prevPayments) => [...prevPayments, newPayment]);
       console.log(newPayment);
+
       // Show success notification with voucher link
-      setNotification({ 
-        show: true, 
-        voucherNumber: newPayment.voucher?.voucherNumber 
+      setNotification({
+        show: true,
+        voucherNumber: newPayment.voucher?.voucherNumber,
       });
 
-      // Hide notification after 5 seconds
+      // Hide notification after 10 seconds
       setTimeout(() => {
         setNotification({ show: false });
       }, 10000);
     } catch (error) {
-      console.error('Error recording payment:', error);
-      alert('Failed to record payment. Please try again.');
+      console.error("Error recording payment:", error);
+      setNotification({
+        show: true,
+        message: "Failed to record payment. Please try again.",
+        type: "error",
+      });
+    }
+  };
+
+  const handleTerminateLease = async () => {
+    if (!lease) return;
+
+    try {
+      const response = await fetch(`/api/leases/${lease.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to terminate lease");
+      }
+
+      // Show success notification
+      setNotification({
+        show: true,
+        message: "Lease terminated successfully.",
+        type: "success",
+      });
+      setTimeout(() => {
+        // Optionally, you can refresh the lease data or redirect
+        router.push("/leases"); // Redirect to the leases list or another page
+      }, 3000); // Delay of 1 second before showing the notification
+    } catch (error) {
+      console.error("Error terminating lease:", error);
+      setNotification({
+        show: true,
+        message: "Failed to terminate lease. Please try again.",
+        type: "error",
+      });
     }
   };
 
@@ -198,9 +237,7 @@ export default function LeaseDetailsPage() {
   if (!lease) {
     return (
       <Layout>
-        <div className='bg-yellow-50 text-yellow-600 p-4 rounded-md'>
-          Lease not found
-        </div>
+        <div className='bg-yellow-50 text-yellow-600 p-4 rounded-md'>Lease not found</div>
       </Layout>
     );
   }
@@ -216,21 +253,10 @@ export default function LeaseDetailsPage() {
         <div className='bg-white rounded-lg shadow mb-6'>
           <div className='p-6'>
             <div className='flex justify-between items-start mb-6'>
-              <h2 className='text-2xl font-semibold text-gray-800'>
-                Lease Details
-              </h2>
+              <h2 className='text-2xl font-semibold text-gray-800'>Lease Details</h2>
               <div className='flex space-x-2'>
-                <Button
-                  variant="outline"
-                  onClick={() => {/* TODO: Edit lease handler */}}
-                >
-                  Edit Lease
-                </Button>
-                <Button
-                  variant={lease.status === 'ACTIVE' ? 'danger' : 'success'}
-                  onClick={() => {/* TODO: Toggle lease status handler */}}
-                >
-                  {lease.status === 'ACTIVE' ? 'Terminate Lease' : 'Activate Lease'}
+                <Button variant={lease.status === "ACTIVE" ? "danger" : "success"} onClick={handleTerminateLease}>
+                  {lease.status === "ACTIVE" ? "Terminate Lease" : "Activate Lease"}
                 </Button>
               </div>
             </div>
@@ -292,10 +318,7 @@ export default function LeaseDetailsPage() {
                 <div className='space-y-2'>
                   <div>
                     <span className='text-sm font-medium text-gray-500'>Status:</span>
-                    <p className={`font-medium ${
-                      lease.status === 'ACTIVE' ? 'text-green-600' : 
-                      lease.status === 'EXPIRED' ? 'text-yellow-600' : 'text-red-600'
-                    }`}>
+                    <p className={`font-medium ${lease.status === "ACTIVE" ? "text-green-600" : lease.status === "EXPIRED" ? "text-yellow-600" : "text-red-600"}`}>
                       {lease.status}
                     </p>
                   </div>
@@ -324,51 +347,55 @@ export default function LeaseDetailsPage() {
         </div>
 
         {/* Payments Section */}
-        <div className='bg-white rounded-lg shadow'>
-          <div className='p-6 border-b border-gray-200'>
-            <div className='flex justify-between items-center mb-4'>
-              <h3 className='text-xl font-semibold text-gray-800 flex items-center'>
-                <FaDollarSign className='mr-2 text-indigo-600' /> Payment Management
-              </h3>
+        {lease.status === "ACTIVE" ? (
+          <div className='bg-white rounded-lg shadow'>
+            <div className='p-6 border-b border-gray-200'>
+              <div className='flex justify-between items-center mb-4'>
+                <h3 className='text-xl font-semibold text-gray-800 flex items-center'>
+                  <FaDollarSign className='mr-2 text-indigo-600' /> Payment Management
+                </h3>
+              </div>
+              <Tabs
+                tabs={[
+                  {
+                    id: "upcoming",
+                    label: "Upcoming Payments",
+                    content: <PaymentSchedule payments={payments} lease={lease} onRecordPayment={handleRecordPayment} />,
+                  },
+                  {
+                    id: "completed",
+                    label: "Completed Payments",
+                    content: <CompletedPayments payments={payments} lease={lease} />,
+                  },
+                ]}
+                defaultTabId='upcoming'
+                className='mt-4'
+              />
             </div>
-            <Tabs
-              tabs={[
-                {
-                  id: "upcoming",
-                  label: "Upcoming Payments",
-                  content: (
-                    <PaymentSchedule 
-                      payments={payments} 
-                      lease={lease}
-                      onRecordPayment={handleRecordPayment} 
-                    />
-                  ),
-                },
-                {
-                  id: "completed",
-                  label: "Completed Payments",
-                  content: <CompletedPayments payments={payments} lease={lease} />,
-                },
-              ]}
-              defaultTabId='upcoming'
-              className='mt-4'
-            />
           </div>
-        </div>
+        ) : (
+          <div className='bg-gray-50 p-4 rounded-lg'>
+            <h3 className='text-lg font-medium text-gray-800 mb-3'>Payment Management is not available for leases that are not active.</h3>
+          </div>
+        )}
 
         {notification.show && (
           <Notification
-            type="success"
-            title="Payment Recorded Successfully"
-            message="The payment has been recorded and a voucher has been generated."
-            action={notification.voucherNumber ? {
-              label: "View Voucher",
-              onClick: () => notification.voucherNumber && router.push(`/vouchers/${encodeURIComponent(notification.voucherNumber)}`)
-            } : undefined}
+            type={notification.type || "success"}
+            title={notification.type === "error" ? "Error" : "Success"}
+            message={notification.message}
+            action={
+              notification.voucherNumber
+                ? {
+                    label: "View Voucher",
+                    onClick: () => notification.voucherNumber && router.push(`/vouchers/${encodeURIComponent(notification.voucherNumber)}`),
+                  }
+                : undefined
+            }
             onClose={() => setNotification({ show: false })}
           />
         )}
       </div>
     </Layout>
   );
-} 
+}

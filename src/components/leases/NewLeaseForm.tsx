@@ -94,28 +94,15 @@ export default function NewLeaseForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Initialize react-hook-form
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors },
-  } = useForm({
+  const { register, handleSubmit, control } = useForm({
     resolver: zodResolver(leaseSchema),
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [propertiesRes, tenantsRes] = await Promise.all([
-          fetch("/api/properties"),
-          fetch("/api/tenants"),
-        ]);
-
-        if (!propertiesRes.ok || !tenantsRes.ok) {
-          throw new Error("Failed to fetch data");
-        }
-
+        const tenantsRes = await fetch("/api/tenants");
+        if (!tenantsRes.ok) throw new Error("Failed to fetch tenants");
         const tenantsData = await tenantsRes.json();
         setTenants(tenantsData);
       } catch (err) {
@@ -127,7 +114,7 @@ export default function NewLeaseForm() {
     fetchData();
   }, []);
 
-  const handleFormSubmit = async (data: any) => {
+  const onSubmit = async (data: any) => {
     setLoading(true);
     setError(null);
 
@@ -223,16 +210,7 @@ export default function NewLeaseForm() {
               </div>
             )}
 
-            <form
-              onSubmit={handleSubmit(handleFormSubmit)}
-              className="space-y-6"
-            >
-              <Input
-                {...register("unitId")}
-                label="Unit"
-                error={errors.unitId?.message}
-              />
-
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <Select
                 {...register("tenantId")}
                 label="Tenant"
@@ -240,9 +218,30 @@ export default function NewLeaseForm() {
                   value: tenant.id.toString(),
                   label: tenant.user.name,
                 }))}
-                error={errors.tenantId?.message}
+                required
               />
-     
+
+              <Input
+                {...register("rentAmount")}
+                label="Rent Amount"
+                type="number"
+                required
+              />
+
+              <Input
+                {...register("depositAmount")}
+                label="Deposit Amount"
+                type="number"
+                required
+              />
+
+              <Input
+                {...register("paymentDay")}
+                label="Payment Day"
+                type="number"
+                required
+              />
+
               <div className="grid grid-cols-2 gap-4">
                 <Controller
                   name="startDate"
@@ -252,11 +251,10 @@ export default function NewLeaseForm() {
                       label="Start Date"
                       value={field.value}
                       onChange={field.onChange}
-                      error={errors.startDate?.message}
+                      error={field.error?.message}
                     />
                   )}
                 />
-
                 <Controller
                   name="endDate"
                   control={control}
@@ -265,32 +263,11 @@ export default function NewLeaseForm() {
                       label="End Date"
                       value={field.value}
                       onChange={field.onChange}
-                      error={errors.endDate?.message}
+                      error={field.error?.message}
                     />
                   )}
                 />
               </div>
-
-              <Input
-                {...register("rentAmount")}
-                label="Rent Amount"
-                type="number"
-                error={errors.rentAmount?.message}
-              />
-
-              <Input
-                {...register("depositAmount")}
-                label="Deposit Amount"
-                type="number"
-                error={errors.depositAmount?.message}
-              />
-
-              <Input
-                {...register("paymentDay")}
-                label="Payment Day"
-                type="number"
-                error={errors.paymentDay?.message}
-              />
 
               <div className="flex justify-end space-x-4">
                 <Button

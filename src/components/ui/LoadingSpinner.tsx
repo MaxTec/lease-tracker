@@ -18,7 +18,6 @@ export default function LoadingSpinner({
   return (
     <div
       className={`animate-spin rounded-full border-b-2 border-[var(--tw-border-color)] ${sizeClasses[size]}`}
-      style={`--tw-border-color:${color}`}
     ></div>
   );
 }

@@ -168,7 +168,7 @@ export default function LeasesPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[200px]">
-          <LoadingSpinner size={32} color="indigo-600" />
+        <LoadingSpinner size={32} color="indigo-600" />
         </div>
       </Layout>
     );

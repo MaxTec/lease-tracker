@@ -8,6 +8,7 @@ import Layout from "@/components/layout/Layout";
 import Table from "@/components/ui/Table";
 import EmptyState from "@/components/ui/EmptyState";
 import { FaPlus, FaBuilding } from "react-icons/fa";
+import PropertyForm from "@/components/properties/PropertyForm";
 
 interface Property {
   id: number;
@@ -28,7 +29,8 @@ export default function PropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<number | null>(null);
   // Redirect if not admin
   if (authStatus === "authenticated" && session?.user?.role !== "ADMIN") {
     redirect("/");
@@ -53,13 +55,13 @@ export default function PropertiesPage() {
     fetchProperties();
   }, []);
 
-  const handleViewProperty = (propertyId: number) => {
-    router.push(`/properties/${propertyId}`);
+  const handleEditProperty = (propertyId: number) => {
+    // router.push(`/properties/${propertyId}`);
+    setSelectedProperty(propertyId);
+    setIsModalOpen(true);
   };
 
-  const handleEditProperty = (propertyId: number) => {
-    router.push(`/properties/${propertyId}/edit`);
-  };
+
 
   const handleDeleteProperty = async (propertyId: number) => {
     if (!confirm("Are you sure you want to delete this property?")) return;
@@ -104,9 +106,6 @@ export default function PropertiesPage() {
       label: "Actions",
       render: (property: Property) => (
         <div className="flex space-x-2">
-          <Button size="sm" onClick={() => handleViewProperty(property.id)}>
-            View
-          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -151,7 +150,7 @@ export default function PropertiesPage() {
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-gray-800">Properties</h2>
-              <Button onClick={() => router.push("/properties/new")}>
+              <Button onClick={() => setIsModalOpen(true)}>
                 <FaPlus className="mr-2 inline-block align-middle" />
                 <span className="align-middle">Add New Property</span>
               </Button>
@@ -177,6 +176,7 @@ export default function PropertiesPage() {
           </div>
         </div>
       </div>
+      <PropertyForm isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} propertyId={selectedProperty ?? undefined} />
     </Layout>
   );
 } 
