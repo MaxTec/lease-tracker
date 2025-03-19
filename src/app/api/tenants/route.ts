@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/db';
 import { hash } from 'bcryptjs';
-
+import { UserRole } from '@prisma/client';
 export async function GET(request: NextRequest) {
     try {
         const tenants = await prisma.tenant.findMany({
@@ -28,9 +28,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { name, email, password, phone, emergencyContact } = body;
+        const { name, email, password, phone, emergencyContact, isActive = false } = body;
 
-        if (!name || !email || !password || !phone) {
+        if (!name || !email || !phone) {
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
@@ -52,14 +52,16 @@ export async function POST(request: NextRequest) {
         // Create user and tenant in a transaction
         const result = await prisma.$transaction(async (tx) => {
             // Create user
-            const hashedPassword = await hash(password, 12);
+            const userData = {
+                name,
+                email,
+                password: password ? await hash(password, 12) : null,
+                role: 'USER' as UserRole,
+                isActive
+            };
+
             const user = await tx.user.create({
-                data: {
-                    name,
-                    email,
-                    password: hashedPassword,
-                    role: 'USER',
-                },
+                data: userData,
             });
 
             // Create tenant

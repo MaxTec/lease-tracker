@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -63,7 +62,6 @@ export default function PropertyForm({
   onClose,
   onUpdate,
 }: PropertyFormProps) {
-  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -152,10 +150,10 @@ export default function PropertyForm({
       if (!response.ok) {
         throw new Error("Failed to save property");
       }
-
-      // router.push("/properties");
+      const responseData = await response.json();
       onClose();
-      onUpdate(propertyId ? [data] : []);
+      console.log("response", responseData);
+      onUpdate(responseData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save property");
     } finally {

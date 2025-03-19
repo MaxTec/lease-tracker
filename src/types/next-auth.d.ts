@@ -7,12 +7,14 @@ declare module 'next-auth' {
         name: string;
         email: string;
         role: UserRole;
+        isActive?: boolean;
     }
 
     interface Session {
         user: User & {
             id: string;
             role: UserRole;
+            isActive?: boolean;
         };
     }
 } 

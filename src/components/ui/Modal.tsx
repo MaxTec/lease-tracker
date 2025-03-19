@@ -1,4 +1,11 @@
-'use client';
+"use client";
+
+import {
+  Dialog,
+  DialogTitle,
+  DialogPanel
+} from "@headlessui/react";
+import React from "react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -7,25 +14,29 @@ interface ModalProps {
   children: React.ReactNode;
 }
 
-export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
-  if (!isOpen) return null;
-
+export default function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+}: ModalProps) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        {children}
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      className="fixed z-10 inset-0 overflow-y-auto"
+    >
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="fixed inset-0 bg-black opacity-30" aria-hidden="true" />
+        <DialogPanel className="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
+          <div className="p-6">
+            <DialogTitle className="text-lg font-medium text-gray-900">
+              {title}
+            </DialogTitle>
+            <div className="mt-2">{children}</div>
+          </div>
+        </DialogPanel>
       </div>
-    </div>
+    </Dialog>
   );
-} 
+}

@@ -5,6 +5,7 @@ import DatePicker from 'react-date-picker';
 import { format } from 'date-fns';
 import 'react-date-picker/dist/DatePicker.css';
 import 'react-calendar/dist/Calendar.css';
+import { FORMAT_DATE } from '@/constants';
 
 interface DateInputProps {
   label: string;
@@ -38,10 +39,10 @@ const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
       if (newDate instanceof Date) {
         setDate(newDate);
         // Format the date as YYYY-MM-DD for form submission
-        onChange(format(newDate, 'yyyy-MM-dd'));
+        onChange(format(newDate, FORMAT_DATE));
       } else if (Array.isArray(newDate) && newDate[0] instanceof Date) {
         setDate(newDate[0]);
-        onChange(format(newDate[0], 'yyyy-MM-dd'));
+        onChange(format(newDate[0], FORMAT_DATE));
       } else {
         setDate(null);
         onChange('');

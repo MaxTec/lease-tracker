@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import { FaCalendarAlt } from 'react-icons/fa';
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, format } from 'date-fns';
 import Button from '@/components/ui/Button';
 import PopConfirm from '@/components/ui/PopConfirm';
 import Select from '@/components/ui/Select';
 import Input from '@/components/ui/Input';
 import DateInput from '@/components/ui/DateInput';
+import { FORMAT_DATE } from '@/constants';
 
 interface Lease {
   id: number;
@@ -283,7 +284,7 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({ payments, lease, onRe
           <div>
             <div className="text-lg font-semibold">${payment.amount.toFixed(2)}</div>
             <div className="text-sm text-gray-500">
-              Due: {payment.dueDate.toLocaleDateString()} {humanReadableDate}
+              Due: {format(payment.dueDate, FORMAT_DATE)} {humanReadableDate}
             </div>
           </div>
           <div className="flex items-center space-x-2">

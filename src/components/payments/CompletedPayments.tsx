@@ -2,6 +2,8 @@ import React from 'react';
 import Table from '@/components/ui/Table';
 import EmptyState from '@/components/ui/EmptyState';
 import { FaCheckCircle } from 'react-icons/fa';
+import { FORMAT_DATE } from '@/constants';
+import { format } from 'date-fns';
 
 interface Lease {
   id: number;
@@ -65,14 +67,14 @@ const CompletedPayments: React.FC<CompletedPaymentsProps> = ({ payments }) => {
     {
       key: 'dueDate',
       label: 'Due Date',
-      render: (payment: Payment) => new Date(payment.dueDate).toLocaleDateString(),
+      render: (payment: Payment) => format(new Date(payment.dueDate), FORMAT_DATE),
     },
     {
       key: 'paidDate',
       label: 'Paid Date',
       render: (payment: Payment) => 
         payment.paidDate 
-          ? new Date(payment.paidDate).toLocaleDateString()
+          ? format(new Date(payment.paidDate), FORMAT_DATE)
           : '-',
     },
     {

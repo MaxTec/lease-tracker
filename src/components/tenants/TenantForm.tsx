@@ -7,6 +7,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Tenant } from "@prisma/client";
 
 interface TenantFormData {
   name: string;
@@ -18,18 +19,23 @@ interface TenantFormData {
 
 interface TenantFormProps {
   tenantId?: number;
+  onClose: () => void;
+  onSuccess: (tenant: Tenant) => void;
 }
 
 // Define the Zod schema for validation
 const tenantSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email address"),
-  password: z.string().optional(),
   phone: z.string().min(1, "Phone is required"),
   emergencyContact: z.string().optional(),
 });
 
-export default function TenantForm({ tenantId }: TenantFormProps) {
+export default function TenantForm({
+  tenantId,
+  onClose,
+  onSuccess,
+}: TenantFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -40,6 +46,7 @@ export default function TenantForm({ tenantId }: TenantFormProps) {
     setValue,
     formState: { errors },
   } = useForm<TenantFormData>({
+    // @ts-expect-error - Zod resolver is not typed
     resolver: zodResolver(tenantSchema), // Use Zod for validation
   });
 
@@ -70,11 +77,11 @@ export default function TenantForm({ tenantId }: TenantFormProps) {
   const onSubmit = async (data: TenantFormData) => {
     setError(null);
     setLoading(true);
-
+    console.log(data);
     try {
       const url = tenantId ? `/api/tenants/${tenantId}` : "/api/tenants";
       const method = tenantId ? "PUT" : "POST";
-
+      console.log(url, method);
       const response = await fetch(url, {
         method,
         headers: {
@@ -82,13 +89,18 @@ export default function TenantForm({ tenantId }: TenantFormProps) {
         },
         body: JSON.stringify(data),
       });
-
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorText = await response.text();
+        const errorData = errorText
+          ? JSON.parse(errorText)
+          : { message: "Failed to save tenant" };
+        console.log(errorData);
         throw new Error(errorData.message || "Failed to save tenant");
       }
 
-      router.push("/tenants");
+      const result = await response.json();
+      onSuccess(result);
+      onClose();
     } catch (err) {
       console.error("Error saving tenant:", err);
       setError(err instanceof Error ? err.message : "Failed to save tenant");
@@ -98,39 +110,48 @@ export default function TenantForm({ tenantId }: TenantFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
-      {error && <div className='bg-red-50 text-red-600 p-4 rounded-md'>{error}</div>}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {error && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-md">{error}</div>
+      )}
 
       <div>
-        <Input {...register("name")} label='Name' error={errors.name?.message} />
-        {/* {errors.name && <span className='text-red-600'>{errors.name.message}</span>} */}
+        <Input
+          {...register("name")}
+          label="Name"
+          error={errors.name?.message}
+        />
       </div>
 
       <div>
-        <Input {...register("email")} label='Email' type='email' error={errors.email?.message} />
-        {/* {errors.email && <span className='text-red-600'>{errors.email.message}</span>} */}
+        <Input
+          {...register("email")}
+          label="Email"
+          type="email"
+          error={errors.email?.message}
+        />
+      </div>
+      <div>
+        <Input
+          {...register("phone")}
+          label="Phone"
+          error={errors.phone?.message}
+        />
       </div>
 
       <div>
-        {!tenantId && <Input {...register("password")} label='Password' type='password' error={errors.password?.message} />}
-        {/* {errors.password && <span className='text-red-600'>{errors.password.message}</span>} */}
+        <Input
+          {...register("emergencyContact")}
+          label="Emergency Contact"
+          error={errors.emergencyContact?.message}
+        />
       </div>
 
-      <div>
-        <Input {...register("phone")} label='Phone' error={errors.phone?.message} />
-        {/* {errors.phone && <span className='text-red-600'>{errors.phone.message}</span>} */}
-      </div>
-
-      <div>
-        <Input {...register("emergencyContact")} label='Emergency Contact' error={errors.emergencyContact?.message} />
-        {/* {errors.emergencyContact && <span className='text-red-600'>{errors.emergencyContact.message}</span>} */}
-      </div>
-
-      <div className='flex justify-end space-x-3'>
-        <Button type='button' variant='outline' onClick={() => router.push("/tenants")}>
+      <div className="flex justify-end space-x-3">
+        <Button type="button" variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button type='submit' disabled={loading}>
+        <Button type="submit" disabled={loading}>
           {loading ? "Saving..." : tenantId ? "Update Tenant" : "Add Tenant"}
         </Button>
       </div>

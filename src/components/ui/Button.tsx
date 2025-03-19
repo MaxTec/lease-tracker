@@ -1,6 +1,7 @@
 'use client';
 
 import { forwardRef } from 'react';
+import { Button as HeadlessUIButton } from '@headlessui/react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'outline';
@@ -35,7 +36,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     return (
-      <button
+      <HeadlessUIButton
         ref={ref}
         className={`
           ${variantClasses[variant]} 
@@ -57,7 +58,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             Loading...
           </div>
         ) : children}
-      </button>
+      </HeadlessUIButton>
     );
   }
 );

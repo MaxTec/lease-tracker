@@ -9,7 +9,6 @@ import Table from "@/components/ui/Table";
 import EmptyState from "@/components/ui/EmptyState";
 import { FaPlus, FaBuilding } from "react-icons/fa";
 import PropertyForm from "@/components/properties/PropertyForm";
-import { PropertyFormProps } from "@/components/properties/PropertyForm";
 
 interface Property {
   id: number;
@@ -81,8 +80,18 @@ export default function PropertiesPage() {
     }
   };
 
-  const handleUpdateProperties = (data: Property[]) => {
-    setProperties(data);
+  const handleUpdateProperties = (updatedProperty: Property) => {
+    setProperties((prevProperties) => {
+      const existingPropertyIndex = prevProperties.findIndex(p => p.id === updatedProperty.id);
+      if (existingPropertyIndex > -1) {
+        // Update existing property
+        const updatedProperties = [...prevProperties];
+        updatedProperties[existingPropertyIndex] = updatedProperty;
+        return updatedProperties;
+      }
+      // Add new property
+      return [...prevProperties, updatedProperty];
+    });
   };
 
   const columns = [

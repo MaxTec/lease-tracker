@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { redirect, useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Layout from "@/components/layout/Layout";
 import Table from "@/components/ui/Table";
@@ -23,7 +23,6 @@ interface Tenant {
 
 export default function TenantsPage() {
   const { data: session, status: authStatus } = useSession();
-  const router = useRouter();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +44,9 @@ export default function TenantsPage() {
         setTenants(data);
       } catch (err) {
         console.error("Error fetching tenants:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch tenants");
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch tenants"
+        );
       } finally {
         setLoading(false);
       }
@@ -53,10 +54,6 @@ export default function TenantsPage() {
 
     fetchTenants();
   }, []);
-
-  const handleViewTenant = (tenantId: number) => {
-    router.push(`/tenants/${tenantId}`);
-  };
 
   const handleEditTenant = (tenant: Tenant) => {
     setCurrentTenant(tenant);
@@ -88,6 +85,20 @@ export default function TenantsPage() {
   const handleModalClose = () => {
     setIsModalOpen(false);
     setCurrentTenant(null);
+  };
+
+  const handleUpdateTenants = (updatedTenant: Tenant) => {
+    setTenants((prevTenants) => {
+      const existingTenantIndex = prevTenants.findIndex(t => t.id === updatedTenant.id);
+      if (existingTenantIndex > -1) {
+        // Update existing tenant
+        const updatedTenants = [...prevTenants];
+        updatedTenants[existingTenantIndex] = updatedTenant;
+        return updatedTenants;
+      }
+      // Add new tenant
+      return [...prevTenants, updatedTenant];
+    });
   };
 
   const columns = [
@@ -187,15 +198,13 @@ export default function TenantsPage() {
         </div>
       </div>
 
-      <Modal title="Add New Tenant" isOpen={isModalOpen} onClose={handleModalClose}>
-        <TenantForm 
-          tenantId={currentTenant?.id} 
-          onClose={handleModalClose} 
-          onSuccess={() => {
-            handleModalClose();
-          }} 
-        />
+      <Modal
+        title="Add New Tenant"
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+      >
+        <TenantForm tenantId={currentTenant?.id} onClose={handleModalClose} onSuccess={handleUpdateTenants} />
       </Modal>
     </Layout>
   );
-} 
+}
