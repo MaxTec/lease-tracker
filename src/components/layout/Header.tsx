@@ -23,8 +23,8 @@ export default function Header() {
             {/* <Weather session={session} /> */}
 
             <div className='space-x-6'>
-              <Link href='/dashboard' className='text-gray-600 hover:text-gray-900'>
-                Dashboard
+              <Link href='/leases' className='text-gray-600 hover:text-gray-900'>
+                Leases
               </Link>
               {session?.user?.role === "ADMIN" && (
                 <>
@@ -36,9 +36,9 @@ export default function Header() {
                   </Link>
                 </>
               )}
-              <Link href='/settings' className='text-gray-600 hover:text-gray-900'>
+              {/* <Link href='/settings' className='text-gray-600 hover:text-gray-900'>
                 Settings
-              </Link>
+              </Link> */}
             </div>
 
             {session?.user && (

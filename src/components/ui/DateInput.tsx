@@ -1,11 +1,9 @@
 'use client';
 
 import { forwardRef, useEffect, useState } from 'react';
-import DatePicker from 'react-date-picker';
-import { format } from 'date-fns';
-import 'react-date-picker/dist/DatePicker.css';
-import 'react-calendar/dist/Calendar.css';
-import { FORMAT_DATE } from '@/constants';
+import ReactDatePicker from 'react-datepicker';
+import { format, parse } from 'date-fns';
+import 'react-datepicker/dist/react-datepicker.css';
 
 interface DateInputProps {
   label: string;
@@ -13,38 +11,34 @@ interface DateInputProps {
   onChange: (value: string) => void;
   error?: string;
   className?: string;
+  showMonthYearPicker?: boolean;
 }
 
-type DateValue = Date | null;
-
 const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
-  ({ label, value, onChange, error, className = '' }, ref) => {
-    const [date, setDate] = useState<DateValue>(value ? new Date(value) : null);
+  ({ label, value, onChange, error, className = '', ...props }, ref) => {
+    const [selectedDate, setSelectedDate] = useState<Date | null>(
+      value ? parse(value, 'yyyy-MM-dd', new Date()) : null
+    );
 
     // Update the date when the value prop changes
     useEffect(() => {
       if (value) {
         try {
-          setDate(new Date(value));
+          setSelectedDate(parse(value, 'yyyy-MM-dd', new Date()));
         } catch {
           // If date parsing fails, set to null
-          setDate(null);
+          setSelectedDate(null);
         }
       } else {
-        setDate(null);
+        setSelectedDate(null);
       }
     }, [value]);
 
-    const handleChange = (newDate: DateValue | [DateValue, DateValue]) => {
-      if (newDate instanceof Date) {
-        setDate(newDate);
-        // Format the date as YYYY-MM-DD for form submission
-        onChange(format(newDate, FORMAT_DATE));
-      } else if (Array.isArray(newDate) && newDate[0] instanceof Date) {
-        setDate(newDate[0]);
-        onChange(format(newDate[0], FORMAT_DATE));
+    const handleChange = (date: Date | null) => {
+      setSelectedDate(date);
+      if (date) {
+        onChange(format(date, 'yyyy-MM-dd'));
       } else {
-        setDate(null);
         onChange('');
       }
     };
@@ -54,15 +48,19 @@ const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {label}
         </label>
-        <DatePicker
+        <ReactDatePicker
+          {...props}
+          selected={selectedDate}
           onChange={handleChange}
-          value={date}
-          format="y-MM-dd"
-          clearIcon={null}
-          className={`w-full rounded-md ${error ? 'border-red-500' : 'border-gray-300'}`}
-          dayPlaceholder="dd"
-          monthPlaceholder="mm"
-          yearPlaceholder="yyyy"
+          dateFormat="yyyy-MM-dd"
+          className={`w-full p-2 border rounded-md ${
+            error ? 'border-red-500' : 'border-gray-300'
+          }`}
+          placeholderText="YYYY-MM-DD"
+          isClearable
+          showMonthDropdown
+          showYearDropdown
+          dropdownMode="select"
         />
         {error && (
           <p className="text-red-500 text-sm mt-1">{error}</p>

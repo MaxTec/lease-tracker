@@ -3,12 +3,13 @@ import prisma from '@/utils/db';
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         const property = await prisma.property.findUnique({
             where: {
-                id: parseInt(params.id),
+                id: parseInt(id),
             },
             include: {
                 units: true,
@@ -34,9 +35,10 @@ export async function GET(
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         const body = await request.json();
         const { name, address, type } = body;
 
@@ -49,7 +51,7 @@ export async function PUT(
 
         const property = await prisma.property.update({
             where: {
-                id: parseInt(params.id),
+                id: parseInt(id),
             },
             data: {
                 name,
@@ -73,12 +75,13 @@ export async function PUT(
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         await prisma.property.delete({
             where: {
-                id: parseInt(params.id),
+                id: parseInt(id),
             },
         });
 

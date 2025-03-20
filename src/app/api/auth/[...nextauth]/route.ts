@@ -3,11 +3,14 @@ import { compare } from 'bcrypt';
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import prisma from '@/utils/db';
+import { SESSION_MAX_AGE } from '@/constants';
 
 export const authOptions: NextAuthOptions = {
+    // @ts-expect-error - PrismaAdapter is not typed
     adapter: PrismaAdapter(prisma),
     session: {
         strategy: 'jwt',
+        maxAge: SESSION_MAX_AGE,
     },
     pages: {
         signIn: '/',
@@ -20,6 +23,7 @@ export const authOptions: NextAuthOptions = {
                 email: { label: 'Email', type: 'email' },
                 password: { label: 'Password', type: 'password' },
             },
+            // @ts-expect-error - CredentialsProvider is not typed
             async authorize(credentials) {
                 if (!credentials?.email || !credentials?.password) {
                     throw new Error('Invalid credentials');

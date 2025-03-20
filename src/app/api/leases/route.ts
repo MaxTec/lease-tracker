@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/db';
 import { Prisma } from '@prisma/client';
 import { differenceInMonths } from 'date-fns';
+import { generateLeasePDF, uploadToR2, sendLeaseEmail } from '@/utils/leaseUtils';
 
 export async function GET(request: NextRequest) {
     try {
@@ -140,7 +141,30 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        console.log(lease);
+        // Generate PDF lease agreement
+        const leaseData = {
+            tenantName: lease.tenant.user.name,
+            propertyName: lease.unit.property.name,
+            unitNumber: lease.unit.unitNumber,
+            startDate: lease.startDate,
+            endDate: lease.endDate,
+            rentAmount: Number(lease.rentAmount),
+            depositAmount: Number(lease.depositAmount),
+            paymentDay: lease.paymentDay,
+        };
+
+        const pdfBuffer = await generateLeasePDF(leaseData);
+        const fileName = `lease_${lease.id}_${Date.now()}.pdf`;
+        const leaseUrl = await uploadToR2(pdfBuffer, fileName);
+
+        // Send email to tenant
+        const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`;
+        await sendLeaseEmail(
+            lease.tenant.user.email,
+            lease.tenant.user.name,
+            leaseUrl,
+            loginUrl
+        );
 
         // Create initial payment records for the lease period
         const start = new Date(startDate);

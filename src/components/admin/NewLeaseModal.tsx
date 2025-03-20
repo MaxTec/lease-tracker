@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -17,7 +17,10 @@ const leaseSchema = z.object({
   startDate: z.string().nonempty("Start date is required"),
   endDate: z.string().nonempty("End date is required"),
   rentAmount: z.string().nonempty("Rent amount is required").transform(Number),
-  depositAmount: z.string().nonempty("Deposit amount is required").transform(Number),
+  depositAmount: z
+    .string()
+    .nonempty("Deposit amount is required")
+    .transform(Number),
   paymentDay: z.string().nonempty("Payment day is required").transform(Number),
 });
 
@@ -38,26 +41,53 @@ interface Unit {
   unitNumber: string;
 }
 
+interface Lease {
+  id: number;
+  startDate: string;
+  endDate: string;
+  rentAmount: number;
+  depositAmount: number;
+  paymentDay: number;
+  status: string;
+  tenant: {
+    user: {
+      name: string;
+    };
+  };
+  unit: {
+    unitNumber: string;
+    property: {
+      name: string;
+    };
+  };
+}
+
 interface NewLeaseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
   tenants: Tenant[];
+  onLeaseCreated: (lease: Lease) => void;
 }
 
-export default function NewLeaseModal({ isOpen, onClose, onSubmit, tenants }: NewLeaseModalProps) {
+export default function NewLeaseModal({
+  isOpen,
+  onClose,
+  tenants,
+  onLeaseCreated,
+}: NewLeaseModalProps) {
   const {
     register,
     handleSubmit,
     control,
     formState: { errors },
+    reset,
   } = useForm({
     resolver: zodResolver(leaseSchema),
   });
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
-  const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
+  const [, setSelectedPropertyId] = useState<number | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -75,6 +105,30 @@ export default function NewLeaseModal({ isOpen, onClose, onSubmit, tenants }: Ne
       fetchProperties();
     }
   }, [isOpen]);
+
+  const onSubmit = async (data: z.infer<typeof leaseSchema>) => {
+    try {
+      const response = await fetch('/api/leases', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create lease');
+      }
+
+      const newLease = await response.json();
+      onLeaseCreated(newLease);
+      reset();
+      onClose();
+    } catch (error) {
+      console.error('Error creating lease:', error);
+      // You might want to add error handling UI here
+    }
+  };
 
   const handlePropertyChange = async (propertyId: string) => {
     setSelectedPropertyId(parseInt(propertyId));
@@ -95,7 +149,7 @@ export default function NewLeaseModal({ isOpen, onClose, onSubmit, tenants }: Ne
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Add New Lease">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <Select
+        <Select
           onChange={(e) => handlePropertyChange(e.target.value)}
           label="Property"
           options={properties.map((property) => ({
@@ -181,4 +235,4 @@ export default function NewLeaseModal({ isOpen, onClose, onSubmit, tenants }: Ne
       </form>
     </Modal>
   );
-} 
+}

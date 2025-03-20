@@ -157,11 +157,8 @@ export default function LeasesPage() {
     setIsModalOpen(false);
   };
 
-  const handleSubmitLease = async (data: any) => {
-    // Handle lease creation logic here
-    console.log(data);
-    // After successful submission, close the modal
-    handleCloseModal();
+  const handleLeaseCreated = (newLease: Lease) => {
+    setLeases((prevLeases) => [...prevLeases, newLease]);
   };
 
   if (loading) {
@@ -223,8 +220,8 @@ export default function LeasesPage() {
         <NewLeaseModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
-          onSubmit={handleSubmitLease}
           tenants={tenants}
+          onLeaseCreated={handleLeaseCreated}
         />
       </div>
     </Layout>

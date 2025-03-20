@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import NewPaymentModal from "./admin/NewPaymentModal";
 import Button from './ui/Button';
+import EmptyState from '@/components/ui/EmptyState';
+import { FaMoneyBillWave } from 'react-icons/fa';
 
 interface Payment {
   id: string;
@@ -122,7 +124,15 @@ export default function PaymentList() {
   }
 
   if (payments.length === 0) {
-    return <div className="p-8">No payments found.</div>;
+    return (
+        <EmptyState
+            icon={<FaMoneyBillWave className="w-12 h-12" />}
+            title="No Payments Found"
+            description="There are no payments available at this time."
+            actionLabel="Add Payment"
+            onAction={() => setIsModalOpen(true)}
+        />
+    );
   }
 
   const isAdmin = session?.user?.role === "ADMIN";
