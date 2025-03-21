@@ -22,6 +22,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   landlord      Landlord?
   tenant        Tenant?
+  ticketComments TicketComment[]
 }
 
 enum UserRole {
@@ -51,6 +52,7 @@ model Tenant {
   emergencyContact String?
   leases           Lease[]
   payments         Payment[]
+  tickets          Ticket[]
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 }
@@ -64,6 +66,7 @@ model Property {
   address       String
   type          PropertyType
   units         Unit[]
+  tickets       Ticket[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -85,6 +88,7 @@ model Unit {
   bathrooms     Int
   squareFeet    Int
   leases        Lease[]
+  tickets       Ticket[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -187,4 +191,49 @@ enum DocumentType {
   INSPECTION_REPORT
   NOTICE
   OTHER
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  PENDING_REVIEW
+  RESOLVED
+  CLOSED
+}
+
+// Support ticket model
+model Ticket {
+  id          Int           @id @default(autoincrement())
+  title       String
+  description String        @db.Text
+  tenantId    Int
+  tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  propertyId  Int
+  property    Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unitId      Int
+  unit        Unit         @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  priority    TicketPriority @default(MEDIUM)
+  status      TicketStatus  @default(OPEN)
+  comments    TicketComment[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// Ticket comments for updates and follow-ups
+model TicketComment {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.Text
+  ticketId  Int
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId    Int      // To track who made the comment
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 } 

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import Weather from "./Weather";
+// import Weather from "./Weather";
 import Logo from "../ui/Logo";
 
 export default function Header() {
@@ -36,6 +36,9 @@ export default function Header() {
                   </Link>
                 </>
               )}
+              <Link href='/tickets' className='text-gray-600 hover:text-gray-900'>
+                Tickets
+              </Link>
               {/* <Link href='/settings' className='text-gray-600 hover:text-gray-900'>
                 Settings
               </Link> */}
