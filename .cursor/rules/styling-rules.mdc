@@ -1,0 +1,32 @@
+---
+description: Styling standards using TailwindCSS
+globs: ["**/*.tsx", "**/*.css"]
+alwaysApply: true
+---
+
+# Styling Standards
+
+## TailwindCSS Usage
+- Use Tailwind classes for styling
+- Avoid inline CSS
+- Use class: syntax instead of ternary operators for conditional classes
+- Follow mobile-first responsive design approach
+
+## Color System
+- Use Tailwind's color palette
+- Maintain consistent color usage across components
+- Use semantic color names in theme configuration
+
+## Layout
+- Use Flexbox and Grid through Tailwind classes
+- Implement proper spacing using Tailwind's spacing scale
+- Use container classes for consistent width constraints
+
+## Component-Specific Styles
+- Group related styles using Tailwind's group modifier
+- Use consistent spacing patterns
+- Implement hover, focus, and active states
+
+## Examples:
+@src/app/globals.css - Reference for global styles
+@src/components/ui/Button.tsx - Reference for component styling 

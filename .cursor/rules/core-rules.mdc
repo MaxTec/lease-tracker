@@ -1,0 +1,45 @@
+---
+description: Core coding standards and practices
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Core Development Standards
+
+## File Structure
+- Use clear, descriptive file names in kebab-case for components and utilities
+- Group related components in feature-specific folders
+- Keep utility functions in `src/utils` directory
+- Store type definitions in `src/types` directory or alongside their components
+
+## Code Style
+- Use TypeScript for type safety
+- Implement early returns for better readability
+- Use descriptive variable and function names
+- Event handler functions should be prefixed with "handle" (e.g., handleClick, handleSubmit)
+- Use const arrow functions instead of regular function declarations
+- Always define TypeScript interfaces/types for props and data structures
+
+## Error Handling
+- Implement proper error boundaries
+- Use try-catch blocks for async operations
+- Provide meaningful error messages in catch blocks
+
+## State Management
+- Use React hooks for local state management
+- Implement proper state initialization
+- Avoid prop drilling by using context where appropriate
+
+## Performance
+- Implement proper memoization using useMemo and useCallback where needed
+- Avoid unnecessary re-renders
+- Lazy load components when possible 
+
+## Endpoint Management
+- For every new endpoint or modification of an existing endpoint, check and analyze the `schema.prisma` file located in `src/prisma` to ensure that the database schema aligns with the API requirements.
+- Ensure that any changes to the Prisma schema are followed by running `npx prisma migrate dev` to apply migrations and update the database.
+
+## Prisma Client Usage
+- Always import `PrismaClient` from `@prisma/client` and instantiate it properly to avoid exhausting database connections.
+- Use the Prisma Client in a way that adheres to best practices, such as using it within API routes or server-side functions, and avoid using it in client-side code.
+- Handle database operations asynchronously and ensure proper error handling for all database interactions. 

@@ -5,10 +5,7 @@ interface LoadingSpinnerProps {
   color?: string; // Color of the spinner
 }
 
-export default function LoadingSpinner({
-  size = "md",
-  color = "indigo-600",
-}: LoadingSpinnerProps) {
+export default function LoadingSpinner({ size = "md" }: LoadingSpinnerProps) {
   const sizeClasses = {
     sm: "h-4 w-4", // Adjusted sizes for Tailwind compatibility
     md: "h-8 w-8",

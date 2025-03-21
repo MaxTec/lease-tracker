@@ -77,10 +77,6 @@ export default function LeasesPage() {
     router.push(`/leases/${leaseId}`);
   };
 
-  const handleViewPayments = (leaseId: number) => {
-    router.push(`/payments?leaseId=${leaseId}`);
-  };
-
   const getStatusBadge = (status: string) => {
     const statusClass =
       {
@@ -137,13 +133,6 @@ export default function LeasesPage() {
           <Button size="sm" onClick={() => handleViewLease(lease.id)}>
             View Details
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handleViewPayments(lease.id)}
-          >
-            Payments
-          </Button>
         </div>
       ),
     },
@@ -165,7 +154,7 @@ export default function LeasesPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[200px]">
-        <LoadingSpinner size={32} color="indigo-600" />
+          <LoadingSpinner size="lg" color="indigo-600" />
         </div>
       </Layout>
     );

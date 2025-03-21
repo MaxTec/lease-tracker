@@ -1,0 +1,30 @@
+---
+description: React component standards and best practices
+globs: ["src/components/**/*.tsx", "src/app/**/*.tsx"]
+alwaysApply: true
+---
+
+# React Component Standards
+
+## Component Structure
+- Use functional components with TypeScript
+- Implement proper prop typing using interfaces
+- Export components as default when they are the main export
+- Use named exports for utility components
+
+## Component Props
+- Define prop interfaces with 'Props' suffix (e.g., ButtonProps)
+- Use proper prop validation
+- Implement default props using destructuring
+- Document complex props with JSDoc comments
+
+## Accessibility
+- Implement proper ARIA attributes
+- Use semantic HTML elements
+- Ensure keyboard navigation support
+- Include proper focus management
+- Add proper alt texts for images
+
+## Component Examples:
+@src/components/ui/Button.tsx - Reference for proper component structure
+@src/components/ui/Notification.tsx - Reference for notification pattern 

@@ -1,0 +1,22 @@
+---
+description: Data validation and form handling standards
+globs: ["src/lib/validations/**/*.ts", "src/components/forms/**/*.tsx"]
+alwaysApply: true
+---
+
+# Validation Standards
+
+## Schema Validation
+- Use Zod for schema validation
+- Define clear validation messages
+- Implement proper error handling
+- Use consistent validation patterns
+
+## Form Handling
+- Implement proper form validation
+- Use controlled components for form inputs
+- Handle form submission properly
+- Show validation feedback to users
+
+## Examples:
+@src/lib/validations/auth.ts - Reference for validation schemas 

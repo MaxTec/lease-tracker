@@ -41,28 +41,47 @@ export async function generateLeasePDF(leaseData: LeaseData): Promise<Buffer> {
   const pdfDoc = await PDFDocument.create();
   
   // Set vertical margin (1 inch = 72 points)
-  const verticalMargin = 72; // 1 inch margin
-  const horizontalMargin = 0; // No horizontal margin
+  const verticalMargin = 28.35; // 1 cm margin (1 cm = 28.35 points), (0.5 cm = 14.175 points)
+  const horizontalMargin = 28.35; // 1 cm margin (1 cm = 28.35 points), (0.5 cm = 14.175 points)
   const titleFontSize = 12;
   const bodyFontSize = 10;
-  const lineHeight = 20;
+  const lineHeight = 12; // 20 points that is 1 cm
   
   // Function to create a new page
   const createNewPage = () => {
     const page = pdfDoc.addPage(PageSizes.Letter);
     return {
       page,
-      y: page.getHeight() - verticalMargin - 50
+      y: page.getHeight() - verticalMargin - 20
     };
   };
 
   // Function to draw text with page breaks
   const drawTextWithPageBreak = (text: string, x: number, currentPage: PDFPage, currentY: number, font: PDFFont, size: number) => {
     let y = currentY;
-    const lines = text.match(/.{1,120}/g) || []; // Increased line length since we have more horizontal space
+    const pageWidth = currentPage.getWidth();
+    const availableWidth = pageWidth - (2 * horizontalMargin);
+    const words = text.split(' ');
+    let currentLine = '';
+    const lines: string[] = [];
+
+    // Calculate how many characters can fit in one line
+    const charsPerLine = Math.floor(availableWidth / (size * 0.6)); // Approximate character width
+
+    for (const word of words) {
+      if ((currentLine + ' ' + word).length > charsPerLine) {
+        lines.push(currentLine.trim());
+        currentLine = word;
+      } else {
+        currentLine += (currentLine ? ' ' : '') + word;
+      }
+    }
+    if (currentLine) {
+      lines.push(currentLine.trim());
+    }
     
     for (const line of lines) {
-      if (y < verticalMargin + 50) { // If we're too close to the bottom margin
+      if (y < verticalMargin + 20) { // If we're too close to the bottom margin
         const { page, y: newY } = createNewPage();
         currentPage = page;
         y = newY;
@@ -171,7 +190,7 @@ export async function generateLeasePDF(leaseData: LeaseData): Promise<Buffer> {
     y -= lineHeight;
 
     // Draw clause content
-    ({ currentPage: page, y } = drawTextWithPageBreak(clause.content, horizontalMargin + 20, page, y, font, bodyFontSize));
+    ({ currentPage: page, y } = drawTextWithPageBreak(clause.content, horizontalMargin, page, y, font, bodyFontSize));
     y -= lineHeight;
   }
 
