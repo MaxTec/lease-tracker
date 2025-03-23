@@ -9,6 +9,8 @@ import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import DateInput from "@/components/ui/DateInput";
+import Checkbox from "@/components/ui/Checkbox";
+import { addYears, format } from "date-fns";
 
 // Define the validation schema using zod
 const leaseSchema = z.object({
@@ -22,6 +24,7 @@ const leaseSchema = z.object({
     .nonempty("Deposit amount is required")
     .transform(Number),
   paymentDay: z.string().nonempty("Payment day is required").transform(Number),
+  customEndDate: z.boolean().default(false),
 });
 
 interface Tenant {
@@ -79,15 +82,33 @@ export default function NewLeaseModal({
     register,
     handleSubmit,
     control,
+    watch,
+    setValue,
     formState: { errors },
     reset,
   } = useForm({
     resolver: zodResolver(leaseSchema),
+    defaultValues: {
+      customEndDate: false,
+    },
   });
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [, setSelectedPropertyId] = useState<number | null>(null);
+
+  // Watch for changes in startDate and customEndDate
+  const startDate = watch("startDate");
+  const customEndDate = watch("customEndDate");
+
+  // Update endDate when startDate changes using date-fns
+  useEffect(() => {
+    if (startDate && !customEndDate) {
+      const start = new Date(startDate);
+      const end = addYears(start, 1);
+      setValue("endDate", format(end, "yyyy-MM-dd"));
+    }
+  }, [startDate, customEndDate, setValue]);
 
   useEffect(() => {
     if (isOpen) {
@@ -189,18 +210,25 @@ export default function NewLeaseModal({
               />
             )}
           />
-          <Controller
-            name="endDate"
-            control={control}
-            render={({ field }) => (
-              <DateInput
-                label="End Date"
-                value={field.value}
-                onChange={field.onChange}
-                error={errors.endDate?.message}
-              />
-            )}
-          />
+          <div className="space-y-2">
+            <Controller
+              name="endDate"
+              control={control}
+              render={({ field }) => (
+                <DateInput
+                  label="End Date"
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.endDate?.message}
+                  disabled={!customEndDate}
+                />
+              )}
+            />
+            <Checkbox
+              {...register("customEndDate")}
+              label="Set custom end date"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-3 gap-4">

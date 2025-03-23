@@ -12,6 +12,7 @@ interface DateInputProps {
   error?: string;
   className?: string;
   showMonthYearPicker?: boolean;
+  disabled?: boolean;
 }
 
 const DateInput = forwardRef<HTMLDivElement, DateInputProps>(

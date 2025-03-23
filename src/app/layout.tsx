@@ -1,9 +1,8 @@
-// 'use client';
-
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import TimeZoneWrapper from "@/components/providers/TimeZoneWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +14,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
+// Move metadata to a separate file since we're using 'use client'
+export const metadata = {
   title: "LeaseTracker",
   description: "Property management and lease tracking solution",
 };
@@ -30,7 +30,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <TimeZoneWrapper>
+            {children}
+          </TimeZoneWrapper>
+        </Providers>
       </body>
     </html>
   );

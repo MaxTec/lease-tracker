@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
         const serializedLeases = leases.map(lease => {
             // Find the most recent payment
             const lastPayment = lease.payments?.[0];
-            
+
             // Calculate overdue months
             let overdueMonths = 0;
             if (lastPayment) {
@@ -142,53 +142,53 @@ export async function POST(request: NextRequest) {
         });
 
         // Generate PDF lease agreement
-        const leaseData = {
-            tenantName: lease.tenant.user.name,
-            propertyName: lease.unit.property.name,
-            unitNumber: lease.unit.unitNumber,
-            startDate: lease.startDate,
-            endDate: lease.endDate,
-            rentAmount: Number(lease.rentAmount),
-            depositAmount: Number(lease.depositAmount),
-            paymentDay: lease.paymentDay,
-        };
+        // const leaseData = {
+        //     tenantName: lease.tenant.user.name,
+        //     propertyName: lease.unit.property.name,
+        //     unitNumber: lease.unit.unitNumber,
+        //     startDate: lease.startDate,
+        //     endDate: lease.endDate,
+        //     rentAmount: Number(lease.rentAmount),
+        //     depositAmount: Number(lease.depositAmount),
+        //     paymentDay: lease.paymentDay,
+        // };
 
-        const pdfBuffer = await generateLeasePDF(leaseData);
-        const fileName = `lease_${lease.id}_${Date.now()}.pdf`;
-        const leaseUrl = await uploadToR2(pdfBuffer, fileName);
+        // const pdfBuffer = await generateLeasePDF(leaseData);
+        // const fileName = `lease_${lease.id}_${Date.now()}.pdf`;
+        // const leaseUrl = await uploadToR2(pdfBuffer, fileName);
 
-        // Send email to tenant
-        const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`;
-        await sendLeaseEmail(
-            lease.tenant.user.email,
-            lease.tenant.user.name,
-            leaseUrl,
-            loginUrl
-        );
+        // // Send email to tenant
+        // const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`;
+        // await sendLeaseEmail(
+        //     lease.tenant.user.email,
+        //     lease.tenant.user.name,
+        //     leaseUrl,
+        //     loginUrl
+        // );
 
         // Create initial payment records for the lease period
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        const payments = [];
+        // const start = new Date(startDate);
+        // const end = new Date(endDate);
+        // const payments = [];
 
-        for (let date = new Date(start); date <= end; date.setMonth(date.getMonth() + 1)) {
-            const dueDate = new Date(date);
-            dueDate.setDate(paymentDay);
+        // for (let date = new Date(start); date <= end; date.setMonth(date.getMonth() + 1)) {
+        //     const dueDate = new Date(date);
+        //     dueDate.setDate(paymentDay);
 
-            if (dueDate >= start && dueDate <= end) {
-                payments.push({
-                    leaseId: lease.id,
-                    tenantId: parseInt(tenantId),
-                    amount: rentAmount,
-                    dueDate,
-                    status: 'PENDING' as const,
-                });
-            }
-        }
+        //     if (dueDate >= start && dueDate <= end) {
+        //         payments.push({
+        //             leaseId: lease.id,
+        //             tenantId: parseInt(tenantId),
+        //             amount: rentAmount,
+        //             dueDate,
+        //             status: 'PENDING' as const,
+        //         });
+        //     }
+        // }
 
-        await prisma.payment.createMany({
-            data: payments,
-        });
+        // await prisma.payment.createMany({
+        //     data: payments,
+        // });
 
         return NextResponse.json(lease);
     } catch (error) {
