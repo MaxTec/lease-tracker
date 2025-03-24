@@ -15,8 +15,6 @@ import Card from "@/components/ui/Card";
 import { FORMAT_DATE } from "@/constants";
 import { useTimeZone } from "@/contexts/TimeZoneContext";
 import { formatDate } from "@/utils/dateUtils";
-import { formatInTimeZone } from "date-fns-tz";
-import { format } from "date-fns";
 interface Lease {
   id: number;
   startDate: string;
@@ -109,17 +107,22 @@ export default function LeaseDetailsPage() {
 
         // Fetch lease information
         const leaseResponse = await fetch(`/api/leases/${leaseId}`);
-        if (!leaseResponse.ok) throw new Error("Failed to fetch lease information");
+        if (!leaseResponse.ok)
+          throw new Error("Failed to fetch lease information");
         const leaseData = await leaseResponse.json();
         setLease(leaseData);
 
         // Fetch payments
-        const paymentsResponse = await fetch(`/api/payments?leaseId=${leaseId}`);
+        const paymentsResponse = await fetch(
+          `/api/payments?leaseId=${leaseId}`
+        );
         if (!paymentsResponse.ok) throw new Error("Failed to fetch payments");
         const paymentsData = await paymentsResponse.json();
 
         // Ensure we have the full lease information in each payment
-        const paymentsWithLease = Array.isArray(paymentsData) ? paymentsData : [paymentsData];
+        const paymentsWithLease = Array.isArray(paymentsData)
+          ? paymentsData
+          : [paymentsData];
 
         // Add lease information to each payment if not already present
         paymentsWithLease.forEach((payment) => {
@@ -181,10 +184,10 @@ export default function LeaseDetailsPage() {
         voucherNumber: newPayment.voucher?.voucherNumber,
       });
 
-      // Hide notification after 10 seconds
+      // Hide notification after 5 seconds
       setTimeout(() => {
         setNotification({ show: false });
-      }, 10000);
+      }, 5000);
     } catch (error) {
       console.error("Error recording payment:", error);
       setNotification({
@@ -216,7 +219,7 @@ export default function LeaseDetailsPage() {
       setTimeout(() => {
         // Optionally, you can refresh the lease data or redirect
         router.push("/leases"); // Redirect to the leases list or another page
-      }, 3000); // Delay of 1 second before showing the notification
+      }, 2000); // Delay of 1 second before showing the notification
     } catch (error) {
       console.error("Error terminating lease:", error);
       setNotification({
@@ -230,8 +233,8 @@ export default function LeaseDetailsPage() {
   if (loading) {
     return (
       <Layout>
-        <div className='flex items-center justify-center min-h-[200px]'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600'></div>
+        <div className="flex items-center justify-center min-h-[200px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
         </div>
       </Layout>
     );
@@ -240,99 +243,136 @@ export default function LeaseDetailsPage() {
   if (error) {
     return (
       <Layout>
-        <div className='bg-red-50 text-red-600 p-4 rounded-md'>{error}</div>
+        <div className="bg-red-50 text-red-600 p-4 rounded-md">{error}</div>
       </Layout>
     );
   }
-  const startDateWithoutTimeZone = lease?.startDate?.split("T")[0];
-  const endDateWithoutTimeZone = lease?.endDate?.split("T")[0];
-  console.log("formattedStartDate", format(startDateWithoutTimeZone, "dd/MM/yyyy"));
-  console.log("formattedEndDate", format(endDateWithoutTimeZone, "dd/MM/yyyy"));
   return (
     <Layout>
-      <div className='container mx-auto px-4 py-8'>
+      <div className="container mx-auto px-4 py-8">
         {/* Lease Details Card */}
-        <Card title='Lease Details'>
-          <div className='flex justify-between items-start mb-6'>
-            <div className='flex space-x-2'>
-              <Button variant={lease.status === "ACTIVE" ? "danger" : "success"} onClick={handleTerminateLease}>
-                {lease.status === "ACTIVE" ? "Terminate Lease" : "Activate Lease"}
+        <Card title="Lease Details">
+          <div className="flex justify-between items-start mb-6">
+            <div className="flex space-x-2">
+              <Button
+                variant={lease.status === "ACTIVE" ? "danger" : "success"}
+                onClick={handleTerminateLease}
+              >
+                {lease.status === "ACTIVE"
+                  ? "Terminate Lease"
+                  : "Activate Lease"}
               </Button>
             </div>
           </div>
 
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Property Information */}
-            <Card title='Property'>
-              <div className='space-y-2'>
+            <Card title="Property">
+              <div className="space-y-2">
                 <div>
-                  <span className='text-sm font-medium text-gray-500'>Name:</span>
-                  <p className='text-gray-900'>{lease.unit.property.name}</p>
+                  <span className="text-sm font-medium text-gray-500">
+                    Name:
+                  </span>
+                  <p className="text-gray-900">{lease.unit.property.name}</p>
                 </div>
                 <div>
-                  <span className='text-sm font-medium text-gray-500'>Address:</span>
-                  <p className='text-gray-900'>{lease.unit.property.address}</p>
+                  <span className="text-sm font-medium text-gray-500">
+                    Address:
+                  </span>
+                  <p className="text-gray-900">{lease.unit.property.address}</p>
                 </div>
                 <div>
-                  <span className='text-sm font-medium text-gray-500'>Unit:</span>
-                  <p className='text-gray-900'>{lease.unit.unitNumber}</p>
+                  <span className="text-sm font-medium text-gray-500">
+                    Unit:
+                  </span>
+                  <p className="text-gray-900">{lease.unit.unitNumber}</p>
                 </div>
                 <div>
-                  <span className='text-sm font-medium text-gray-500'>Details:</span>
-                  <p className='text-gray-900'>
-                    {lease.unit.bedrooms} bed, {lease.unit.bathrooms} bath, {lease.unit.squareFeet} sq ft
+                  <span className="text-sm font-medium text-gray-500">
+                    Details:
+                  </span>
+                  <p className="text-gray-900">
+                    {lease.unit.bedrooms} bed, {lease.unit.bathrooms} bath,{" "}
+                    {lease.unit.squareFeet} sq ft
                   </p>
                 </div>
               </div>
             </Card>
 
             {/* Tenant Information */}
-            <Card title='Tenant'>
-              <div className='space-y-2'>
+            <Card title="Tenant">
+              <div className="space-y-2">
                 <div>
-                  <span className='text-sm font-medium text-gray-500'>Name:</span>
-                  <p className='text-gray-900'>{lease.tenant.user.name}</p>
+                  <span className="text-sm font-medium text-gray-500">
+                    Name:
+                  </span>
+                  <p className="text-gray-900">{lease.tenant.user.name}</p>
                 </div>
                 <div>
-                  <span className='text-sm font-medium text-gray-500'>Email:</span>
-                  <p className='text-gray-900'>{lease.tenant.user.email}</p>
+                  <span className="text-sm font-medium text-gray-500">
+                    Email:
+                  </span>
+                  <p className="text-gray-900">{lease.tenant.user.email}</p>
                 </div>
                 <div>
-                  <span className='text-sm font-medium text-gray-500'>Phone:</span>
-                  <p className='text-gray-900'>{lease.tenant.phone}</p>
+                  <span className="text-sm font-medium text-gray-500">
+                    Phone:
+                  </span>
+                  <p className="text-gray-900">{lease.tenant.phone}</p>
                 </div>
               </div>
             </Card>
 
             {/* Lease Information */}
-            <Card title='Lease Terms'>
-              <div className='space-y-2'>
-                <div className='flex flex-row gap-2 justify-between'>
+            <Card title="Lease Terms">
+              <div className="space-y-2">
+                <div className="flex flex-row gap-2 justify-between">
                   <div>
-                    <span className='text-sm font-medium text-gray-500'>Status:</span>
-                    <p className={`font-medium ${lease.status === "ACTIVE" ? "text-green-600" : lease.status === "EXPIRED" ? "text-yellow-600" : "text-red-600"}`}>
+                    <span className="text-sm font-medium text-gray-500">
+                      Status:
+                    </span>
+                    <p
+                      className={`font-medium ${
+                        lease.status === "ACTIVE"
+                          ? "text-green-600"
+                          : lease.status === "EXPIRED"
+                          ? "text-yellow-600"
+                          : "text-red-600"
+                      }`}
+                    >
                       {lease.status}
                     </p>
                   </div>
                   <div>
-                    <span className='text-sm font-medium text-gray-500'>Period:</span>
-                    <p className='text-gray-900'>
-                      {formatDate(lease.startDate, "MM/dd/yyyy", timeZone)} to {formatDate(lease.endDate, "MM/dd/yyyy", timeZone)}
+                    <span className="text-sm font-medium text-gray-500">
+                      Period:
+                    </span>
+                    <p className="text-gray-900">
+                      {formatDate(lease.startDate, FORMAT_DATE)} to{" "}
+                      {formatDate(lease.endDate, FORMAT_DATE)}
                     </p>
                   </div>
                 </div>
-                <div className='flex flex-row gap-2'>
+                <div className="flex flex-row gap-2">
                   <div>
-                    <span className='text-sm font-medium text-gray-500'>Monthly Rent:</span>
-                    <p className='text-gray-900'>${lease.rentAmount}</p>
+                    <span className="text-sm font-medium text-gray-500">
+                      Monthly Rent:
+                    </span>
+                    <p className="text-gray-900">${lease.rentAmount}</p>
                   </div>
                   <div>
-                    <span className='text-sm font-medium text-gray-500'>Security Deposit:</span>
-                    <p className='text-gray-900'>${lease.depositAmount}</p>
+                    <span className="text-sm font-medium text-gray-500">
+                      Security Deposit:
+                    </span>
+                    <p className="text-gray-900">${lease.depositAmount}</p>
                   </div>
                   <div>
-                    <span className='text-sm font-medium text-gray-500'>Payment Day:</span>
-                    <p className='text-gray-900'>{/* {formatDate(new Date(lease.paymentDay), 'do', timeZone)} of each month */}</p>
+                    <span className="text-sm font-medium text-gray-500">
+                      Payment Day:
+                    </span>
+                    <p className="text-gray-900">
+                      {formatDate(new Date(lease.paymentDay), 'do')} of each month
+                    </p>
                   </div>
                 </div>
               </div>
@@ -342,11 +382,12 @@ export default function LeaseDetailsPage() {
 
         {/* Payments Section */}
         {lease.status === "ACTIVE" ? (
-          <div className='bg-white rounded-lg shadow'>
-            <div className='p-6 border-b border-gray-200'>
-              <div className='flex justify-between items-center mb-4'>
-                <h3 className='text-xl font-semibold text-gray-800 flex items-center'>
-                  <FaDollarSign className='mr-2 text-indigo-600' /> Payment Management
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold text-gray-800 flex items-center">
+                  <FaDollarSign className="mr-2 text-indigo-600" /> Payment
+                  Management
                 </h3>
               </div>
               <Tabs
@@ -354,22 +395,33 @@ export default function LeaseDetailsPage() {
                   {
                     id: "upcoming",
                     label: "Upcoming Payments",
-                    content: <PaymentSchedule payments={payments} lease={lease} onRecordPayment={handleRecordPayment} />,
+                    content: (
+                      <PaymentSchedule
+                        payments={payments}
+                        lease={lease}
+                        onRecordPayment={handleRecordPayment}
+                      />
+                    ),
                   },
                   {
                     id: "completed",
                     label: "Completed Payments",
-                    content: <CompletedPayments payments={payments} lease={lease} />,
+                    content: (
+                      <CompletedPayments payments={payments} lease={lease} />
+                    ),
                   },
                 ]}
-                defaultTabId='upcoming'
-                className='mt-4'
+                defaultTabId="upcoming"
+                className="mt-4"
               />
             </div>
           </div>
         ) : (
-          <div className='bg-gray-50 p-4 rounded-lg'>
-            <h3 className='text-lg font-medium text-gray-800 mb-3'>Payment Management is not available for leases that are not active.</h3>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-lg font-medium text-gray-800 mb-3">
+              Payment Management is not available for leases that are not
+              active.
+            </h3>
           </div>
         )}
 
@@ -382,7 +434,13 @@ export default function LeaseDetailsPage() {
               notification.voucherNumber
                 ? {
                     label: "View Voucher",
-                    onClick: () => notification.voucherNumber && router.push(`/vouchers/${encodeURIComponent(notification.voucherNumber)}`),
+                    onClick: () =>
+                      notification.voucherNumber &&
+                      router.push(
+                        `/vouchers/${encodeURIComponent(
+                          notification.voucherNumber
+                        )}`
+                      ),
                   }
                 : undefined
             }

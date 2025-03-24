@@ -2,10 +2,9 @@
   "name": "lease-tracker",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "prisma": {
     "schema": "src/prisma/schema.prisma",
-    "seed": "node --loader ts-node/esm --experimental-specifier-resolution=node -r ts-node/register/transpile-only src/prisma/seed.ts"
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} src/prisma/seed.ts"
   },
   "scripts": {
     "dev": "next dev --turbopack",

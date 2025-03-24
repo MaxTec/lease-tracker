@@ -10,7 +10,8 @@ import EmptyState from "@/components/ui/EmptyState";
 import { FaPlus, FaBuilding } from "react-icons/fa";
 import NewLeaseModal from "@/components/admin/NewLeaseModal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-
+import { formatDate } from "@/utils/dateUtils";
+import { FORMAT_DATE } from "@/constants";
 interface Lease {
   id: number;
   startDate: string;
@@ -115,8 +116,8 @@ export default function LeasesPage() {
       key: "period",
       label: "Lease Period",
       render: (lease: Lease) => {
-        const startDate = new Date(lease.startDate).toLocaleDateString();
-        const endDate = new Date(lease.endDate).toLocaleDateString();
+        const startDate = formatDate(lease.startDate, FORMAT_DATE);
+        const endDate = formatDate(lease.endDate, FORMAT_DATE);
         return `${startDate} - ${endDate}`;
       },
     },

@@ -28,7 +28,7 @@ export default function Modal({
     >
       <div className="flex items-center justify-center min-h-screen">
         <div className="fixed inset-0 bg-black opacity-30" aria-hidden="true" />
-        <DialogPanel className="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
+        <DialogPanel className="bg-white rounded-lg shadow-xl transform transition-all sm:max-w-lg sm:w-full">
           <div className="p-6">
             <DialogTitle className="text-lg font-medium text-gray-900">
               {title}

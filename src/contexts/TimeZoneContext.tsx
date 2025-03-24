@@ -8,7 +8,7 @@ interface TimeZoneContextType {
 }
 
 const TimeZoneContext = createContext<TimeZoneContextType | undefined>(undefined);
-const DEFAULT_TIMEZONE = "America/Cancun";
+const DEFAULT_TIMEZONE = "UTC";
 export function TimeZoneProvider({ children }: { children: React.ReactNode }) {
   // Default to the user's system timezone, falling back to 'UTC' if not available
   const [timeZone, setTimeZone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE);

@@ -110,6 +110,8 @@ model Lease {
   status        LeaseStatus @default(ACTIVE)
   payments      Payment[]
   documents     Document[]
+  clauses       LeasesToClauses[]
+  rules         LeasesToRules[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -236,4 +238,73 @@ model TicketComment {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Predefined lease clauses
+model LeaseClause {
+  id          Int       @id @default(autoincrement())
+  title       String
+  content     String    @db.Text
+  type        ClauseType
+  isActive    Boolean   @default(true)
+  leases      LeasesToClauses[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Junction table for many-to-many relationship between Leases and Clauses
+model LeasesToClauses {
+  id          Int         @id @default(autoincrement())
+  leaseId     Int
+  lease       Lease       @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  clauseId    Int
+  clause      LeaseClause @relation(fields: [clauseId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+
+  @@unique([leaseId, clauseId])
+}
+
+// Predefined lease rules
+model LeaseRule {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String    @db.Text
+  category    RuleCategory
+  isActive    Boolean   @default(true)
+  leases      LeasesToRules[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Junction table for many-to-many relationship between Leases and Rules
+model LeasesToRules {
+  id          Int         @id @default(autoincrement())
+  leaseId     Int
+  lease       Lease       @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  ruleId      Int
+  rule        LeaseRule   @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+
+  @@unique([leaseId, ruleId])
+}
+
+enum ClauseType {
+  PAYMENT
+  MAINTENANCE
+  TERMINATION
+  SECURITY_DEPOSIT
+  UTILITIES
+  INSURANCE
+  OTHER
+}
+
+enum RuleCategory {
+  PETS
+  SMOKING
+  NOISE
+  GUESTS
+  PARKING
+  MAINTENANCE
+  ALTERATIONS
+  OTHER
 } 
