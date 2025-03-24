@@ -8,10 +8,10 @@ import Layout from "@/components/layout/Layout";
 import Table from "@/components/ui/Table";
 import EmptyState from "@/components/ui/EmptyState";
 import { FaPlus, FaBuilding } from "react-icons/fa";
-import NewLeaseModal from "@/components/admin/NewLeaseModal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { formatDate } from "@/utils/dateUtils";
 import { FORMAT_DATE } from "@/constants";
+
 interface Lease {
   id: number;
   startDate: string;
@@ -37,9 +37,6 @@ export default function LeasesPage() {
   const [leases, setLeases] = useState<Lease[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tenants, setTenants] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
   // Redirect if not admin
   if (authStatus === "authenticated" && session?.user?.role !== "ADMIN") {
     redirect("/");
@@ -62,16 +59,6 @@ export default function LeasesPage() {
     };
 
     fetchLeases();
-  }, []);
-
-  useEffect(() => {
-    const fetchTenants = async () => {
-      const response = await fetch("/api/tenants");
-      const data = await response.json();
-      setTenants(data);
-    };
-
-    fetchTenants();
   }, []);
 
   const handleViewLease = (leaseId: number) => {
@@ -139,16 +126,8 @@ export default function LeasesPage() {
     },
   ];
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
-
-  const handleLeaseCreated = (newLease: Lease) => {
-    setLeases((prevLeases) => [...prevLeases, newLease]);
+  const handleAddNewLease = () => {
+    router.push('/leases/new');
   };
 
   if (loading) {
@@ -176,7 +155,7 @@ export default function LeasesPage() {
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-gray-800">Leases</h2>
-              <Button onClick={handleOpenModal}>
+              <Button onClick={handleAddNewLease}>
                 <FaPlus className="mr-2 inline-block align-middle" />
                 <span className="align-middle">Add New Lease</span>
               </Button>
@@ -201,18 +180,11 @@ export default function LeasesPage() {
                 title="No Leases Found"
                 description="There are no leases in the system yet. Click the button below to create your first lease."
                 actionLabel="Add New Lease"
-                onAction={handleOpenModal}
+                onAction={handleAddNewLease}
               />
             )}
           </div>
         </div>
-
-        <NewLeaseModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          tenants={tenants}
-          onLeaseCreated={handleLeaseCreated}
-        />
       </div>
     </Layout>
   );
