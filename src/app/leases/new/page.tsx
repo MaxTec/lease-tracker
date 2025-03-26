@@ -20,21 +20,36 @@ const leaseDetailsSchema = z.object({
   startDate: z.string().nonempty("Start date is required"),
   endDate: z.string().nonempty("End date is required"),
   rentAmount: z.string().nonempty("Rent amount is required").transform(Number),
-  depositAmount: z.string().nonempty("Deposit amount is required").transform(Number),
-  paymentDay: z.string()
+  depositAmount: z
+    .string()
+    .nonempty("Deposit amount is required")
+    .transform(Number),
+  paymentDay: z
+    .string()
     .nonempty("Payment day is required")
     .transform(Number)
-    .refine((val) => val >= 1 && val <= 31, "Payment day must be between 1 and 31"),
+    .refine(
+      (val) => val >= 1 && val <= 31,
+      "Payment day must be between 1 and 31"
+    ),
   customEndDate: z.boolean().default(false),
 });
 
 const leaseRulesSchema = z.object({
-  selectedRules: z.array(z.number()).min(1, "At least one rule must be selected"),
-  selectedClauses: z.array(z.number()).min(1, "At least one clause must be selected"),
-  customClauses: z.array(z.object({
-    title: z.string(),
-    content: z.string()
-  })).default([])
+  selectedRules: z
+    .array(z.number())
+    .min(1, "At least one rule must be selected"),
+  selectedClauses: z
+    .array(z.number())
+    .min(1, "At least one clause must be selected"),
+  customClauses: z
+    .array(
+      z.object({
+        title: z.string(),
+        content: z.string(),
+      })
+    )
+    .default([]),
 });
 
 // Combined schema for the entire form
@@ -44,99 +59,130 @@ type LeaseFormData = z.infer<typeof leaseSchema>;
 
 const steps = [
   { title: "Lease Details", description: "Enter basic lease information" },
-  { title: "Rules & Clauses", description: "Select applicable rules and clauses" },
-  { title: "Preview & Submit", description: "Review and generate lease agreement" }
+  {
+    title: "Rules & Clauses",
+    description: "Select applicable rules and clauses",
+  },
+  {
+    title: "Preview & Submit",
+    description: "Review and generate lease agreement",
+  },
 ];
+
+// Add after LeaseFormData type definition
+const defaultFormValues: LeaseFormData = {
+  unitId: "",
+  tenantId: "",
+  startDate: "",
+  endDate: "",
+  rentAmount: "",
+  depositAmount: "",
+  paymentDay: "",
+  customEndDate: false,
+  selectedRules: [],
+  selectedClauses: [],
+  customClauses: [],
+};
 
 export default function NewLeasePage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
-  
+  const [formData, setFormData] = useState<LeaseFormData>(defaultFormValues);
+
   const methods = useForm<LeaseFormData>({
     resolver: zodResolver(leaseSchema),
-    defaultValues: {
-      customEndDate: false,
-      selectedRules: [],
-      selectedClauses: [],
-      customClauses: []
-    },
-    mode: "onChange" // Enable real-time validation
+    defaultValues: formData, // Use the formData as defaultValues
+    mode: "onChange", // Enable real-time validation
   });
 
-  const { handleSubmit, trigger, formState: { errors } } = methods;
+  const {
+    handleSubmit,
+    trigger,
+    formState: { errors },
+  } = methods;
 
   const validateCurrentStep = async () => {
-    let fieldsToValidate: string[] = [];
-    
+    let fieldsToValidate: Array<keyof LeaseFormData> = []; // Properly type the fields array
+
     switch (currentStep) {
       case 0:
         fieldsToValidate = [
-          'unitId',
-          'tenantId',
-          'startDate',
-          'endDate',
-          'rentAmount',
-          'depositAmount',
-          'paymentDay'
+          "unitId",
+          "tenantId",
+          "startDate",
+          "endDate",
+          "rentAmount",
+          "depositAmount",
+          "paymentDay",
         ];
         break;
       case 1:
-        fieldsToValidate = [
-          'selectedRules',
-          'selectedClauses'
-        ];
+        fieldsToValidate = ["selectedRules", "selectedClauses"];
         break;
       default:
         return true;
     }
 
     const isStepValid = await trigger(fieldsToValidate);
-    
+    console.log("isStepValid", isStepValid);
     if (!isStepValid) {
-      // Show error toast with the first error message
       const firstError = Object.values(errors)[0]?.message;
+      console.log("firstError", firstError);
       if (firstError) {
-        toast.error(firstError);
+        toast.error(firstError as string);
       }
     }
-    
+
+    // Save form data when step is valid
+    if (isStepValid) {
+      const currentFormData = methods.getValues();
+      setFormData(currentFormData);
+    }
+
     return isStepValid;
   };
 
   const nextStep = async () => {
     const isValid = await validateCurrentStep();
     if (isValid) {
+      // Save current form data before moving to next step
+      const currentFormData = methods.getValues();
+      setFormData(currentFormData);
       setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
     }
   };
 
   const previousStep = () => {
+    // Save current form data before moving to previous step
+    const currentFormData = methods.getValues();
+    setFormData(currentFormData);
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
   const onSubmit = async (data: LeaseFormData) => {
     try {
-      const response = await fetch('/api/leases', {
-        method: 'POST',
+      setFormData(data); // Save final form data
+      const response = await fetch("/api/leases", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create lease');
+        throw new Error("Failed to create lease");
       }
 
       const newLease = await response.json();
-      toast.success('Lease created successfully');
+      toast.success("Lease created successfully");
       router.push(`/leases/${newLease.id}`);
     } catch (error) {
-      console.error('Error creating lease:', error);
-      toast.error('Failed to create lease');
+      console.error("Error creating lease:", error);
+      toast.error("Failed to create lease");
     }
   };
-
+  console.log("formData", formData);
   const renderStep = () => {
     switch (currentStep) {
       case 0:
@@ -179,20 +225,17 @@ export default function NewLeasePage() {
                       Previous
                     </Button>
                   )}
-                  
+
                   {currentStep < steps.length - 1 ? (
-                    <Button 
-                      type="button" 
+                    <Button
+                      type="button"
                       onClick={nextStep}
                       className="ml-auto"
                     >
                       Next
                     </Button>
                   ) : (
-                    <Button 
-                      type="submit"
-                      className="ml-auto"
-                    >
+                    <Button type="submit" className="ml-auto">
                       Create Lease
                     </Button>
                   )}
@@ -204,4 +247,4 @@ export default function NewLeasePage() {
       </div>
     </Layout>
   );
-} 
+}
