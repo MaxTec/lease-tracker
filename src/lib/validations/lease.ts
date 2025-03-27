@@ -17,5 +17,10 @@ export const clauseFormSchema = z.object({
   }),
 });
 
+export const leaseFormSchema = z.object({
+  selectedRules: z.array(z.number()).min(1, "Please select at least one rule").default([]),
+  selectedClauses: z.array(z.number()).min(1, "Please select at least one clause").default([]),
+});
+
 export type RuleFormData = z.infer<typeof ruleFormSchema>;
 export type ClauseFormData = z.infer<typeof clauseFormSchema>; 

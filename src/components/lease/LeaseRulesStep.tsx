@@ -46,17 +46,11 @@ interface Clause {
 
 export default function LeaseRulesStep() {
   const { register, watch, setValue } = useFormContext();
-  const {
-    rules,
-    isLoading: rulesLoading,
-    error: rulesError,
-    mutate: mutateRules,
-  } = useRules();
+  const { rules, isLoading: rulesLoading, error: rulesError } = useRules();
   const {
     clauses,
     isLoading: clausesLoading,
     error: clausesError,
-    mutate: mutateClauses,
   } = useClauses();
 
   const [localRules, setLocalRules] = useState<Rule[]>([]);
@@ -76,15 +70,23 @@ export default function LeaseRulesStep() {
     if (rules) {
       console.log("Rules loaded:", rules);
       setLocalRules(rules);
+      const currentSelectedRules = watch("selectedRules");
+      if (!currentSelectedRules || currentSelectedRules.length === 0) {
+        setValue("selectedRules", [], { shouldValidate: true });
+      }
     }
-  }, [rules]);
+  }, [rules, setValue, watch]);
 
   useEffect(() => {
     if (clauses) {
       console.log("Clauses loaded:", clauses);
       setLocalClauses(clauses);
+      const currentSelectedClauses = watch("selectedClauses");
+      if (!currentSelectedClauses || currentSelectedClauses.length === 0) {
+        setValue("selectedClauses", [], { shouldValidate: true });
+      }
     }
-  }, [clauses]);
+  }, [clauses, setValue, watch]);
 
   const handleDragEnd = async (
     event: DragEndEvent,
@@ -94,20 +96,20 @@ export default function LeaseRulesStep() {
 
     if (!over || active.id === over.id) return;
 
-    const items = type === "rules" ? localRules : localClauses;
+    const items: (Rule | Clause)[] = type === "rules" ? localRules : localClauses;
     const oldIndex = items.findIndex((item) => item.id === active.id);
     const newIndex = items.findIndex((item) => item.id === over.id);
 
     const newItems = arrayMove(items, oldIndex, newIndex);
 
     if (type === "rules") {
-      setLocalRules(newItems);
+      setLocalRules(newItems as Rule[]);
       await fetch("/api/rules", {
         method: "PUT",
         body: JSON.stringify({ rules: newItems }),
       });
     } else {
-      setLocalClauses(newItems);
+      setLocalClauses(newItems as Clause[]);
       await fetch("/api/clauses", {
         method: "PUT",
         body: JSON.stringify({ clauses: newItems }),
@@ -124,13 +126,14 @@ export default function LeaseRulesStep() {
 
       if (!response.ok) throw new Error("Failed to add rule");
 
-      const rule = await response.json();
-      setLocalRules([...localRules, rule]);
+      const rule: Rule = await response.json();
+      setLocalRules((prev) => [...prev, rule]);
       toast.success("Rule added successfully");
-      mutateRules();
       setIsRuleModalOpen(false);
     } catch (error) {
-      toast.error("Failed to add rule");
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      toast.error("Failed to add rule: " + errorMessage);
     }
   };
 
@@ -143,14 +146,35 @@ export default function LeaseRulesStep() {
 
       if (!response.ok) throw new Error("Failed to add clause");
 
-      const clause = await response.json();
-      setLocalClauses([...localClauses, clause]);
+      const clause: Clause = await response.json();
+      setLocalClauses((prev) => [...prev, clause]);
       toast.success("Clause added successfully");
-      mutateClauses();
       setIsClauseModalOpen(false);
     } catch (error) {
-      toast.error("Failed to add clause");
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      toast.error("Failed to add clause: " + errorMessage);
     }
+  };
+
+  const handleRuleChange = (ruleId: number, checked: boolean) => {
+    const currentValues = watch("selectedRules") || [];
+    const newValues = checked
+      ? [...currentValues, ruleId]
+      : currentValues.filter((id: number) => id !== ruleId);
+
+    setValue("selectedRules", newValues, { shouldValidate: true });
+    console.log("Updated selectedRules:", newValues);
+  };
+
+  const handleClauseChange = (clauseId: number, checked: boolean) => {
+    const currentValues = watch("selectedClauses") || [];
+    const newValues = checked
+      ? [...currentValues, clauseId]
+      : currentValues.filter((id: number) => id !== clauseId);
+
+    setValue("selectedClauses", newValues, { shouldValidate: true });
+    console.log("Updated selectedClauses:", newValues);
   };
 
   if (rulesLoading || clausesLoading) {
@@ -183,17 +207,12 @@ export default function LeaseRulesStep() {
               <SortableItem key={rule.id} id={rule.id}>
                 <div className="flex flex-col items-start space-x-3 p-2.5 bg-white rounded-lg shadow-sm border border-gray-200">
                   <Checkbox
-                    {...register(`selectedRules`)}
+                    {...register("selectedRules")}
                     value={rule.id}
-                    onChange={(e) => {
-                      const values = new Set(watch("selectedRules") || []);
-                      if (e.target.checked) {
-                        values.add(rule.id);
-                      } else {
-                        values.delete(rule.id);
-                      }
-                      return setValue("selectedRules", Array.from(values));
-                    }}
+                    onChange={(e) =>
+                      handleRuleChange(rule.id, e.target.checked)
+                    }
+                    checked={watch("selectedRules")?.includes(rule.id)}
                     label={rule.title}
                   />
                   <p className="text-sm text-gray-500">{rule.description}</p>
@@ -229,17 +248,12 @@ export default function LeaseRulesStep() {
                 <SortableItem key={clause.id} id={clause.id}>
                   <div className="flex flex-col items-start space-y-1 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
                     <Checkbox
-                      {...register(`selectedClauses`)}
+                      {...register("selectedClauses")}
                       value={clause.id}
-                      onChange={(e) => {
-                        const values = new Set(watch("selectedClauses") || []);
-                        if (e.target.checked) {
-                          values.add(clause.id);
-                        } else {
-                          values.delete(clause.id);
-                        }
-                        return setValue("selectedClauses", Array.from(values));
-                      }}
+                      onChange={(e) =>
+                        handleClauseChange(clause.id, e.target.checked)
+                      }
+                      checked={watch("selectedClauses")?.includes(clause.id)}
                       label={clause.title}
                     />
                     <p className="text-sm text-gray-500">{clause.content}</p>

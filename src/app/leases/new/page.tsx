@@ -13,47 +13,35 @@ import LeasePreviewStep from "@/components/lease/LeasePreviewStep";
 import Button from "@/components/ui/Button";
 import { toast } from "react-hot-toast";
 
-// Separate validation schemas for each step
+// Fix the schema definitions
 const leaseDetailsSchema = z.object({
   unitId: z.string().nonempty("Unit is required"),
   tenantId: z.string().nonempty("Tenant is required"),
   startDate: z.string().nonempty("Start date is required"),
   endDate: z.string().nonempty("End date is required"),
-  rentAmount: z.string().nonempty("Rent amount is required").transform(Number),
-  depositAmount: z
-    .string()
-    .nonempty("Deposit amount is required")
-    .transform(Number),
-  paymentDay: z
-    .string()
-    .nonempty("Payment day is required")
-    .transform(Number)
-    .refine(
-      (val) => val >= 1 && val <= 31,
-      "Payment day must be between 1 and 31"
-    ),
+  rentAmount: z.string().nonempty("Rent amount is required"),  // Keep as string for form handling
+  depositAmount: z.string().nonempty("Deposit amount is required"), // Keep as string for form handling
+  paymentDay: z.string().nonempty("Payment day is required"), // Keep as string for form handling
   customEndDate: z.boolean().default(false),
 });
 
 const leaseRulesSchema = z.object({
-  selectedRules: z
-    .array(z.number())
-    .min(1, "At least one rule must be selected"),
-  selectedClauses: z
-    .array(z.number())
-    .min(1, "At least one clause must be selected"),
-  customClauses: z
-    .array(
-      z.object({
-        title: z.string(),
-        content: z.string(),
-      })
-    )
-    .default([]),
+  selectedRules: z.array(z.string()).min(1, "At least one rule must be selected").default([]),
+  selectedClauses: z.array(z.string()).min(1, "At least one clause must be selected").default([]),
+  customClauses: z.array(
+    z.object({
+      title: z.string(),
+      content: z.string(),
+    })
+  ).default([]),
 });
 
 // Combined schema for the entire form
-const leaseSchema = leaseDetailsSchema.merge(leaseRulesSchema);
+const leaseSchema = leaseDetailsSchema.merge(leaseRulesSchema).extend({
+  agreementVerified: z.boolean().refine((val) => val === true, {
+    message: "You must verify that you have reviewed the lease agreement"
+  })
+});
 
 type LeaseFormData = z.infer<typeof leaseSchema>;
 
@@ -69,8 +57,8 @@ const steps = [
   },
 ];
 
-// Add after LeaseFormData type definition
-const defaultFormValues: LeaseFormData = {
+// Fix the defaultFormValues to match the schema types
+const defaultFormValues = {
   unitId: "",
   tenantId: "",
   startDate: "",
@@ -79,20 +67,21 @@ const defaultFormValues: LeaseFormData = {
   depositAmount: "",
   paymentDay: "",
   customEndDate: false,
-  selectedRules: [],
-  selectedClauses: [],
-  customClauses: [],
+  selectedRules: [] as string[],
+  selectedClauses: [] as string[],
+  customClauses: [] as { title: string; content: string }[],
+  agreementVerified: false,
 };
 
 export default function NewLeasePage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<LeaseFormData>(defaultFormValues);
+  const [formData, setFormData] = useState(defaultFormValues);
 
   const methods = useForm<LeaseFormData>({
     resolver: zodResolver(leaseSchema),
-    defaultValues: formData, // Use the formData as defaultValues
-    mode: "onChange", // Enable real-time validation
+    defaultValues: defaultFormValues,
+    mode: "onChange",
   });
 
   const {
@@ -102,7 +91,7 @@ export default function NewLeasePage() {
   } = methods;
 
   const validateCurrentStep = async () => {
-    let fieldsToValidate: Array<keyof LeaseFormData> = []; // Properly type the fields array
+    let fieldsToValidate: Array<keyof LeaseFormData> = [];
 
     switch (currentStep) {
       case 0:
@@ -119,24 +108,23 @@ export default function NewLeasePage() {
       case 1:
         fieldsToValidate = ["selectedRules", "selectedClauses"];
         break;
+      case 2:
+        fieldsToValidate = ["agreementVerified"];
+        break;
       default:
         return true;
     }
 
     const isStepValid = await trigger(fieldsToValidate);
-    console.log("isStepValid", isStepValid);
+    console.log("Step validation result:", isStepValid);
+    console.log("Current form values:", methods.getValues());
+    console.log("Form errors:", methods.formState.errors);
+
     if (!isStepValid) {
       const firstError = Object.values(errors)[0]?.message;
-      console.log("firstError", firstError);
       if (firstError) {
         toast.error(firstError as string);
       }
-    }
-
-    // Save form data when step is valid
-    if (isStepValid) {
-      const currentFormData = methods.getValues();
-      setFormData(currentFormData);
     }
 
     return isStepValid;
@@ -214,7 +202,6 @@ export default function NewLeasePage() {
             <FormProvider {...methods}>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {renderStep()}
-
                 <div className="flex justify-between mt-8">
                   {currentStep > 0 && (
                     <Button
