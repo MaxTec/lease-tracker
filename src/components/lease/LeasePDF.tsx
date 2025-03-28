@@ -9,10 +9,20 @@ import {
   StyleSheet,
   PDFViewer,
 } from "@react-pdf/renderer";
-import { formatDistance } from "date-fns";
 import { numberToWords } from "@/utils/numberUtils";
 import { formatDate } from "@/utils/dateUtils";
-import { Locale, eachMonthOfInterval, setDate } from "date-fns";
+import {
+  parseISO,
+  Locale,
+  eachMonthOfInterval,
+  setDate,
+  lastDayOfMonth,
+  formatDistance,
+  isBefore,
+  isAfter,
+  addMonths,
+  isEqual,
+} from "date-fns";
 import { es } from "date-fns/locale"; // Import Spanish locale
 // Define styles for the lease PDF
 const styles = StyleSheet.create({
@@ -52,10 +62,10 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   clauseContent: {
-    fontSize: 12,
-    marginBottom: 10,
-    marginLeft: 20,
-    lineHeight: 1.5,
+    fontSize: 10,
+    marginBottom: 5,
+    marginLeft: 10,
+    lineHeight: 1,
   },
   pageNumber: {
     position: "absolute",
@@ -120,9 +130,9 @@ export interface LeaseData {
   // Lease details
   startDate: string;
   endDate: string;
-  rentAmount: number;
-  depositAmount: number;
-  paymentDay: number;
+  rentAmount: string;
+  depositAmount: string;
+  paymentDay: string;
 
   // Existing clause and rule interfaces
   clauses: LeaseClause[];
@@ -162,7 +172,6 @@ const LeaseDocument: React.FC<{ data: LeaseData; locale?: Locale }> = ({
           EN LA CALLE {data.propertyAddress}&nbsp; SUJETAN A LAS SIGUIENTES:
         </Text>
       </View>
-
       {/* SEGUNDA. \- Este convenio es por el término definitivo e improrrogable de 1 AÑO(S), que corresponde del 01 DE ABRIL DE 2024 AL 31 DE MARZO DE 2025\.
        */}
       {/* Poner titulo de la seccion CLAUSULAS */}
@@ -188,16 +197,12 @@ const LeaseDocument: React.FC<{ data: LeaseData; locale?: Locale }> = ({
       <View key={1} style={styles.section}>
         <Text style={styles.clauseTitle}>2. RENTA</Text>
         <Text style={styles.clauseContent}>
-          A partir del {formatDate(data.startDate, "d 'de' MMMM 'de' yyyy")}, el
-          arrendatario deberá pagar {data.rentAmount}&nbsp;(
-          {numberToWords(data.rentAmount)}&nbsp;00/100&nbsp;M.N.) como renta
-          mensual. Este monto se mantendrá vigente hasta el pago correspondiente
-          al {formatDate(data.endDate, "d 'de' MMMM 'de' yyyy")}, cubriendo el
-          Cada pago deberá realizarse el día {data.paymentDay}&nbsp;de cada mes
-          y corresponderá al mes en curso. Para años subsecuentes, si el
-          arrendador opta por renovar el contrato, el monto de la renta podrá
-          ser actualizado y los pagos seguirán realizándose de la misma manera,
-          el día {data.paymentDay}&nbsp;de cada mes, cubriendo el mes en curso.
+          {generateRentClause(
+            data.startDate,
+            data.endDate,
+            parseInt(data.paymentDay) || 1,
+            parseFloat(data.rentAmount) || 0
+          )}
         </Text>
       </View>
       {/* Render Clauses */}
@@ -209,50 +214,53 @@ const LeaseDocument: React.FC<{ data: LeaseData; locale?: Locale }> = ({
           <Text style={styles.clauseContent}>{clause.content}</Text>
         </View>
       ))}
-
-      {/* Tenant Information Section */}
-      {/* <View style={styles.section}>
-        <Text style={styles.sectionTitle}>ARRENDATARIO:</Text>
-        <Text style={styles.contactInfo}>Nombre: {data.tenantName}</Text>
-        <Text style={styles.contactInfo}>Teléfono: {data.tenantPhone}</Text>
-        <Text style={styles.contactInfo}>Email: {data.tenantEmail}</Text>
-        {data.emergencyContact && (
-          <Text style={styles.contactInfo}>
-            Contacto de Emergencia: {data.emergencyContact}
-          </Text>
-        )}
-      </View> */}
-
-      {/* Property Information Section */}
-      {/* <View style={styles.section}>
-        <Text style={styles.sectionTitle}>1. OBJETO DEL CONTRATO</Text>
-        <Text style={styles.propertyDetails}>
-          El inmueble denominado {data.propertyName}, tipo{" "}
-          {data.propertyType.toLowerCase()}, ubicado en {data.propertyAddress},
-          Unidad {data.unitNumber}.
-        </Text>
-      </View> */}
-
-      {/* <View style={styles.section}>
-        <Text style={styles.clauseTitle}>2. TÉRMINO</Text>
-        <Text style={styles.clauseContent}>
-          Desde: {format(new Date(data.startDate), "dd/MM/yyyy")}
-          {"\n"}
-          Hasta: {format(new Date(data.endDate), "dd/MM/yyyy")}
-        </Text>
-      </View>
-
+      {/* Generar tabla de amortizacion */}
       <View style={styles.section}>
-        <Text style={styles.clauseTitle}>3. RENTA Y DEPÓSITO</Text>
-        <Text style={styles.clauseContent}>
-          Renta mensual: ${data.rentAmount}
-          {"\n"}
-          Depósito de garantía: ${data.depositAmount}
-          {"\n"}
-          Día de pago: {data.paymentDay} de cada mes
-        </Text>
-      </View> */}
-
+        <Text style={styles.sectionTitle}>Tabla de Amortización</Text>
+      </View>
+      <View style={{ padding: 5 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            fontSize: 8,
+            fontWeight: "bold",
+            borderBottom: "1px solid #000",
+            paddingBottom: 4,
+          }}
+        >
+          <Text style={styles.clauseContent}>Número</Text>
+          <Text style={styles.clauseContent}>Fecha de Vencimiento</Text>
+          <Text style={styles.clauseContent}>Monto</Text>
+          <Text style={styles.clauseContent}>Cubre</Text>
+        </View>
+        {generateAmortizationTable(
+          data.startDate,
+          data.endDate,
+          parseInt(data.paymentDay) || 1,
+          parseFloat(data.rentAmount) || 0
+        ).map((item) => (
+          <View
+            key={item.number}
+            style={{ borderBottom: "1px solid #000", padding: 2 }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                fontSize: 8,
+              }}
+            >
+              <Text style={styles.clauseContent}>{item.number}</Text>
+              <Text style={styles.clauseContent}>{item.dueDate}</Text>
+              <Text style={styles.clauseContent}>
+                {numberToWords(item.amount)}
+              </Text>
+              <Text style={styles.clauseContent}>{item.covers}</Text>
+            </View>
+          </View>
+        ))}
+      </View>
       {/* Render Rules Section */}
       {data.rules.length > 0 && (
         <View style={styles.section}>
@@ -312,3 +320,130 @@ export default function LeasePDF({ data, locale }: LeasePDFProps) {
     </div>
   );
 }
+
+export const generateRentClause = (
+  startDate: string,
+  endDate: string,
+  paymentDay: number,
+  rentAmount: number
+): string => {
+  console.log("startDate", startDate);
+  console.log("endDate", endDate);
+  console.log("paymentDay", paymentDay);
+  console.log("rentAmount", rentAmount);
+  const start = parseISO(startDate);
+  const end = parseISO(endDate);
+
+  const getUTCDate = (date: Date, day: number): Date => {
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth();
+
+    if (day === 30) {
+      return lastDayOfMonth(new Date(Date.UTC(year, month, 1)));
+    }
+
+    return new Date(Date.UTC(year, month, day));
+  };
+
+  // Primer pago
+  const firstPaymentDate = getUTCDate(start, paymentDay);
+  const formattedFirstPaymentDate = formatDate(
+    firstPaymentDate,
+    "d 'de' MMMM 'de' yyyy",
+    "UTC",
+    es
+  );
+  const coveredMonth = formatDate(firstPaymentDate, "MMMM", "UTC", es);
+
+  // Último pago
+  const lastPaymentDate = getUTCDate(end, paymentDay);
+  const formattedLastPaymentDate = formatDate(
+    lastPaymentDate,
+    "d 'de' MMMM 'de' yyyy",
+    "UTC",
+    es
+  );
+  const lastCoveredMonth = formatDate(lastPaymentDate, "MMMM", "UTC", es);
+
+  // Día de pago texto
+  const paymentDayText =
+    paymentDay === 1
+      ? "día 1 de cada mes"
+      : paymentDay === 15
+      ? "día 15 de cada mes"
+      : "último día de cada mes";
+
+  const clause = `
+El primer pago de renta deberá realizarse el ${formattedFirstPaymentDate}, y corresponderá al mes de ${coveredMonth}. A partir de esa fecha, el arrendatario deberá pagar ${numberToWords(
+    rentAmount
+  )} como renta mensual.
+
+Cada pago deberá realizarse el ${paymentDayText} y cubrirá el mes en curso.
+
+Este monto se mantendrá vigente hasta el pago correspondiente al ${formattedLastPaymentDate}, cubriendo el mes de ${lastCoveredMonth}.
+
+Para años subsecuentes, si el arrendador opta por renovar el contrato, el monto de la renta podrá ser actualizado y los pagos seguirán realizándose de la misma manera: el ${paymentDayText}, cubriendo el mes en curso.
+`.trim();
+
+  return clause;
+};
+export type AmortizationItem = {
+  number: number;
+  dueDate: string;
+  amount: number;
+  covers: string;
+};
+
+export const generateAmortizationTable = (
+  startDateStr: string,
+  endDateStr: string,
+  paymentDay: number,
+  rentAmount: number
+): AmortizationItem[] => {
+  const items: AmortizationItem[] = [];
+
+  const startDate = parseISO(startDateStr);
+  const endDate = parseISO(endDateStr);
+
+  const getPaymentDate = (year: number, month: number): Date => {
+    return paymentDay === 30
+      ? lastDayOfMonth(new Date(Date.UTC(year, month, 1)))
+      : new Date(Date.UTC(year, month, paymentDay));
+  };
+
+  let year = startDate.getUTCFullYear();
+  let month = startDate.getUTCMonth();
+
+  let paymentDate = getPaymentDate(year, month);
+
+  // ✓ Si el primer pago es menor que startDate y no exactamente igual, avanzar
+  while (paymentDate < startDate && !isEqual(paymentDate, startDate)) {
+    month++;
+    if (month > 11) {
+      month = 0;
+      year++;
+    }
+    paymentDate = getPaymentDate(year, month);
+  }
+
+  let count = 1;
+
+  while (paymentDate <= endDate) {
+    items.push({
+      number: count,
+      dueDate: formatDate(paymentDate, "d 'de' MMMM 'de' yyyy", "UTC"),
+      amount: rentAmount,
+      covers: formatDate(paymentDate, "MMMM yyyy", "UTC"),
+    });
+
+    month++;
+    if (month > 11) {
+      month = 0;
+      year++;
+    }
+    paymentDate = getPaymentDate(year, month);
+    count++;
+  }
+
+  return items;
+};

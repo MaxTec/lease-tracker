@@ -12,35 +12,53 @@ import LeaseRulesStep from "@/components/lease/LeaseRulesStep";
 import LeasePreviewStep from "@/components/lease/LeasePreviewStep";
 import Button from "@/components/ui/Button";
 import { toast } from "react-hot-toast";
-
+import {
+  parseISO,
+  format,
+  isBefore,
+  addMonths,
+  isEqual,
+  isAfter,
+  lastDayOfMonth,
+} from "date-fns";
+import { AmortizationItem } from "@/components/lease/LeasePDF";
+import { formatDate } from "@/utils/dateUtils";
 // Fix the schema definitions
 const leaseDetailsSchema = z.object({
   unitId: z.string().nonempty("Unit is required"),
   tenantId: z.string().nonempty("Tenant is required"),
   startDate: z.string().nonempty("Start date is required"),
   endDate: z.string().nonempty("End date is required"),
-  rentAmount: z.string().nonempty("Rent amount is required"),  // Keep as string for form handling
+  rentAmount: z.string().nonempty("Rent amount is required"), // Keep as string for form handling
   depositAmount: z.string().nonempty("Deposit amount is required"), // Keep as string for form handling
   paymentDay: z.string().nonempty("Payment day is required"), // Keep as string for form handling
   customEndDate: z.boolean().default(false),
 });
 
 const leaseRulesSchema = z.object({
-  selectedRules: z.array(z.string()).min(1, "At least one rule must be selected").default([]),
-  selectedClauses: z.array(z.string()).min(1, "At least one clause must be selected").default([]),
-  customClauses: z.array(
-    z.object({
-      title: z.string(),
-      content: z.string(),
-    })
-  ).default([]),
+  selectedRules: z
+    .array(z.string())
+    .min(1, "At least one rule must be selected")
+    .default([]),
+  selectedClauses: z
+    .array(z.string())
+    .min(1, "At least one clause must be selected")
+    .default([]),
+  customClauses: z
+    .array(
+      z.object({
+        title: z.string(),
+        content: z.string(),
+      })
+    )
+    .default([]),
 });
 
 // Combined schema for the entire form
 const leaseSchema = leaseDetailsSchema.merge(leaseRulesSchema).extend({
   agreementVerified: z.boolean().refine((val) => val === true, {
-    message: "You must verify that you have reviewed the lease agreement"
-  })
+    message: "You must verify that you have reviewed the lease agreement",
+  }),
 });
 
 type LeaseFormData = z.infer<typeof leaseSchema>;
@@ -183,7 +201,19 @@ export default function NewLeasePage() {
         return null;
     }
   };
-
+  // const amortizationTable = generateAmortizationTable(
+  //   "2023-09-01",
+  //   "2024-08-31",
+  //   30,
+  //   9500
+  // );
+  const amortizationTable = generateAmortizationTable(
+    "2025-05-01",
+    "2026-04-30",
+    1,
+    9500
+  );
+  console.log("amortizationTable", amortizationTable);
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -235,3 +265,57 @@ export default function NewLeasePage() {
     </Layout>
   );
 }
+
+export const generateAmortizationTable = (
+  startDateStr: string,
+  endDateStr: string,
+  paymentDay: 1 | 15 | 30,
+  rentAmount: number
+): AmortizationItem[] => {
+  const items: AmortizationItem[] = [];
+
+  const startDate = parseISO(startDateStr);
+  const endDate = parseISO(endDateStr);
+
+  const getPaymentDate = (year: number, month: number): Date => {
+    return paymentDay === 30
+      ? lastDayOfMonth(new Date(Date.UTC(year, month, 1)))
+      : new Date(Date.UTC(year, month, paymentDay));
+  };
+
+  let year = startDate.getUTCFullYear();
+  let month = startDate.getUTCMonth();
+
+  let paymentDate = getPaymentDate(year, month);
+
+  // Avanzar solo si el paymentDate es estrictamente menor que el startDate
+  if (paymentDate.getTime() < startDate.getTime()) {
+    month++;
+    if (month > 11) {
+      month = 0;
+      year++;
+    }
+    paymentDate = getPaymentDate(year, month);
+  }
+
+  let count = 1;
+
+  while (!isAfter(paymentDate, endDate) && count <= 100) {
+    items.push({
+      number: count,
+      dueDate: formatDate(paymentDate, "d 'de' MMMM 'de' yyyy", "UTC"),
+      amount: rentAmount,
+      covers: formatDate(paymentDate, "MMMM yyyy", "UTC"),
+    });
+
+    month++;
+    if (month > 11) {
+      month = 0;
+      year++;
+    }
+    paymentDate = getPaymentDate(year, month);
+    count++;
+  }
+
+  return items;
+};
