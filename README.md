@@ -66,17 +66,22 @@ src/
    npx prisma migrate dev
    ```
 
-5. Seed the database:
+5. **(Optional) Re-run all migrations**: If you need to reset your database and apply all migrations again, use the following command:
+   ```bash
+   npx prisma migrate reset
+   ```
+
+6. Seed the database:
    ```bash
    npx prisma db seed
    ```
 
-6. Start the development server:
+7. Start the development server:
    ```bash
    npm run dev
    ```
 
-7. Open [http://localhost:3000](http://localhost:3000) in your browser.
+8. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Database Schema
 

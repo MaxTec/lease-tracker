@@ -12,17 +12,6 @@ import LeaseRulesStep from "@/components/lease/LeaseRulesStep";
 import LeasePreviewStep from "@/components/lease/LeasePreviewStep";
 import Button from "@/components/ui/Button";
 import { toast } from "react-hot-toast";
-import {
-  parseISO,
-  format,
-  isBefore,
-  addMonths,
-  isEqual,
-  isAfter,
-  lastDayOfMonth,
-} from "date-fns";
-import { AmortizationItem } from "@/components/lease/LeasePDF";
-import { formatDate } from "@/utils/dateUtils";
 // Fix the schema definitions
 const leaseDetailsSchema = z.object({
   unitId: z.string().nonempty("Unit is required"),
@@ -36,14 +25,8 @@ const leaseDetailsSchema = z.object({
 });
 
 const leaseRulesSchema = z.object({
-  selectedRules: z
-    .array(z.string())
-    .min(1, "At least one rule must be selected")
-    .default([]),
-  selectedClauses: z
-    .array(z.string())
-    .min(1, "At least one clause must be selected")
-    .default([]),
+  selectedRules: z.array(z.string()).min(1, "At least one rule must be selected").default([]),
+  selectedClauses: z.array(z.string()).min(1, "At least one clause must be selected").default([]),
   customClauses: z
     .array(
       z.object({
@@ -113,15 +96,7 @@ export default function NewLeasePage() {
 
     switch (currentStep) {
       case 0:
-        fieldsToValidate = [
-          "unitId",
-          "tenantId",
-          "startDate",
-          "endDate",
-          "rentAmount",
-          "depositAmount",
-          "paymentDay",
-        ];
+        fieldsToValidate = ["unitId", "tenantId", "startDate", "endDate", "rentAmount", "depositAmount", "paymentDay"];
         break;
       case 1:
         fieldsToValidate = ["selectedRules", "selectedClauses"];
@@ -201,58 +176,31 @@ export default function NewLeasePage() {
         return null;
     }
   };
-  // const amortizationTable = generateAmortizationTable(
-  //   "2023-09-01",
-  //   "2024-08-31",
-  //   30,
-  //   9500
-  // );
-  const amortizationTable = generateAmortizationTable(
-    "2025-05-01",
-    "2026-04-30",
-    1,
-    9500
-  );
-  console.log("amortizationTable", amortizationTable);
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h1 className="text-2xl font-semibold text-gray-800 mb-6">
-              Create New Lease
-            </h1>
+      <div className='container mx-auto px-4 py-8'>
+        <div className='max-w-4xl mx-auto'>
+          <div className='bg-white rounded-lg shadow p-6'>
+            <h1 className='text-2xl font-semibold text-gray-800 mb-6'>Create New Lease</h1>
 
-            <StepIndicator
-              steps={steps}
-              currentStep={currentStep}
-              className="mb-8"
-            />
+            <StepIndicator steps={steps} currentStep={currentStep} className='mb-8' />
 
             <FormProvider {...methods}>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
                 {renderStep()}
-                <div className="flex justify-between mt-8">
+                <div className='flex justify-between mt-8'>
                   {currentStep > 0 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={previousStep}
-                    >
+                    <Button type='button' variant='outline' onClick={previousStep}>
                       Previous
                     </Button>
                   )}
 
                   {currentStep < steps.length - 1 ? (
-                    <Button
-                      type="button"
-                      onClick={nextStep}
-                      className="ml-auto"
-                    >
+                    <Button type='button' onClick={nextStep} className='ml-auto'>
                       Next
                     </Button>
                   ) : (
-                    <Button type="submit" className="ml-auto">
+                    <Button type='submit' className='ml-auto'>
                       Create Lease
                     </Button>
                   )}
@@ -265,57 +213,3 @@ export default function NewLeasePage() {
     </Layout>
   );
 }
-
-export const generateAmortizationTable = (
-  startDateStr: string,
-  endDateStr: string,
-  paymentDay: 1 | 15 | 30,
-  rentAmount: number
-): AmortizationItem[] => {
-  const items: AmortizationItem[] = [];
-
-  const startDate = parseISO(startDateStr);
-  const endDate = parseISO(endDateStr);
-
-  const getPaymentDate = (year: number, month: number): Date => {
-    return paymentDay === 30
-      ? lastDayOfMonth(new Date(Date.UTC(year, month, 1)))
-      : new Date(Date.UTC(year, month, paymentDay));
-  };
-
-  let year = startDate.getUTCFullYear();
-  let month = startDate.getUTCMonth();
-
-  let paymentDate = getPaymentDate(year, month);
-
-  // Avanzar solo si el paymentDate es estrictamente menor que el startDate
-  if (paymentDate.getTime() < startDate.getTime()) {
-    month++;
-    if (month > 11) {
-      month = 0;
-      year++;
-    }
-    paymentDate = getPaymentDate(year, month);
-  }
-
-  let count = 1;
-
-  while (!isAfter(paymentDate, endDate) && count <= 100) {
-    items.push({
-      number: count,
-      dueDate: formatDate(paymentDate, "d 'de' MMMM 'de' yyyy", "UTC"),
-      amount: rentAmount,
-      covers: formatDate(paymentDate, "MMMM yyyy", "UTC"),
-    });
-
-    month++;
-    if (month > 11) {
-      month = 0;
-      year++;
-    }
-    paymentDate = getPaymentDate(year, month);
-    count++;
-  }
-
-  return items;
-};

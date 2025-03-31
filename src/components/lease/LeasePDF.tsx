@@ -1,29 +1,13 @@
 "use client";
 
 import React from "react";
-import {
-  Document,
-  Page,
-  Text,
-  View,
-  StyleSheet,
-  PDFViewer,
-} from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, PDFViewer } from "@react-pdf/renderer";
 import { numberToWords } from "@/utils/numberUtils";
 import { formatDate } from "@/utils/dateUtils";
-import {
-  parseISO,
-  Locale,
-  eachMonthOfInterval,
-  setDate,
-  lastDayOfMonth,
-  formatDistance,
-  isBefore,
-  isAfter,
-  addMonths,
-  isEqual,
-} from "date-fns";
+import { parseISO, Locale, eachMonthOfInterval, setDate, lastDayOfMonth, formatDistance } from "date-fns";
 import { es } from "date-fns/locale"; // Import Spanish locale
+import { generateAmortizationTable } from "@/utils/agreementUtils";
+
 // Define styles for the lease PDF
 const styles = StyleSheet.create({
   page: {
@@ -145,31 +129,23 @@ interface LeasePDFProps {
 }
 
 // Component for the actual PDF document
-const LeaseDocument: React.FC<{ data: LeaseData; locale?: Locale }> = ({
-  data,
-  locale,
-}) => (
+const LeaseDocument: React.FC<{ data: LeaseData; locale?: Locale }> = ({ data, locale }) => (
   <Document>
     {/* Title Page */}
-    <Page size="LETTER" style={styles.page}>
+    <Page size='LETTER' style={styles.page}>
       <View style={styles.title}>
         <Text>CONTRATO DE ARRENDAMIENTO</Text>
       </View>
 
       <View style={{ ...styles.section, textAlign: "left" }}>
-        <Text style={styles.header}>
-          En la ciudad de Cancun, a{" "}
-          {formatDate(new Date(), "d 'de' MMMM 'de' yyyy")}
-        </Text>
+        <Text style={styles.header}>En la ciudad de Cancun, a {formatDate(new Date(), "d 'de' MMMM 'de' yyyy")}</Text>
       </View>
 
       {/* Landlord Information Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
-          CONVENIO TRANSACCIONAL QUE CELEBRAN POR UNA PARTE COMO ARRENDADOR O
-          PROPIETARIO EL C. {data.landlordName}, Y POR LA OTRA PARTE COMO
-          ARRENDATARIO EL C. {data.tenantName}&nbsp; RESPECTO AL LOCAL UBICADO
-          EN LA CALLE {data.propertyAddress}&nbsp; SUJETAN A LAS SIGUIENTES:
+          CONVENIO TRANSACCIONAL QUE CELEBRAN POR UNA PARTE COMO ARRENDADOR O PROPIETARIO EL C. {data.landlordName}, Y POR LA OTRA PARTE COMO ARRENDATARIO EL C. {data.tenantName}
+          &nbsp; RESPECTO AL LOCAL UBICADO EN LA CALLE {data.propertyAddress}&nbsp; SUJETAN A LAS SIGUIENTES:
         </Text>
       </View>
       {/* SEGUNDA. \- Este convenio es por el término definitivo e improrrogable de 1 AÑO(S), que corresponde del 01 DE ABRIL DE 2024 AL 31 DE MARZO DE 2025\.
@@ -196,14 +172,7 @@ const LeaseDocument: React.FC<{ data: LeaseData; locale?: Locale }> = ({
        */}
       <View key={1} style={styles.section}>
         <Text style={styles.clauseTitle}>2. RENTA</Text>
-        <Text style={styles.clauseContent}>
-          {generateRentClause(
-            data.startDate,
-            data.endDate,
-            parseInt(data.paymentDay) || 1,
-            parseFloat(data.rentAmount) || 0
-          )}
-        </Text>
+        <Text style={styles.clauseContent}>{generateRentClause(data.startDate, data.endDate, parseInt(data.paymentDay) || 1, parseFloat(data.rentAmount) || 0)}</Text>
       </View>
       {/* Render Clauses */}
       {data.clauses.map((clause, index) => (
@@ -234,16 +203,8 @@ const LeaseDocument: React.FC<{ data: LeaseData; locale?: Locale }> = ({
           <Text style={styles.clauseContent}>Monto</Text>
           <Text style={styles.clauseContent}>Cubre</Text>
         </View>
-        {generateAmortizationTable(
-          data.startDate,
-          data.endDate,
-          parseInt(data.paymentDay) || 1,
-          parseFloat(data.rentAmount) || 0
-        ).map((item) => (
-          <View
-            key={item.number}
-            style={{ borderBottom: "1px solid #000", padding: 2 }}
-          >
+        {generateAmortizationTable(data.startDate, data.endDate, parseInt(data.paymentDay) || 1, parseFloat(data.rentAmount) || 0).map((item) => (
+          <View key={item.number} style={{ borderBottom: "1px solid #000", padding: 2 }}>
             <View
               style={{
                 flexDirection: "row",
@@ -253,10 +214,8 @@ const LeaseDocument: React.FC<{ data: LeaseData; locale?: Locale }> = ({
             >
               <Text style={styles.clauseContent}>{item.number}</Text>
               <Text style={styles.clauseContent}>{item.dueDate}</Text>
-              <Text style={styles.clauseContent}>
-                {numberToWords(item.amount)}
-              </Text>
-              <Text style={styles.clauseContent}>{item.covers}</Text>
+              <Text style={styles.clauseContent}>{item.amount}</Text>
+              {/* <Text style={styles.clauseContent}>{item.covers}</Text> */}
             </View>
           </View>
         ))}
@@ -295,38 +254,25 @@ const LeaseDocument: React.FC<{ data: LeaseData; locale?: Locale }> = ({
 export default function LeasePDF({ data, locale }: LeasePDFProps) {
   if (!data) return null;
   const months = eachMonthOfInterval({
-    start: new Date(
-      new Date(data.startDate).setMonth(new Date(data.startDate).getMonth() - 1)
-    ),
+    start: new Date(new Date(data.startDate).setMonth(new Date(data.startDate).getMonth() - 1)),
     end: new Date(data.endDate),
   });
-  const paymentDates = months.map((date) =>
-    formatDate(setDate(date, data.paymentDay), "d 'de' MMMM 'de' yyyy")
-  );
+  const paymentDates = months.map((date) => formatDate(setDate(date, data.paymentDay), "d 'de' MMMM 'de' yyyy"));
   const monthsCount = months.length;
   console.log(monthsCount);
   console.log(months);
   console.log(data.endDate);
   console.log(paymentDates);
   return (
-    <div className="w-full h-[800px]">
-      <PDFViewer className="w-full h-full">
-        <LeaseDocument
-          data={data}
-          locale={locale}
-          paymentDates={paymentDates}
-        />
+    <div className='w-full h-[800px]'>
+      <PDFViewer className='w-full h-full'>
+        <LeaseDocument data={data} locale={locale} paymentDates={paymentDates} />
       </PDFViewer>
     </div>
   );
 }
 
-export const generateRentClause = (
-  startDate: string,
-  endDate: string,
-  paymentDay: number,
-  rentAmount: number
-): string => {
+export const generateRentClause = (startDate: string, endDate: string, paymentDay: number, rentAmount: number): string => {
   console.log("startDate", startDate);
   console.log("endDate", endDate);
   console.log("paymentDay", paymentDay);
@@ -347,31 +293,16 @@ export const generateRentClause = (
 
   // Primer pago
   const firstPaymentDate = getUTCDate(start, paymentDay);
-  const formattedFirstPaymentDate = formatDate(
-    firstPaymentDate,
-    "d 'de' MMMM 'de' yyyy",
-    "UTC",
-    es
-  );
+  const formattedFirstPaymentDate = formatDate(firstPaymentDate, "d 'de' MMMM 'de' yyyy", "UTC", es);
   const coveredMonth = formatDate(firstPaymentDate, "MMMM", "UTC", es);
 
   // Último pago
   const lastPaymentDate = getUTCDate(end, paymentDay);
-  const formattedLastPaymentDate = formatDate(
-    lastPaymentDate,
-    "d 'de' MMMM 'de' yyyy",
-    "UTC",
-    es
-  );
+  const formattedLastPaymentDate = formatDate(lastPaymentDate, "d 'de' MMMM 'de' yyyy", "UTC", es);
   const lastCoveredMonth = formatDate(lastPaymentDate, "MMMM", "UTC", es);
 
   // Día de pago texto
-  const paymentDayText =
-    paymentDay === 1
-      ? "día 1 de cada mes"
-      : paymentDay === 15
-      ? "día 15 de cada mes"
-      : "último día de cada mes";
+  const paymentDayText = paymentDay === 1 ? "día 1 de cada mes" : paymentDay === 15 ? "día 15 de cada mes" : "último día de cada mes";
 
   const clause = `
 El primer pago de renta deberá realizarse el ${formattedFirstPaymentDate}, y corresponderá al mes de ${coveredMonth}. A partir de esa fecha, el arrendatario deberá pagar ${numberToWords(
@@ -393,57 +324,4 @@ export type AmortizationItem = {
   amount: number;
   covers: string;
 };
-
-export const generateAmortizationTable = (
-  startDateStr: string,
-  endDateStr: string,
-  paymentDay: number,
-  rentAmount: number
-): AmortizationItem[] => {
-  const items: AmortizationItem[] = [];
-
-  const startDate = parseISO(startDateStr);
-  const endDate = parseISO(endDateStr);
-
-  const getPaymentDate = (year: number, month: number): Date => {
-    return paymentDay === 30
-      ? lastDayOfMonth(new Date(Date.UTC(year, month, 1)))
-      : new Date(Date.UTC(year, month, paymentDay));
-  };
-
-  let year = startDate.getUTCFullYear();
-  let month = startDate.getUTCMonth();
-
-  let paymentDate = getPaymentDate(year, month);
-
-  // ✓ Si el primer pago es menor que startDate y no exactamente igual, avanzar
-  while (paymentDate < startDate && !isEqual(paymentDate, startDate)) {
-    month++;
-    if (month > 11) {
-      month = 0;
-      year++;
-    }
-    paymentDate = getPaymentDate(year, month);
-  }
-
-  let count = 1;
-
-  while (paymentDate <= endDate) {
-    items.push({
-      number: count,
-      dueDate: formatDate(paymentDate, "d 'de' MMMM 'de' yyyy", "UTC"),
-      amount: rentAmount,
-      covers: formatDate(paymentDate, "MMMM yyyy", "UTC"),
-    });
-
-    month++;
-    if (month > 11) {
-      month = 0;
-      year++;
-    }
-    paymentDate = getPaymentDate(year, month);
-    count++;
-  }
-
-  return items;
-};
+ 
