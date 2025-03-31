@@ -20,9 +20,9 @@ const propertySchema = z.object({
     .array(
       z.object({
         unitNumber: z.string().min(1, "required"),
-        bedrooms: z.number(),
-        bathrooms: z.number(),
-        squareFeet: z.number(),
+        bedrooms: z.string(),
+        bathrooms: z.string(),
+        squareFeet: z.string(),
       })
     )
     .min(1, "At least one unit is required"),
@@ -36,9 +36,9 @@ interface Property {
   landlordId: number;
   units: {
     unitNumber: string;
-    bedrooms: number;
-    bathrooms: number;
-    squareFeet: number;
+    bedrooms: string;
+    bathrooms: string;
+    squareFeet: string;
   }[];
 }
 
@@ -77,7 +77,7 @@ export default function PropertyForm({
       address: "",
       type: "",
       landlordId: undefined,
-      units: [{ unitNumber: "", bedrooms: 1, bathrooms: 2, squareFeet: 100 }],
+      units: [{ unitNumber: "" }],
     },
   });
   const { fields, append, remove } = useFieldArray({
@@ -114,9 +114,7 @@ export default function PropertyForm({
             address: "",
             type: "",
             landlordId: undefined,
-            units: [
-              { unitNumber: "", bedrooms: 1, bathrooms: 2, squareFeet: 100 },
-            ],
+            units: [{ unitNumber: "" }],
           });
           setLoading(false);
         }
@@ -175,7 +173,6 @@ export default function PropertyForm({
         </div>
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          
           <Input
             {...register("name")}
             label="Property Name"

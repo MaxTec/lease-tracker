@@ -25,15 +25,13 @@ const leaseDetailsSchema = z.object({
 });
 
 const leaseRulesSchema = z.object({
-  selectedRules: z.array(z.string()).min(1, "At least one rule must be selected").default([]),
-  selectedClauses: z.array(z.string()).min(1, "At least one clause must be selected").default([]),
-  customClauses: z
-    .array(
-      z.object({
-        title: z.string(),
-        content: z.string(),
-      })
-    )
+  selectedRules: z
+    .array(z.string())
+    .min(1, "At least one rule must be selected")
+    .default([]),
+  selectedClauses: z
+    .array(z.string())
+    .min(1, "At least one clause must be selected")
     .default([]),
 });
 
@@ -70,14 +68,13 @@ const defaultFormValues = {
   customEndDate: false,
   selectedRules: [] as string[],
   selectedClauses: [] as string[],
-  customClauses: [] as { title: string; content: string }[],
   agreementVerified: false,
 };
 
 export default function NewLeasePage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState(defaultFormValues);
+  // const [formData, setFormData] = useState(defaultFormValues);
 
   const methods = useForm<LeaseFormData>({
     resolver: zodResolver(leaseSchema),
@@ -96,7 +93,15 @@ export default function NewLeasePage() {
 
     switch (currentStep) {
       case 0:
-        fieldsToValidate = ["unitId", "tenantId", "startDate", "endDate", "rentAmount", "depositAmount", "paymentDay"];
+        fieldsToValidate = [
+          "unitId",
+          "tenantId",
+          "startDate",
+          "endDate",
+          "rentAmount",
+          "depositAmount",
+          "paymentDay",
+        ];
         break;
       case 1:
         fieldsToValidate = ["selectedRules", "selectedClauses"];
@@ -116,7 +121,12 @@ export default function NewLeasePage() {
     if (!isStepValid) {
       const firstError = Object.values(errors)[0]?.message;
       if (firstError) {
-        toast.error(firstError as string);
+        // toast.error(firstError as string);
+        Object.values(errors).forEach((error) => {
+          if (error) {
+            toast.error(error.message as string);
+          }
+        });
       }
     }
 
@@ -127,22 +137,22 @@ export default function NewLeasePage() {
     const isValid = await validateCurrentStep();
     if (isValid) {
       // Save current form data before moving to next step
-      const currentFormData = methods.getValues();
-      setFormData(currentFormData);
+      // const currentFormData = methods.getValues();
+      // setFormData(currentFormData);
       setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
     }
   };
 
   const previousStep = () => {
     // Save current form data before moving to previous step
-    const currentFormData = methods.getValues();
-    setFormData(currentFormData);
+    // const currentFormData = methods.getValues();
+    // setFormData(currentFormData);
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
   const onSubmit = async (data: LeaseFormData) => {
     try {
-      setFormData(data); // Save final form data
+      // setFormData(data); // Save final form data
       const response = await fetch("/api/leases", {
         method: "POST",
         headers: {
@@ -163,7 +173,7 @@ export default function NewLeasePage() {
       toast.error("Failed to create lease");
     }
   };
-  console.log("formData", formData);
+  // console.log("formData", formData);
   const renderStep = () => {
     switch (currentStep) {
       case 0:
@@ -178,29 +188,43 @@ export default function NewLeasePage() {
   };
   return (
     <Layout>
-      <div className='container mx-auto px-4 py-8'>
-        <div className='max-w-4xl mx-auto'>
-          <div className='bg-white rounded-lg shadow p-6'>
-            <h1 className='text-2xl font-semibold text-gray-800 mb-6'>Create New Lease</h1>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h1 className="text-2xl font-semibold text-gray-800 mb-6">
+              Create New Lease
+            </h1>
 
-            <StepIndicator steps={steps} currentStep={currentStep} className='mb-8' />
+            <StepIndicator
+              steps={steps}
+              currentStep={currentStep}
+              className="mb-8"
+            />
 
             <FormProvider {...methods}>
-              <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {renderStep()}
-                <div className='flex justify-between mt-8'>
+                <div className="flex justify-between mt-8">
                   {currentStep > 0 && (
-                    <Button type='button' variant='outline' onClick={previousStep}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={previousStep}
+                    >
                       Previous
                     </Button>
                   )}
 
                   {currentStep < steps.length - 1 ? (
-                    <Button type='button' onClick={nextStep} className='ml-auto'>
+                    <Button
+                      type="button"
+                      onClick={nextStep}
+                      className="ml-auto"
+                    >
                       Next
                     </Button>
                   ) : (
-                    <Button type='submit' className='ml-auto'>
+                    <Button type="submit" className="ml-auto">
                       Create Lease
                     </Button>
                   )}

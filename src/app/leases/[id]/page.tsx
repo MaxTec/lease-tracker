@@ -9,7 +9,7 @@ import Layout from "@/components/layout/Layout";
 import Tabs from "@/components/ui/Tabs";
 import PaymentSchedule from "@/components/payments/PaymentSchedule";
 import CompletedPayments from "@/components/payments/CompletedPayments";
-import { FaHome, FaUser, FaCalendarAlt, FaDollarSign } from "react-icons/fa";
+import { FaDollarSign } from "react-icons/fa";
 import Notification from "@/components/ui/Notification";
 import Card from "@/components/ui/Card";
 import { FORMAT_DATE } from "@/constants";
@@ -427,9 +427,9 @@ export default function LeaseDetailsPage() {
 
         {notification.show && (
           <Notification
-            type={notification.type || "success"}
+            type={notification.type as "success" | "error"}
             title={notification.type === "error" ? "Error" : "Success"}
-            message={notification.message}
+            message={notification.message as string}
             action={
               notification.voucherNumber
                 ? {

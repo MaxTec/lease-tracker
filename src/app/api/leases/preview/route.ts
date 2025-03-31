@@ -1,37 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { generateAmortizationTable } from "@/utils/agreementUtils";
 
 export async function POST(req: Request) {
   try {
     const formData = await req.json();
-    // Example of the form data
-    // {
-    //     "unitId": "1",
-    //     "tenantId": "2",
-    //     "startDate": "2025-03-01",
-    //     "endDate": "2026-02-28",
-    //     "rentAmount": "1000",
-    //     "depositAmount": "1000",
-    //     "paymentDay": "1",
-    //     "customEndDate": false,
-    //     "selectedRules": [
-    //         "10",
-    //         "9",
-    //         "6",
-    //         "5",
-    //         "3"
-    //     ],
-    //     "selectedClauses": [
-    //         "8",
-    //         "7",
-    //         "6",
-    //         "5",
-    //         "2",
-    //         "1"
-    //     ],
-    //     "customClauses": [],
-    //     "agreementVerified": false
-    // }
     console.log(formData);
     const selectedClauses = await prisma.leaseClause.findMany({
       where: {
@@ -59,20 +32,20 @@ export async function POST(req: Request) {
           include: {
             landlord: {
               include: {
-                user: true
-              }
-            }
-          }
-        }
-      }
+                user: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     // Get tenant data with user information
     const tenant = await prisma.tenant.findUnique({
       where: { id: Number(formData.tenantId) },
       include: {
-        user: true
-      }
+        user: true,
+      },
     });
 
     if (!unit || !tenant) {
@@ -81,6 +54,14 @@ export async function POST(req: Request) {
         { status: 404 }
       );
     }
+
+    // Generate amortization table
+    const amortizationTable = generateAmortizationTable(
+      formData.startDate,
+      formData.endDate,
+      parseInt(formData.paymentDay) || 1,
+      parseFloat(formData.rentAmount) || 0
+    );
 
     // Format the data for the PDF
     const pdfData = {
@@ -101,7 +82,7 @@ export async function POST(req: Request) {
       propertyAddress: unit.property.address,
       propertyType: unit.property.type,
       unitNumber: unit.unitNumber,
-      
+
       // Lease details
       startDate: formData.startDate,
       endDate: formData.endDate,
@@ -110,22 +91,21 @@ export async function POST(req: Request) {
       paymentDay: formData.paymentDay,
 
       // Selected clauses and rules
-      clauses: selectedClauses.map(clause => ({
+      clauses: selectedClauses.map((clause) => ({
         id: clause.id,
         title: clause.title,
         content: clause.content,
-        type: clause.type
+        type: clause.type,
       })),
 
-      rules: selectedRules.map(rule => ({
+      rules: selectedRules.map((rule) => ({
         id: rule.id,
         title: rule.title,
         description: rule.description,
-        category: rule.category
-      }))
+        category: rule.category,
+      })),
+      payments: amortizationTable,
     };
-
-    console.log(pdfData);
 
     return NextResponse.json(pdfData);
   } catch (error) {

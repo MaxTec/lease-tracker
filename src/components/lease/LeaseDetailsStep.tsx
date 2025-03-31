@@ -16,7 +16,7 @@ export default function LeaseDetailsStep() {
     control,
     watch,
     setValue,
-    formState: { errors }
+    formState: { errors },
   } = useFormContext();
 
   const { properties, units, handlePropertyChange } = useProperties();
@@ -24,6 +24,10 @@ export default function LeaseDetailsStep() {
 
   const startDate = watch("startDate");
   const customEndDate = watch("customEndDate");
+  const propertyId = watch("propertyId");
+  const existingUnitId = watch("unitId");
+  const existingTenantId = watch("tenantId");
+  const existingPaymentDay = watch("paymentDay");
 
   useEffect(() => {
     if (startDate && !customEndDate) {
@@ -33,10 +37,37 @@ export default function LeaseDetailsStep() {
     }
   }, [startDate, customEndDate, setValue]);
 
+  useEffect(() => {
+    console.log("populting:", propertyId, units, existingUnitId);
+    if (properties.length > 0 && propertyId) {
+      console.log("RE POPULATING PROPERTY", propertyId);
+      setValue("propertyId", propertyId);
+      // handlePropertyChange(propertyId);
+    }
+    if (!units.length && propertyId) {
+      console.log("RE POPULATING UNITS", propertyId);
+      handlePropertyChange(propertyId);
+    }
+    if (units.length > 0 && existingUnitId) {
+      console.log("RE POPULATING UNIT", existingUnitId);
+      setValue("unitId", existingUnitId);
+    }
+    if (tenants.length > 0 && existingTenantId) {
+      console.log("RE POPULATING TENANT", existingTenantId);
+      setValue("tenantId", existingTenantId);
+    }
+    if (existingPaymentDay) {
+      setValue("paymentDay", existingPaymentDay);
+    }
+  }, [tenants, units, propertyId]);
+
   return (
     <div className="space-y-6">
       <Select
-        onChange={(e) => handlePropertyChange(e.target.value)}
+        {...register("propertyId")}
+        onChange={(e) => {
+          handlePropertyChange(e.target.value);
+        }}
         label="Property"
         options={properties.map((property) => ({
           value: property.id.toString(),
@@ -114,13 +145,17 @@ export default function LeaseDetailsStep() {
           error={errors.depositAmount?.message as string}
         />
 
-        <Input
+        <Select
           {...register("paymentDay")}
           label="Payment Day"
-          type="number"
           error={errors.paymentDay?.message as string}
+          options={[
+            { value: 1, label: "1st of the month" },
+            { value: 15, label: "15th of the month" },
+            { value: 30, label: "last day of the month" },
+          ]}
         />
       </div>
     </div>
   );
-} 
+}

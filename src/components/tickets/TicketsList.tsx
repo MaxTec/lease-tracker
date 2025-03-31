@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import Table from "@/components/ui/Table";
+import EmptyState from "../ui/EmptyState";
 
 interface Ticket {
   id: number;
@@ -54,7 +54,7 @@ export default function TicketsList() {
   if (tickets.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">No tickets found.</p>
+        <EmptyState title="No tickets found" description="No tickets found" />
       </div>
     );
   }
@@ -70,17 +70,17 @@ export default function TicketsList() {
     return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
 
-  const getPriorityColor = (priority: string) => {
-    const colors = {
-      LOW: "bg-gray-100 text-gray-800",
-      MEDIUM: "bg-yellow-100 text-yellow-800",
-      HIGH: "bg-orange-100 text-orange-800",
-      URGENT: "bg-red-100 text-red-800",
-    };
-    return (
-      colors[priority as keyof typeof colors] || "bg-gray-100 text-gray-800"
-    );
-  };
+  // const getPriorityColor = (priority: string) => {
+  //   const colors = {
+  //     LOW: "bg-gray-100 text-gray-800",
+  //     MEDIUM: "bg-yellow-100 text-yellow-800",
+  //     HIGH: "bg-orange-100 text-orange-800",
+  //     URGENT: "bg-red-100 text-red-800",
+  //   };
+  //   return (
+  //     colors[priority as keyof typeof colors] || "bg-gray-100 text-gray-800"
+  //   );
+  // };
 
   const columns = [
     {
@@ -98,55 +98,21 @@ export default function TicketsList() {
     {
       key: "status",
       label: "Status",
+      render: (item: Ticket) => (
+        <Badge className={getStatusColor(item.status)}>
+          {item.status.replace("_", " ")}
+        </Badge>
+      ),
     },
   ];
   return (
     <div className="rounded-md border">
-       {/* data={leases}
-                columns={columns}
-                searchable={true}
-                searchKeys={[
-                  "unit.property.name",
-                  "unit.unitNumber",
-                  "tenant.user.name",
-                  "status",
-                ]} */}
       <Table
         data={tickets}
         columns={columns}
         searchable={true}
         searchKeys={["title", "status", "priority", "createdAt"]}
-      >
-        {/* <TableBody>
-          {tickets.map((ticket) => (
-            <TableRow key={ticket.id}>
-              <TableCell>
-                <Link
-                  href={`/tickets/${ticket.id}`}
-                  className="text-blue-600 hover:text-blue-800"
-                >
-                  {ticket.title}
-                </Link>
-              </TableCell>
-              <TableCell>{ticket.property.name}</TableCell>
-              <TableCell>{ticket.unit.unitNumber}</TableCell>
-              <TableCell>
-                <Badge className={getStatusColor(ticket.status)}>
-                  {ticket.status.replace("_", " ")}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge className={getPriorityColor(ticket.priority)}>
-                  {ticket.priority}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                {new Date(ticket.createdAt).toLocaleDateString()}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody> */}
-      </Table>
+      ></Table>
     </div>
   );
 }

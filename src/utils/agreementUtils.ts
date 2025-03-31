@@ -1,6 +1,7 @@
 import { lastDayOfMonth, parse, isValid, compareAsc, getDaysInMonth, addMonths } from "date-fns";
 import { formatDate } from "@/utils/dateUtils";
 import { numberToWords } from "@/utils/numberUtils";
+
 interface Payment {
     number: number;
     dueDate: string;
@@ -71,4 +72,60 @@ export function generateAmortizationTable(startDate: string, endDate: string, pa
             amount: numberToWords(amount),
         };
     });
-} 
+}
+
+export const generateRentClause = (
+  startDate: string,
+  endDate: string,
+  paymentDay: number,
+  rentAmount: number
+): string => {
+  const start = parse(startDate, "yyyy-MM-dd", new Date());
+  const end = parse(endDate, "yyyy-MM-dd", new Date());
+  // Primer pago
+  let firstPaymentDate: Date;
+  let lastPaymentDate: Date;
+  if (paymentDay === 30 || paymentDay > getDaysInMonth(start)) {
+    firstPaymentDate = lastDayOfMonth(start);
+    lastPaymentDate = lastDayOfMonth(end);
+  } else {
+    firstPaymentDate = new Date(start);
+    firstPaymentDate.setDate(paymentDay);
+    lastPaymentDate = new Date(end);
+    lastPaymentDate.setDate(paymentDay);
+  }
+  const formattedFirstPaymentDate = formatDate(
+    firstPaymentDate,
+    "d 'de' MMMM 'de' yyyy",
+    "UTC"
+  );
+  const coveredMonth = formatDate(firstPaymentDate, "MMMM", "UTC");
+
+  // // Último pago
+  const formattedLastPaymentDate = formatDate(
+    lastPaymentDate,
+    "d 'de' MMMM 'de' yyyy",
+    "UTC"
+  );
+  const lastCoveredMonth = formatDate(lastPaymentDate, "MMMM", "UTC");
+
+  const paymentDayText =
+    paymentDay === 1
+      ? "día 1 de cada mes"
+      : paymentDay === 15
+      ? "día 15 de cada mes"
+      : "último día de cada mes";
+
+  // Cláusula generada
+  return `
+El primer pago de renta deberá realizarse el ${formattedFirstPaymentDate}, y corresponderá al mes de ${coveredMonth}. A partir de esa fecha, el arrendatario deberá pagar ${numberToWords(
+    rentAmount
+  )} como renta mensual.
+
+Cada pago deberá realizarse el ${paymentDayText} y cubrirá el mes en curso.
+
+Este monto se mantendrá vigente hasta el pago correspondiente al ${formattedLastPaymentDate}, cubriendo el mes de ${lastCoveredMonth}.
+
+Para años subsecuentes, si el arrendador opta por renovar el contrato, el monto de la renta podrá ser actualizado y los pagos seguirán realizándose de la misma manera: el ${paymentDayText}, cubriendo el mes en curso.
+`.trim();
+}; 

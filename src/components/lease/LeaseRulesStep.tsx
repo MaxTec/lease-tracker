@@ -29,6 +29,7 @@ import { FaPlus } from "react-icons/fa";
 import RuleForm from "./RuleForm";
 import ClauseForm from "./ClauseForm";
 import type { RuleFormData, ClauseFormData } from "@/lib/validations/lease";
+import { getOrdinal } from "@/utils/numberUtils";
 
 interface Rule {
   id: number;
@@ -55,6 +56,8 @@ export default function LeaseRulesStep() {
 
   const [localRules, setLocalRules] = useState<Rule[]>([]);
   const [localClauses, setLocalClauses] = useState<Clause[]>([]);
+  const [areRulesSelected, setAreRulesSelected] = useState(false);
+  const [areClausesSelected, setAreClausesSelected] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -70,23 +73,15 @@ export default function LeaseRulesStep() {
     if (rules) {
       console.log("Rules loaded:", rules);
       setLocalRules(rules);
-      const currentSelectedRules = watch("selectedRules");
-      if (!currentSelectedRules || currentSelectedRules.length === 0) {
-        setValue("selectedRules", [], { shouldValidate: true });
-      }
     }
-  }, [rules, setValue, watch]);
+  }, [rules, setValue]);
 
   useEffect(() => {
     if (clauses) {
       console.log("Clauses loaded:", clauses);
       setLocalClauses(clauses);
-      const currentSelectedClauses = watch("selectedClauses");
-      if (!currentSelectedClauses || currentSelectedClauses.length === 0) {
-        setValue("selectedClauses", [], { shouldValidate: true });
-      }
     }
-  }, [clauses, setValue, watch]);
+  }, [clauses, setValue]);
 
   const handleDragEnd = async (
     event: DragEndEvent,
@@ -96,7 +91,8 @@ export default function LeaseRulesStep() {
 
     if (!over || active.id === over.id) return;
 
-    const items: (Rule | Clause)[] = type === "rules" ? localRules : localClauses;
+    const items: (Rule | Clause)[] =
+      type === "rules" ? localRules : localClauses;
     const oldIndex = items.findIndex((item) => item.id === active.id);
     const newIndex = items.findIndex((item) => item.id === over.id);
 
@@ -104,16 +100,8 @@ export default function LeaseRulesStep() {
 
     if (type === "rules") {
       setLocalRules(newItems as Rule[]);
-      await fetch("/api/rules", {
-        method: "PUT",
-        body: JSON.stringify({ rules: newItems }),
-      });
     } else {
       setLocalClauses(newItems as Clause[]);
-      await fetch("/api/clauses", {
-        method: "PUT",
-        body: JSON.stringify({ clauses: newItems }),
-      });
     }
   };
 
@@ -157,24 +145,69 @@ export default function LeaseRulesStep() {
     }
   };
 
+  const handleToggleAllRules = () => {
+    const newState = !areRulesSelected;
+    setAreRulesSelected(newState);
+
+    // Get current values as numbers
+    const currentValues = (watch("selectedRules") || []).map(Number);
+
+    // If we're selecting all, add any missing rule IDs
+    if (newState) {
+      const allRuleIds = localRules.map((rule) => Number(rule.id));
+      const uniqueIds = Array.from(new Set([...currentValues, ...allRuleIds]));
+      console.log("uniqueIds", uniqueIds);
+      setValue("selectedRules", uniqueIds.map(String), {
+        shouldValidate: true,
+      });
+    } else {
+      // If we're deselecting all, set to empty array
+      setValue("selectedRules", [], { shouldValidate: true });
+    }
+  };
+
+  const handleToggleAllClauses = () => {
+    const newState = !areClausesSelected;
+    setAreClausesSelected(newState);
+
+    // Get current values as numbers
+    const currentValues = (watch("selectedClauses") || []).map(Number);
+
+    // If we're selecting all, add any missing clause IDs
+    if (newState) {
+      const allClauseIds = localClauses.map((clause) => Number(clause.id));
+      const uniqueIds = Array.from(
+        new Set([...currentValues, ...allClauseIds])
+      );
+      setValue("selectedClauses", uniqueIds.map(String), {
+        shouldValidate: true,
+      });
+    } else {
+      // If we're deselecting all, set to empty array
+      setValue("selectedClauses", [], { shouldValidate: true });
+    }
+  };
+
   const handleRuleChange = (ruleId: number, checked: boolean) => {
-    const currentValues = watch("selectedRules") || [];
+    const currentValues = (watch("selectedRules") || []).map(Number);
     const newValues = checked
       ? [...currentValues, ruleId]
       : currentValues.filter((id: number) => id !== ruleId);
 
-    setValue("selectedRules", newValues, { shouldValidate: true });
-    console.log("Updated selectedRules:", newValues);
+    setValue("selectedRules", newValues.map(Number), { shouldValidate: true });
+    setAreRulesSelected(newValues.length === localRules.length);
   };
 
   const handleClauseChange = (clauseId: number, checked: boolean) => {
-    const currentValues = watch("selectedClauses") || [];
+    const currentValues = (watch("selectedClauses") || []).map(Number);
     const newValues = checked
       ? [...currentValues, clauseId]
       : currentValues.filter((id: number) => id !== clauseId);
 
-    setValue("selectedClauses", newValues, { shouldValidate: true });
-    console.log("Updated selectedClauses:", newValues);
+    setValue("selectedClauses", newValues.map(Number), {
+      shouldValidate: true,
+    });
+    setAreClausesSelected(newValues.length === localClauses.length);
   };
 
   if (rulesLoading || clausesLoading) {
@@ -184,17 +217,24 @@ export default function LeaseRulesStep() {
   if (rulesError || clausesError) {
     return <div className="text-red-500">Error loading data</div>;
   }
+  // console.log("localRules", localRules);
+  // console.log("localClauses", localClauses);
   return (
     <div className="space-y-8">
       <Divider
         title="Lease Rules"
         lineStyle="solid"
         actions={
-          <Button onClick={() => setIsRuleModalOpen(true)} square>
-            <div className="flex items-center space-x-2">
-              <FaPlus />
-            </div>
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button onClick={handleToggleAllRules} variant="outline" size="sm">
+              {areRulesSelected ? "Unselect All" : "Select All"}
+            </Button>
+            <Button onClick={() => setIsRuleModalOpen(true)} square>
+              <div className="flex items-center space-x-2">
+                <FaPlus />
+              </div>
+            </Button>
+          </div>
         }
       >
         <div className="w-full space-y-4">
@@ -203,22 +243,28 @@ export default function LeaseRulesStep() {
             collisionDetection={closestCenter}
             onDragEnd={(event) => handleDragEnd(event, "rules")}
           >
-            {localRules.map((rule) => (
-              <SortableItem key={rule.id} id={rule.id}>
-                <div className="flex flex-col items-start space-x-3 p-2.5 bg-white rounded-lg shadow-sm border border-gray-200">
-                  <Checkbox
-                    {...register("selectedRules")}
-                    value={rule.id}
-                    onChange={(e) =>
-                      handleRuleChange(rule.id, e.target.checked)
-                    }
-                    checked={watch("selectedRules")?.includes(rule.id)}
-                    label={rule.title}
-                  />
-                  <p className="text-sm text-gray-500">{rule.description}</p>
-                </div>
-              </SortableItem>
-            ))}
+            {localRules.map((rule) => {
+              return (
+                <SortableItem key={rule.id} id={rule.id}>
+                  <div className="flex flex-col items-start space-x-3 p-2.5 bg-white rounded-lg shadow-sm border border-gray-200">
+                    <Checkbox
+                      key={rule.id}
+                      {...register("selectedRules", {
+                        onChange: (e) => {
+                          handleRuleChange(Number(rule.id), e.target.checked);
+                        },
+                      })}
+                      value={rule.id}
+                      checked={(watch("selectedRules") || [])
+                        .map(Number)
+                        .includes(rule.id)}
+                      label={rule.title}
+                    />
+                    <p className="text-sm text-gray-500">{rule.description}</p>
+                  </div>
+                </SortableItem>
+              );
+            })}
           </DndContext>
         </div>
       </Divider>
@@ -227,11 +273,20 @@ export default function LeaseRulesStep() {
         title="Lease Clauses"
         lineStyle="dashed"
         actions={
-          <Button onClick={() => setIsClauseModalOpen(true)}>
-            <div className="flex items-center space-x-2">
-              <FaPlus />
-            </div>
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={handleToggleAllClauses}
+              variant="outline"
+              size="sm"
+            >
+              {areClausesSelected ? "Unselect All" : "Select All"}
+            </Button>
+            <Button onClick={() => setIsClauseModalOpen(true)} square>
+              <div className="flex items-center space-x-2">
+                <FaPlus />
+              </div>
+            </Button>
+          </div>
         }
       >
         <div className="w-full space-y-4">
@@ -244,17 +299,25 @@ export default function LeaseRulesStep() {
               items={localClauses}
               strategy={verticalListSortingStrategy}
             >
-              {localClauses.map((clause) => (
+              {localClauses.map((clause, index) => (
                 <SortableItem key={clause.id} id={clause.id}>
                   <div className="flex flex-col items-start space-y-1 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
                     <Checkbox
-                      {...register("selectedClauses")}
+                      {...register("selectedClauses", {
+                        onChange: (e) => {
+                          handleClauseChange(
+                            Number(clause.id),
+                            e.target.checked
+                          );
+                        },
+                      })}
                       value={clause.id}
-                      onChange={(e) =>
-                        handleClauseChange(clause.id, e.target.checked)
-                      }
-                      checked={watch("selectedClauses")?.includes(clause.id)}
-                      label={clause.title}
+                      checked={(watch("selectedClauses") || [])
+                        .map(Number)
+                        .includes(clause.id)}
+                      label={`${getOrdinal(index + 1, {
+                        language: "es",
+                      }).toUpperCase()}`}
                     />
                     <p className="text-sm text-gray-500">{clause.content}</p>
                   </div>
