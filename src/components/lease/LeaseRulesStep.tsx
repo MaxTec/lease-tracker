@@ -219,6 +219,7 @@ export default function LeaseRulesStep() {
   }
   // console.log("localRules", localRules);
   // console.log("localClauses", localClauses);
+  // TODO: After adding a new rule or clause, it must be added as checked in the form
   return (
     <div className="space-y-8">
       <Divider

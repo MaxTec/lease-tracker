@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { Prisma } from "@prisma/client";
 import { differenceInMonths } from "date-fns";
-// import { generateLeasePDF, uploadToR2, sendLeaseEmail } from '@/utils/leaseUtils';
+import { uploadToR2 } from '@/utils/leaseUtils';
+// import { generateLeasePDF, sendLeaseEmail } from '@/utils/leaseUtils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +12,9 @@ export async function GET(request: NextRequest) {
 
     const leases = await prisma.lease.findMany({
       where: {
-        status: "ACTIVE",
+        status: {
+          in: ["ACTIVE", "PENDING"],
+        },
       },
       include: {
         tenant: {
@@ -100,7 +103,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const formData = await request.formData();
+    const body = JSON.parse(formData.get('data') as string);
+    const signedLeaseFile = formData.get('signedLeaseFile') as File | null;
+
     const {
       unitId,
       tenantId,
@@ -127,6 +133,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const selectedRules = body.selectedRules;
+    const selectedClauses = body.selectedClauses;
+
     // Create the lease
     const lease = await prisma.lease.create({
       data: {
@@ -137,7 +146,7 @@ export async function POST(request: NextRequest) {
         rentAmount: new Prisma.Decimal(rentAmount),
         depositAmount: new Prisma.Decimal(depositAmount),
         paymentDay: parseInt(paymentDay),
-        status: "ACTIVE",
+        status: "PENDING",
       },
       include: {
         tenant: {
@@ -151,6 +160,55 @@ export async function POST(request: NextRequest) {
           },
         },
       },
+    });
+
+    // Handle signed lease file upload if provided
+    if (signedLeaseFile) {
+      const buffer = Buffer.from(await signedLeaseFile.arrayBuffer());
+      const fileName = `signed_lease_${lease.id}_${Date.now()}.pdf`;
+      const fileUrl = await uploadToR2(buffer, fileName);
+
+      // Create document record in the database
+      const document = await prisma.document.create({
+        data: {
+          leaseId: lease.id,
+          name: 'Signed Lease Agreement',
+          type: 'LEASE_AGREEMENT',
+          fileUrl: fileUrl,
+        },
+      });
+
+      if (lease.status === "PENDING" && document) {
+        lease.status = "ACTIVE";
+        await prisma.lease.update({
+          where: { id: lease.id },
+          data: { status: "ACTIVE" },
+        });
+      }
+    }
+
+    const leaseRules = selectedRules.map((ruleId: string, index: number) => ({
+      leaseId: lease.id,
+      ruleId: parseInt(ruleId),
+      order: index,
+    }));
+
+    const leaseClauses = selectedClauses.map(
+      (clauseId: string, index: number) => ({
+        leaseId: lease.id,
+        clauseId: parseInt(clauseId),
+        order: index,
+      })
+    );
+
+    // link leaseRules to lease
+    await prisma.leasesToRules.createMany({
+      data: leaseRules,
+    });
+
+    // link leaseClauses to lease
+    await prisma.leasesToClauses.createMany({
+      data: leaseClauses,
     });
 
     // const pdfBuffer = await generateLeasePDF(leaseData);

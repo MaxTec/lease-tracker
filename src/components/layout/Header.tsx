@@ -7,9 +7,9 @@ import Logo from "../ui/Logo";
 export default function Header() {
   const { data: session, status } = useSession();
 
-  if (status === "unauthenticated") {
-    return <div>Unauthenticated</div>;
-  }
+  // if (status === "unauthenticated") {
+  //   return <div>Unauthenticated</div>;
+  // }
 
   return (
     <header className='bg-white shadow-md'>

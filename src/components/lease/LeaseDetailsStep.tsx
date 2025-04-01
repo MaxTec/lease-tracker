@@ -33,7 +33,7 @@ export default function LeaseDetailsStep() {
     if (startDate && !customEndDate) {
       const start = new Date(startDate);
       const end = addYears(start, 1);
-      setValue("endDate", format(end, "yyyy-MM-dd"));
+      setValue("endDate", format(end, "yyyy-MM-dd"), { shouldValidate: true });
     }
   }, [startDate, customEndDate, setValue]);
 

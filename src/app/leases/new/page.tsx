@@ -12,7 +12,7 @@ import LeaseRulesStep from "@/components/lease/LeaseRulesStep";
 import LeasePreviewStep from "@/components/lease/LeasePreviewStep";
 import Button from "@/components/ui/Button";
 import { toast } from "react-hot-toast";
-// Fix the schema definitions
+
 const leaseDetailsSchema = z.object({
   unitId: z.string().nonempty("Unit is required"),
   tenantId: z.string().nonempty("Tenant is required"),
@@ -40,6 +40,7 @@ const leaseSchema = leaseDetailsSchema.merge(leaseRulesSchema).extend({
   agreementVerified: z.boolean().refine((val) => val === true, {
     message: "You must verify that you have reviewed the lease agreement",
   }),
+  signedLeaseFile: z.instanceof(File).optional(),
 });
 
 type LeaseFormData = z.infer<typeof leaseSchema>;
@@ -74,7 +75,8 @@ const defaultFormValues = {
 export default function NewLeasePage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
-  // const [formData, setFormData] = useState(defaultFormValues);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const methods = useForm<LeaseFormData>({
     resolver: zodResolver(leaseSchema),
@@ -136,44 +138,49 @@ export default function NewLeasePage() {
   const nextStep = async () => {
     const isValid = await validateCurrentStep();
     if (isValid) {
-      // Save current form data before moving to next step
-      // const currentFormData = methods.getValues();
-      // setFormData(currentFormData);
       setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
     }
   };
 
   const previousStep = () => {
-    // Save current form data before moving to previous step
-    // const currentFormData = methods.getValues();
-    // setFormData(currentFormData);
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
   const onSubmit = async (data: LeaseFormData) => {
     try {
-      // setFormData(data); // Save final form data
-      const response = await fetch("/api/leases", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+      setIsSubmitting(true);
+      setError(null);
+
+      const formData = new FormData();
+      formData.append('data', JSON.stringify({
+        ...data,
+        signedLeaseFile: undefined // Remove the file from JSON data
+      }));
+      
+      // Append the signed lease file if it exists
+      if (data.signedLeaseFile) {
+        formData.append('signedLeaseFile', data.signedLeaseFile);
+      }
+
+      const response = await fetch('/api/leases', {
+        method: 'POST',
+        body: formData,
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create lease");
+        throw new Error('Failed to create lease');
       }
 
-      const newLease = await response.json();
-      toast.success("Lease created successfully");
-      router.push(`/leases/${newLease.id}`);
+      const lease = await response.json();
+      router.push(`/leases/${lease.id}`);
     } catch (error) {
-      console.error("Error creating lease:", error);
-      toast.error("Failed to create lease");
+      console.error('Error creating lease:', error);
+      setError('Failed to create lease. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
-  // console.log("formData", formData);
+
   const renderStep = () => {
     switch (currentStep) {
       case 0:
@@ -203,7 +210,14 @@ export default function NewLeasePage() {
 
             <FormProvider {...methods}>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {error && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-sm text-red-600">{error}</p>
+                  </div>
+                )}
+                
                 {renderStep()}
+
                 <div className="flex justify-between mt-8">
                   {currentStep > 0 && (
                     <Button
@@ -224,8 +238,12 @@ export default function NewLeasePage() {
                       Next
                     </Button>
                   ) : (
-                    <Button type="submit" className="ml-auto">
-                      Create Lease
+                    <Button
+                      disabled={!methods.formState.isValid}
+                      type="submit"
+                      className="ml-auto"
+                    >
+                      {isSubmitting ? 'Creating Lease...' : 'Create Lease'}
                     </Button>
                   )}
                 </div>

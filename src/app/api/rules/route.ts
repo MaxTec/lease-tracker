@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { createRuleSchema, updateRulesOrderSchema } from "@/lib/validations/rules";
+import { ZodError } from "zod";
 
 export async function GET() {
   try {
@@ -30,19 +32,28 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { title, description, category } = await request.json();
+    const json = await request.json();
+    
+    // Validate the input data
+    const validatedData = createRuleSchema.parse(json);
 
     const rule = await prisma.leaseRule.create({
       data: {
-        title,
-        description,
-        category,
+        ...validatedData,
         isActive: true,
       },
     });
 
     return NextResponse.json(rule);
   } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: "Validation failed", issues: error.errors },
+        { status: 400 }
+      );
+    }
+
+    console.error('Error creating rule:', error);
     return NextResponse.json(
       { error: "Failed to create rule" },
       { status: 500 }
@@ -52,10 +63,13 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const { rules } = await request.json();
+    const json = await request.json();
+    
+    // Validate the input data
+    const validatedData = updateRulesOrderSchema.parse(json);
     
     // Update rules in sequence
-    for (const [index, rule] of rules.entries()) {
+    for (const rule of validatedData.rules) {
       await prisma.leaseRule.update({
         where: { id: rule.id },
         data: { updatedAt: new Date() }
@@ -64,6 +78,14 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: "Validation failed", issues: error.errors },
+        { status: 400 }
+      );
+    }
+
+    console.error('Error updating rules:', error);
     return NextResponse.json(
       { error: "Failed to update rules order" },
       { status: 500 }

@@ -120,6 +120,7 @@ enum LeaseStatus {
   ACTIVE
   EXPIRED
   TERMINATED
+  PENDING // New status for waiting the tenant's signature on the lease agreement
 }
 
 // Payment model
@@ -260,6 +261,7 @@ model LeasesToClauses {
   clauseId    Int
   clause      LeaseClause @relation(fields: [clauseId], references: [id], onDelete: Cascade)
   createdAt   DateTime    @default(now())
+  order       Int         @default(0)
 
   @@unique([leaseId, clauseId])
 }
@@ -284,6 +286,7 @@ model LeasesToRules {
   ruleId      Int
   rule        LeaseRule   @relation(fields: [ruleId], references: [id], onDelete: Cascade)
   createdAt   DateTime    @default(now())
+  order       Int         @default(0)
 
   @@unique([leaseId, ruleId])
 }

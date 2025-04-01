@@ -13,8 +13,11 @@ import { FaDollarSign } from "react-icons/fa";
 import Notification from "@/components/ui/Notification";
 import Card from "@/components/ui/Card";
 import { FORMAT_DATE } from "@/constants";
-import { useTimeZone } from "@/contexts/TimeZoneContext";
 import { formatDate } from "@/utils/dateUtils";
+import EmptyState from "@/components/ui/EmptyState";
+import Descriptions from "@/components/ui/Descriptions";
+import Badge from "@/components/ui/Badge";
+
 interface Lease {
   id: number;
   startDate: string;
@@ -82,7 +85,6 @@ export default function LeaseDetailsPage() {
   const { data: session, status: authStatus } = useSession();
   const params = useParams();
   const leaseId = params.id as string;
-  const { timeZone } = useTimeZone();
 
   const [lease, setLease] = useState<Lease | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -251,138 +253,116 @@ export default function LeaseDetailsPage() {
     <Layout>
       <div className="container mx-auto px-4 py-8">
         {/* Lease Details Card */}
-        <Card title="Lease Details">
-          <div className="flex justify-between items-start mb-6">
-            <div className="flex space-x-2">
-              <Button
-                variant={lease.status === "ACTIVE" ? "danger" : "success"}
-                onClick={handleTerminateLease}
-              >
-                {lease.status === "ACTIVE"
-                  ? "Terminate Lease"
-                  : "Activate Lease"}
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card
+          title="Details"
+          actions={[
+            <Button
+              key={lease?.status}
+              variant={lease?.status === "ACTIVE" ? "danger" : "success"}
+              onClick={handleTerminateLease}
+            >
+              {lease?.status === "ACTIVE"
+                ? "Terminate Lease"
+                : "Activate Lease"}
+            </Button>,
+          ]}
+        >
+          <div className="grid grid-cols-1 gap-2">
             {/* Property Information */}
-            <Card title="Property">
-              <div className="space-y-2">
-                <div>
-                  <span className="text-sm font-medium text-gray-500">
-                    Name:
-                  </span>
-                  <p className="text-gray-900">{lease.unit.property.name}</p>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-500">
-                    Address:
-                  </span>
-                  <p className="text-gray-900">{lease.unit.property.address}</p>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-500">
-                    Unit:
-                  </span>
-                  <p className="text-gray-900">{lease.unit.unitNumber}</p>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-500">
-                    Details:
-                  </span>
-                  <p className="text-gray-900">
-                    {lease.unit.bedrooms} bed, {lease.unit.bathrooms} bath,{" "}
-                    {lease.unit.squareFeet} sq ft
-                  </p>
-                </div>
-              </div>
-            </Card>
+            <Descriptions
+              title="Property"
+              column={5}
+              items={[
+                {
+                  label: "Name",
+                  children: lease?.unit.property.name,
+                },
+                {
+                  label: "Address",
+                  children: lease?.unit.property.address,
+                },
+                {
+                  label: "Unit",
+                  children: lease?.unit.unitNumber,
+                },
+                {
+                  label: "Details",
+                  children: `${lease?.unit.bedrooms} bed, ${lease?.unit.bathrooms} bath, ${lease?.unit.squareFeet} sq ft`,
+                },
+              ]}
+            />
 
             {/* Tenant Information */}
-            <Card title="Tenant">
-              <div className="space-y-2">
-                <div>
-                  <span className="text-sm font-medium text-gray-500">
-                    Name:
-                  </span>
-                  <p className="text-gray-900">{lease.tenant.user.name}</p>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-500">
-                    Email:
-                  </span>
-                  <p className="text-gray-900">{lease.tenant.user.email}</p>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-500">
-                    Phone:
-                  </span>
-                  <p className="text-gray-900">{lease.tenant.phone}</p>
-                </div>
-              </div>
-            </Card>
+            <Descriptions
+              column={5}
+              title="Tenant"
+              items={[
+                {
+                  label: "Name",
+                  children: lease?.tenant.user.name,
+                },
+                {
+                  label: "Email",
+                  children: lease?.tenant.user.email,
+                },
+                {
+                  label: "Phone",
+                  children: lease?.tenant.phone,
+                },
+              ]}
+            />
 
-            {/* Lease Information */}
-            <Card title="Lease Terms">
-              <div className="space-y-2">
-                <div className="flex flex-row gap-2 justify-between">
-                  <div>
-                    <span className="text-sm font-medium text-gray-500">
-                      Status:
-                    </span>
-                    <p
-                      className={`font-medium ${
-                        lease.status === "ACTIVE"
-                          ? "text-green-600"
-                          : lease.status === "EXPIRED"
-                          ? "text-yellow-600"
-                          : "text-red-600"
-                      }`}
+            {/* Lease Terms */}
+            <Descriptions
+              title="Lease Terms"
+              column={5}
+              items={[
+                {
+                  label: "Status",
+                  children: (
+                    <Badge
+                      status={
+                        lease?.status === "ACTIVE"
+                          ? "success"
+                          : lease?.status === "EXPIRED"
+                          ? "warning"
+                          : "error"
+                      }
                     >
-                      {lease.status}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500">
-                      Period:
-                    </span>
-                    <p className="text-gray-900">
-                      {formatDate(lease.startDate, FORMAT_DATE)} to{" "}
-                      {formatDate(lease.endDate, FORMAT_DATE)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-row gap-2">
-                  <div>
-                    <span className="text-sm font-medium text-gray-500">
-                      Monthly Rent:
-                    </span>
-                    <p className="text-gray-900">${lease.rentAmount}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500">
-                      Security Deposit:
-                    </span>
-                    <p className="text-gray-900">${lease.depositAmount}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500">
-                      Payment Day:
-                    </span>
-                    <p className="text-gray-900">
-                      {formatDate(new Date(lease.paymentDay), 'do')} of each month
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </Card>
+                      {lease?.status}
+                    </Badge>
+                  ),
+                },
+                {
+                  label: "Period",
+                  children: `${formatDate(
+                    lease?.startDate || "",
+                    FORMAT_DATE
+                  )} to ${formatDate(lease?.endDate || "", FORMAT_DATE)}`,
+                },
+                {
+                  label: "Monthly Rent",
+                  children: `$${lease?.rentAmount}`,
+                },
+                {
+                  label: "Security Deposit",
+                  children: `$${lease?.depositAmount}`,
+                },
+                {
+                  label: "Payment Day",
+                  children: `${formatDate(
+                    new Date(lease?.paymentDay || ""),
+                    "do"
+                  )} of each month`,
+                },
+              ]}
+            />
           </div>
         </Card>
 
         {/* Payments Section */}
-        {lease.status === "ACTIVE" ? (
-          <div className="bg-white rounded-lg shadow">
+        {lease?.status === "ACTIVE" ? (
+          <div className="bg-white rounded-lg shadow mt-4">
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold text-gray-800 flex items-center">
@@ -398,7 +378,7 @@ export default function LeaseDetailsPage() {
                     content: (
                       <PaymentSchedule
                         payments={payments}
-                        lease={lease}
+                        lease={lease || undefined}
                         onRecordPayment={handleRecordPayment}
                       />
                     ),
@@ -407,7 +387,10 @@ export default function LeaseDetailsPage() {
                     id: "completed",
                     label: "Completed Payments",
                     content: (
-                      <CompletedPayments payments={payments} lease={lease} />
+                      <CompletedPayments
+                        payments={payments}
+                        lease={lease || undefined}
+                      />
                     ),
                   },
                 ]}
@@ -417,11 +400,11 @@ export default function LeaseDetailsPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-lg font-medium text-gray-800 mb-3">
-              Payment Management is not available for leases that are not
-              active.
-            </h3>
+          <div className="bg-gray-50 p-4 rounded-lg mt-4">
+            <EmptyState
+              title="Payment Management is not available for leases that are not active."
+              description="Please activate the lease to manage payments."
+            />
           </div>
         )}
 

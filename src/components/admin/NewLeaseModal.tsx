@@ -100,6 +100,7 @@ export default function NewLeaseModal({
   // Watch for changes in startDate and customEndDate
   const startDate = watch("startDate");
   const customEndDate = watch("customEndDate");
+  const isCheckedAgreement = watch("isCheckedAgreement");
 
   // Update endDate when startDate changes using date-fns
   useEffect(() => {

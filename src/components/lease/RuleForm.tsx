@@ -2,7 +2,8 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { RuleFormData, ruleFormSchema } from "@/lib/validations/lease";
+import { RuleFormData } from "@/lib/validations/lease";
+import { createRuleSchema } from "@/lib/validations/rules";
 import { RuleCategory } from "@prisma/client";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
@@ -21,7 +22,7 @@ export default function RuleForm({ onSubmit, onCancel }: RuleFormProps) {
     formState: { errors, isSubmitting },
     reset,
   } = useForm<RuleFormData>({
-    resolver: zodResolver(ruleFormSchema),
+    resolver: zodResolver(createRuleSchema),
     defaultValues: {
       title: "",
       description: "",
@@ -77,4 +78,4 @@ export default function RuleForm({ onSubmit, onCancel }: RuleFormProps) {
       </div>
     </form>
   );
-} 
+}

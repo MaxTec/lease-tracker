@@ -109,10 +109,6 @@ const CompletedPayments: React.FC<CompletedPaymentsProps> = ({ payments }) => {
         icon={<FaCheckCircle className="w-12 h-12" />}
         title="No Completed Payments"
         description="There are no completed payments for this lease yet."
-        actionLabel="Record Payment"
-        onAction={() => {
-          /* TODO: Add handler */
-        }}
       />
     );
   }

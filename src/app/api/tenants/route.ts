@@ -6,8 +6,14 @@ export async function GET(request: NextRequest) {
   try {
     const tenants = await prisma.tenant.findMany({
       where: {
-        leases: {
-          none: {},
+        NOT: {
+          leases: {
+            some: {
+              status: {
+                in: ["ACTIVE"],
+              },
+            },
+          },
         },
       },
       include: {
