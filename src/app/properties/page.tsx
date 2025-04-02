@@ -191,7 +191,10 @@ export default function PropertiesPage() {
                 title="No Properties Found"
                 description="There are no properties in the system yet. Click the button below to add your first property."
                 actionLabel="Add New Property"
-                onAction={() => router.push("/properties/new")}
+                onAction={() => {
+                  setSelectedProperty(null);
+                  setIsModalOpen(true);
+                }}
               />
             )}
           </div>

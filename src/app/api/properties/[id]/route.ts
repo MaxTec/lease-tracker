@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/db';
 
+interface UnitInput {
+    unitNumber: string;
+    bedrooms: number | string;
+    bathrooms: number | string;
+    squareFeet: number | string;
+}
+
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -40,7 +47,7 @@ export async function PUT(
     try {
         const { id } = await params;
         const body = await request.json();
-        const { name, address, type } = body;
+        const { name, address, type, units } = body;
 
         if (!name || !address || !type) {
             return NextResponse.json(
@@ -49,6 +56,14 @@ export async function PUT(
             );
         }
 
+        // First, delete existing units
+        await prisma.unit.deleteMany({
+            where: {
+                propertyId: parseInt(id),
+            },
+        });
+
+        // Then update property and create new units
         const property = await prisma.property.update({
             where: {
                 id: parseInt(id),
@@ -57,6 +72,14 @@ export async function PUT(
                 name,
                 address,
                 type,
+                units: units ? {
+                    create: units.map((unit: UnitInput) => ({
+                        unitNumber: unit.unitNumber.toString(),
+                        bedrooms: parseInt(unit.bedrooms.toString()),
+                        bathrooms: parseInt(unit.bathrooms.toString()),
+                        squareFeet: parseInt(unit.squareFeet.toString()),
+                    })),
+                } : undefined,
             },
             include: {
                 units: true,

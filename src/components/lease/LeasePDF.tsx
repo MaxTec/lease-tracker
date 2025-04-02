@@ -1,14 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  Document,
-  Page,
-  Text,
-  View,
-  StyleSheet,
-  PDFViewer,
-} from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, PDFViewer } from "@react-pdf/renderer";
 import { Locale, formatDistance } from "date-fns";
 import { es } from "date-fns/locale";
 import { formatDate } from "@/utils/dateUtils";
@@ -40,10 +33,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
-    fontWeight: "bold",
     marginTop: 10,
     marginBottom: 5,
-    textTransform: "uppercase",
   },
   clauseTitle: {
     fontSize: 12,
@@ -52,10 +43,10 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   clauseContent: {
-    fontSize: 10,
+    fontSize: 12,
     marginBottom: 5,
     marginLeft: 10,
-    lineHeight: 1,
+    lineHeight: 1.5,
   },
   pageNumber: {
     position: "absolute",
@@ -136,51 +127,42 @@ interface LeasePDFProps {
 }
 
 // Component for the actual PDF document
-const LeaseDocument: React.FC<{ data: LeaseData; locale?: Locale }> = ({
-  data,
-  locale,
-}) => (
+const LeaseDocument: React.FC<{ data: LeaseData; locale?: Locale }> = ({ data, locale }) => (
   <Document>
     {/* Title Page */}
-    <Page size="LETTER" style={styles.page}>
+    <Page size='LETTER' style={styles.page} wrap={true}>
       <View style={styles.title}>
         <Text>CONTRATO DE ARRENDAMIENTO</Text>
       </View>
 
       <View style={{ ...styles.section, textAlign: "left" }}>
-        <Text style={styles.header}>
-          En la ciudad de Cancun, a{" "}
-          {formatDate(new Date(), "d 'de' MMMM 'de' yyyy")}
-        </Text>
+        <Text style={styles.header}>En la ciudad de Cancun, a {formatDate(new Date(), "d 'de' MMMM 'de' yyyy")}</Text>
       </View>
 
       {/* Landlord Information Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
-          CONVENIO TRANSACCIONAL QUE CELEBRAN POR UNA PARTE COMO ARRENDADOR O
-          PROPIETARIO EL C. {data.landlordName}, Y POR LA OTRA PARTE COMO
-          ARRENDATARIO EL C. {data.tenantName}
-          &nbsp; RESPECTO AL LOCAL UBICADO EN LA CALLE {data.propertyAddress}
-          &nbsp; SUJETAN A LAS SIGUIENTES:
+          CONVENIO TRANSACCIONAL que celebran, por una parte, como arrendador o propietario, el C.
+          <Text style={{ fontWeight: "bold" }}>{data.landlordName}</Text>&nbsp;, y por la otra parte, como arrendatario, el C.{" "}
+          <Text style={{ fontWeight: "bold" }}>{data.tenantName}</Text>
+          &nbsp;respecto al local ubicado en la calle {data.propertyAddress}, sujetándose a las siguientes:
         </Text>
       </View>
       {/* SEGUNDA. \- Este convenio es por el término definitivo e improrrogable de 1 AÑO(S), que corresponde del 01 DE ABRIL DE 2024 AL 31 DE MARZO DE 2025\.
        */}
       {/* Poner titulo de la seccion CLAUSULAS */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>CLAUSULAS</Text>
+        <Text style={{ ...styles.sectionTitle, fontWeight: "bold" }}>CLAUSULAS</Text>
       </View>
       <View key={0} style={styles.section}>
-        <Text style={styles.clauseTitle}>
-          {getOrdinal(1, { language: "es" }).toUpperCase()}
-        </Text>
+        <Text style={styles.clauseTitle}>{getOrdinal(1, { language: "es" }).toUpperCase()}</Text>
         <Text style={styles.clauseContent}>
-          Este convenio es por el término definitivo e improrrogable de&nbsp;
+          El presente convenio se celebra por un término definitivo e improrrogable de&nbsp;
           {formatDistance(new Date(data.startDate), new Date(data.endDate), {
             addSuffix: false,
             locale: locale || es,
           })}
-          &nbsp; , que corresponde del&nbsp;
+          &nbsp;, comprendido del&nbsp;
           {formatDate(data.startDate, "d 'de' MMMM 'de' yyyy")}&nbsp; al&nbsp;
           {formatDate(data.endDate, "d 'de' MMMM 'de' yyyy")}.
         </Text>
@@ -189,79 +171,106 @@ const LeaseDocument: React.FC<{ data: LeaseData; locale?: Locale }> = ({
       {/* La cuota mensual por concepto de arrendamiento se detalla a continuación: La cuota mensual por concepto de arrendamiento se establecerá de la siguiente manera: A partir del 30 DE ABRIL DE 2024, el arrendatario deberá pagar $2,500 (DOS MIL QUINIENTOS PESOS 00/100 M.N.) correspondientes al mes de abril. Este monto se aplicará hasta el pago realizado el 30 DE SEPTIEMBRE DE 2024\. A partir del 30 DE OCTUBRE DE 2024, la cuota mensual aumentará a $3,000 (TRES MIL PESOS 00/100 M.N.) y así sucesivamente hasta el término del primer año contractual, el 31 DE MARZO DE 2025\. Cada pago realizado el día 30 será para cubrir el costo del arrendamiento del mes que finaliza ese día, entregándose en el domicilio ya mencionado o a través de un depósito bancario. Para años subsecuentes, si el arrendador opta por renovar el contrato, la cuota mensual será determinada por el arrendador y seguirá pagándose de la misma manera, el día 30 de cada mes, por el mes correspondiente.
        */}
       <View key={1} style={styles.section}>
-        <Text style={styles.clauseTitle}>
-          {getOrdinal(2, { language: "es" }).toUpperCase()}
-        </Text>
+        <Text style={styles.clauseTitle}>{getOrdinal(2, { language: "es" }).toUpperCase()}</Text>
         <Text style={styles.clauseContent}>
-          {generateRentClause(
-            data.payments[0].dueDate,
-            data.payments[data.payments.length - 1].dueDate,
-            parseInt(data.paymentDay) || 1,
-            parseFloat(data.rentAmount) || 0
-          )}
+          {generateRentClause(data.payments[0].dueDate, data.payments[data.payments.length - 1].dueDate, parseInt(data.paymentDay) || 1, parseFloat(data.rentAmount) || 0)}
         </Text>
       </View>
       {/* Generar tabla de amortizacion */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Tabla de Amortización</Text>
       </View>
-      <View style={{ paddingLeft: 8, paddingRight: 8 }}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            fontSize: 8,
-            fontWeight: "bold",
-            borderBottom: "1px solid #000",
-            paddingBottom: 4,
-            paddingLeft: 8,
-            paddingRight: 8,
-          }}
-        >
-          <Text style={{ ...styles.clauseContent, fontSize: 8 }}>Número</Text>
-          <Text style={{ ...styles.clauseContent, fontSize: 8 }}>
-            Fecha de Pago
-          </Text>
-          <Text style={{ ...styles.clauseContent, fontSize: 8 }}>Monto</Text>
-          {/* <Text style={styles.clauseContent}>Cubre</Text> */}
-        </View>
-        {data.payments.map((item) => (
+      <View style={{ paddingLeft: 8, paddingRight: 8, flexDirection: "row" }}>
+        <View style={{ paddingLeft: 8, paddingRight: 8, width: "49%" }}>
           <View
-            key={item.number}
-            style={{ borderBottom: "1px solid #000", padding: 2 }}
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              fontSize: 8,
+              fontWeight: "bold",
+              borderBottom: "1px solid #000",
+              paddingBottom: 4,
+              paddingLeft: 8,
+              paddingRight: 8,
+            }}
           >
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                fontSize: 8,
-              }}
-            >
-              <Text style={styles.clauseContent}>{item.number}</Text>
-              <Text style={styles.clauseContent}>{item.dueDate}</Text>
-              <Text style={styles.clauseContent}>{item.amount}</Text>
-              {/* <Text style={styles.clauseContent}>{item.covers}</Text> */}
+            <Text style={{ ...styles.clauseContent, fontSize: 8 }}>Número</Text>
+            <Text style={{ ...styles.clauseContent, fontSize: 8 }}>Fecha de Pago</Text>
+            <Text style={{ ...styles.clauseContent, fontSize: 8 }}>Monto</Text>
+          </View>
+          {data.payments.slice(0, 6).map((item) => (
+            <View key={item.number} style={{ borderBottom: "1px solid #000", padding: 2 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  fontSize: 8,
+                }}
+              >
+                <Text style={{ ...styles.clauseContent, fontSize: 8 }}>{item.number}</Text>
+                <Text style={{ ...styles.clauseContent, fontSize: 8 }}>{item.dueDate}</Text>
+                <Text style={{ ...styles.clauseContent, fontSize: 8 }}>{item.amount}</Text>
+              </View>
             </View>
+          ))}
+        </View>
+        <View style={{ paddingLeft: 8, paddingRight: 8, width: "49%" }}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              fontSize: 8,
+              fontWeight: "bold",
+              borderBottom: "1px solid #000",
+              paddingBottom: 4,
+              paddingLeft: 8,
+              paddingRight: 8,
+            }}
+          >
+            <Text style={{ ...styles.clauseContent, fontSize: 8 }}>Número</Text>
+            <Text style={{ ...styles.clauseContent, fontSize: 8 }}>Fecha de Pago</Text>
+            <Text style={{ ...styles.clauseContent, fontSize: 8 }}>Monto</Text>
+          </View>
+          {data.payments.slice(6, 12).map((item) => (
+            <View key={item.number} style={{ borderBottom: "1px solid #000", padding: 2}}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  fontSize: 8,
+                }}
+              >
+                <Text style={{ ...styles.clauseContent, fontSize: 8 }}>{item.number}</Text>
+                <Text style={{ ...styles.clauseContent, fontSize: 8 }}>{item.dueDate}</Text>
+                <Text style={{ ...styles.clauseContent, fontSize: 8 }}>{item.amount}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
+      {/* Render Clauses */}
+      <View break={true}>
+        {data.clauses.map((clause, index) => (
+          <View key={clause.id} style={styles.section} break={false}>
+            {/* <Text style={styles.clauseTitle}>{getOrdinal(index + 3, { language: "es" }).toUpperCase()}</Text> */}
+            <Text style={styles.clauseContent}>
+              <Text style={{ fontWeight: "bold" }}>{getOrdinal(index + 3, { language: "es" }).toUpperCase()}: </Text>
+              {clause.content}
+            </Text>
           </View>
         ))}
       </View>
-      {/* Render Clauses */}
-      {data.clauses.map((clause, index) => (
-        <View key={clause.id} style={styles.section}>
-          <Text style={styles.clauseTitle}>
-            {getOrdinal(index + 3, { language: "es" }).toUpperCase()}
-          </Text>
-          <Text style={styles.clauseContent}>{clause.content}</Text>
-        </View>
-      ))}
       {/* Render Rules Section */}
       {data.rules.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.clauseTitle}>REGLAMENTO DEL INMUEBLE</Text>
           {data.rules.map((rule) => (
             <View key={rule.id} style={styles.section}>
-              <Text style={styles.clauseTitle}>{rule.title}</Text>
-              <Text style={styles.clauseContent}>{rule.description}</Text>
+              {/* <Text style={styles.clauseTitle}>{rule.title}</Text> */}
+              <Text style={styles.clauseContent}>
+                <Text style={{ fontWeight: "bold" }}>{rule.title}</Text>
+                {rule.description}
+              </Text>
             </View>
           ))}
         </View>
@@ -289,8 +298,8 @@ export default function LeasePDF({ data, locale }: LeasePDFProps) {
   if (!data) return null;
 
   return (
-    <div className="w-full h-[800px]">
-      <PDFViewer className="w-full h-full">
+    <div className='w-full h-[800px]'>
+      <PDFViewer className='w-full h-full'>
         <LeaseDocument data={data} locale={locale} />
       </PDFViewer>
     </div>

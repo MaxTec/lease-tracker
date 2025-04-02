@@ -34,6 +34,9 @@ export default function Header() {
                   <Link href='/tenants' className='text-gray-600 hover:text-gray-900'>
                     Tenants
                   </Link>
+                  <Link href='/landlords' className='text-gray-600 hover:text-gray-900'>
+                    Landlords
+                  </Link>
                 </>
               )}
               <Link href='/tickets' className='text-gray-600 hover:text-gray-900'>

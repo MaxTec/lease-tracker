@@ -106,6 +106,12 @@ export default function PropertyForm({
           const propertyData = await propertyRes.json();
           // Convert landlordId to string
           propertyData.landlordId = String(propertyData.landlordId);
+          // cast bedrooms, bathrooms, squareFeet to string
+          propertyData.units.forEach((unit: any) => {
+            unit.bedrooms = String(unit.bedrooms);
+            unit.bathrooms = String(unit.bathrooms);
+            unit.squareFeet = String(unit.squareFeet);
+          });
           reset(propertyData);
           setLoading(false);
         } else {

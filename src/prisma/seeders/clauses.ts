@@ -10,20 +10,6 @@ export const leaseClauses = [
     isActive: true,
   },
   {
-    title: "SEGUNDA",
-    content:
-      "Este convenio es por el término definitivo e improrrogable de 1 AÑO(S), que corresponde del 01 DE ABRIL DE 2024 AL 31 DE MARZO DE 2025.",
-    type: ClauseType.OTHER,
-    isActive: true,
-  },
-  {
-    title: "TERCERA",
-    content:
-      "La cuota mensual por concepto de arrendamiento se detalla a continuación: La cuota mensual por concepto de arrendamiento se establecerá de la siguiente manera: A partir del 30 DE ABRIL DE 2024, el arrendatario deberá pagar $2,500 (DOS MIL QUINIENTOS PESOS 00/100 M.N.) correspondientes al mes de abril. Este monto se aplicará hasta el pago realizado el 30 DE SEPTIEMBRE DE 2024. A partir del 30 DE OCTUBRE DE 2024, la cuota mensual aumentará a $3,000 (TRES MIL PESOS 00/100 M.N.) y así sucesivamente hasta el término del primer año contractual, el 31 DE MARZO DE 2025. Cada pago realizado el día 30 será para cubrir el costo del arrendamiento del mes que finaliza ese día, entregándose en el domicilio ya mencionado o a través de un depósito bancario. Para años subsecuentes, si el arrendador opta por renovar el contrato, la cuota mensual será determinada por el arrendador y seguirá pagándose de la misma manera, el día 30 de cada mes, por el mes correspondiente.",
-    type: ClauseType.OTHER,
-    isActive: true,
-  },
-  {
     title: "CUARTA",
     content:
       "EL LOCAL será destinado para uso de OFICINA ADMINISTRATIVA Y DE DISEÑO, que el arrendatario acepta que están en buenas condiciones dicho LOCAL para su uso y funcionamiento.",
