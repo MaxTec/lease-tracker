@@ -10,6 +10,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import { FaPlus, FaUsers } from "react-icons/fa";
 import TenantForm from "@/components/tenants/TenantForm";
 import Modal from "@/components/ui/Modal";
+import { useDevice } from "@/contexts/DeviceContext";
 
 interface Tenant {
   id: number;
@@ -28,7 +29,7 @@ export default function TenantsPage() {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
-
+  const { isMobile } = useDevice();
   // Redirect if not admin
   if (authStatus === "authenticated" && session?.user?.role !== "ADMIN") {
     redirect("/");
@@ -106,6 +107,7 @@ export default function TenantsPage() {
       key: "name",
       label: "Name",
       render: (tenant: Tenant) => tenant.user.name,
+      priority: 1,
     },
     {
       key: "email",
@@ -125,6 +127,9 @@ export default function TenantsPage() {
     {
       key: "actions",
       label: "Actions",
+      priority: isMobile ? 1 : 0,
+      sticky: isMobile ? true : false,
+      width: isMobile ? "100px" : "100px",
       render: (tenant: Tenant) => (
         <div className="flex space-x-2">
           <Button

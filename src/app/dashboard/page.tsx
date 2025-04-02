@@ -133,29 +133,32 @@ export default function Dashboard() {
     <Layout>
       <div className="space-y-6 p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:items-center">
             <DateInput
               showMonthYearPicker
               label="Start Date"
               value={startDate}
               onChange={setStartDate}
+              className="w-full md:w-auto"
             />
             <DateInput
               label="End Date"
               value={endDate}
               onChange={setEndDate}
               showMonthYearPicker
+              className="w-full md:w-auto"
             />
             <Select
               label="Property"
               value={selectedProperty}
               onChange={(e) => setSelectedProperty(e.target.value)}
               options={propertyOptions}
+              className="w-full col-span-3"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {!selectedProperty && (
             <MetricCard
               title="Total Properties"

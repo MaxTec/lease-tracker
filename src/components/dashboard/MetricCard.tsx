@@ -30,7 +30,7 @@ export const MetricCard = ({ title, value, icon, trend }: MetricCardProps) => {
           )}
         </div>
         {icon && (
-          <div className="rounded-full bg-gray-100 p-3 text-gray-600">
+          <div className="rounded-full bg-gray-100 h-12 w-12 flex items-center justify-center text-gray-600">
             {icon}
           </div>
         )}

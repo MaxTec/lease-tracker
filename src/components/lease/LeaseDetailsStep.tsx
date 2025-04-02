@@ -2,13 +2,14 @@
 
 import { useEffect } from "react";
 import { useFormContext, Controller } from "react-hook-form";
-import { addYears, format } from "date-fns";
+import { addYears, format, getDate, parse } from "date-fns";
 import Select from "@/components/ui/Select";
 import Input from "@/components/ui/Input";
 import DateInput from "@/components/ui/DateInput";
 import Checkbox from "@/components/ui/Checkbox";
 import { useProperties } from "@/hooks/useProperties";
 import { useTenants } from "@/hooks/useTenants";
+import toast from "react-hot-toast";
 
 export default function LeaseDetailsStep() {
   const {
@@ -28,6 +29,7 @@ export default function LeaseDetailsStep() {
   const existingUnitId = watch("unitId");
   const existingTenantId = watch("tenantId");
   const existingPaymentDay = watch("paymentDay");
+  const paymentDay = watch("paymentDay");
 
   useEffect(() => {
     if (startDate && !customEndDate) {
@@ -40,26 +42,56 @@ export default function LeaseDetailsStep() {
   useEffect(() => {
     console.log("populting:", propertyId, units, existingUnitId);
     if (properties.length > 0 && propertyId) {
-      console.log("RE POPULATING PROPERTY", propertyId);
       setValue("propertyId", propertyId);
       // handlePropertyChange(propertyId);
     }
     if (!units.length && propertyId) {
-      console.log("RE POPULATING UNITS", propertyId);
       handlePropertyChange(propertyId);
     }
     if (units.length > 0 && existingUnitId) {
-      console.log("RE POPULATING UNIT", existingUnitId);
       setValue("unitId", existingUnitId);
     }
     if (tenants.length > 0 && existingTenantId) {
-      console.log("RE POPULATING TENANT", existingTenantId);
       setValue("tenantId", existingTenantId);
     }
     if (existingPaymentDay) {
       setValue("paymentDay", existingPaymentDay);
     }
   }, [tenants, units, propertyId]);
+
+  // New effect for validating start date against payment day
+  useEffect(() => {
+    if (startDate && paymentDay) {
+      const start = parse(startDate, "yyyy-MM-dd", new Date());
+      const currentDay = getDate(new Date(start));
+
+      let isValid = false;
+      let requiredDay = 1;
+
+      if (paymentDay === "1") {
+        isValid = currentDay === 1;
+        requiredDay = 1;
+      } else if (paymentDay === "15") {
+        isValid = currentDay <= 15; // Changed logic to ensure startDate does not start after 15
+        requiredDay = 15;
+      } else if (paymentDay === "30") {
+        isValid = currentDay <= 30;
+        requiredDay = 30;
+      }
+
+      if (!isValid) {
+        if (!errors.startDate) {
+          toast.error(
+            `Start date must be on or before the ${requiredDay}${
+              requiredDay === 1 ? "st" : "th"
+            } of the month for the selected payment day`,
+            { id: "startDateError" }
+          );
+        }
+        setValue("startDate", "");
+      }
+    }
+  }, [startDate, paymentDay, setValue]);
 
   return (
     <div className="space-y-6">
@@ -132,17 +164,19 @@ export default function LeaseDetailsStep() {
 
       <div className="grid grid-cols-3 gap-4">
         <Input
-          {...register("rentAmount")}
+          {...register("rentAmount", { min: 0 })}
           label="Rent Amount"
           type="number"
           error={errors.rentAmount?.message as string}
+          min="0"
         />
 
         <Input
-          {...register("depositAmount")}
+          {...register("depositAmount", { min: 0 })}
           label="Deposit Amount"
           type="number"
           error={errors.depositAmount?.message as string}
+          min="0"
         />
 
         <Select
@@ -150,9 +184,9 @@ export default function LeaseDetailsStep() {
           label="Payment Day"
           error={errors.paymentDay?.message as string}
           options={[
-            { value: 1, label: "1st of the month" },
-            { value: 15, label: "15th of the month" },
-            { value: 30, label: "last day of the month" },
+            { value: "1", label: "1st of the month" },
+            { value: "15", label: "15th of the month" },
+            { value: "30", label: "last day of the month" },
           ]}
         />
       </div>

@@ -232,6 +232,38 @@ export default function LeaseDetailsPage() {
     }
   };
 
+  const handleActivateLease = async () => {
+    if (!lease) return;
+
+    try {
+      const response = await fetch(`/api/leases/${lease.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ status: "ACTIVE" }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to activate lease");
+      }
+
+      // Show success notification
+      setNotification({
+        show: true,
+        message: "Lease activated successfully.",
+        type: "success",
+      });
+      setTimeout(() => {
+        // Optionally, you can refresh the lease data or redirect
+        router.push("/leases"); // Redirect to the leases list or another page
+      }, 2000); // Delay of 1 second before showing the notification
+    } catch (error) {
+      console.error("Error activating lease:", error);
+      setNotification({
+        show: true,
+        message: "Failed to activate lease. Please try again.",
+        type: "error",
+      });
+    }
+  };
   if (loading) {
     return (
       <Layout>
@@ -259,7 +291,11 @@ export default function LeaseDetailsPage() {
             <Button
               key={lease?.status}
               variant={lease?.status === "ACTIVE" ? "danger" : "success"}
-              onClick={handleTerminateLease}
+              onClick={
+                lease?.status === "ACTIVE"
+                  ? handleTerminateLease
+                  : handleActivateLease
+              }
             >
               {lease?.status === "ACTIVE"
                 ? "Terminate Lease"

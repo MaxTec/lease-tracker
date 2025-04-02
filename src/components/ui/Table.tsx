@@ -9,6 +9,9 @@ interface Column<T> {
   label: string;
   sortable?: boolean;
   render?: (item: T) => React.ReactNode;
+  sticky?: boolean;
+  priority?: number; // 1 is highest priority, will show on mobile
+  width?: string; // Optional width for the column
 }
 
 interface TableProps<T> {
@@ -146,6 +149,15 @@ export default function Table<T extends { id: number | string }>({
     );
   };
 
+  // Sort columns by priority
+  const sortedColumns = useMemo(() => {
+    return [...columns].sort((a, b) => {
+      const priorityA = a.priority || Infinity;
+      const priorityB = b.priority || Infinity;
+      return priorityA - priorityB;
+    });
+  }, [columns]);
+
   return (
     <div className="w-full">
       {searchable && (
@@ -179,64 +191,74 @@ export default function Table<T extends { id: number | string }>({
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto relative">
         {searchTerm && filteredData.length === 0 ? (
           <EmptyState
             title="No results found"
             description="No results found for your search. Please try again."
           />
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                {columns.map((column) => (
-                  <th
-                    key={column.key}
-                    scope="col"
-                    className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                      column.sortable ? "cursor-pointer select-none" : ""
-                    }`}
-                    onClick={() => column.sortable && requestSort(column.key)}
-                  >
-                    {column.label}
-                    {column.sortable && getSortIcon(column.key)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedData.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  {columns.map((column) => (
-                    <td
+          <div className="relative">
+            <table className="min-w-full divide-y divide-gray-200 table-fixed">
+              <thead className="bg-gray-50">
+                <tr>
+                  {sortedColumns.map((column) => (
+                    <th
                       key={column.key}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                      scope="col"
+                      style={{ width: column.width }}
+                      className={`
+                        ${column.sticky ? 'sticky left-0 z-10 bg-gray-50' : ''}
+                        ${column.priority ? '' : 'hidden md:table-cell'}
+                        px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider
+                        ${column.sortable ? 'cursor-pointer select-none' : ''}
+                      `}
+                      onClick={() => column.sortable && requestSort(column.key)}
                     >
-                      {column.render
-                        ? column.render(item)
-                        : String(
-                            getNestedValue(
-                              item as unknown as NestedObject,
-                              column.key
-                            ) ?? ""
-                          )}
-                    </td>
+                      {column.label}
+                      {column.sortable && getSortIcon(column.key)}
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {paginatedData.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    {sortedColumns.map((column) => (
+                      <td
+                        key={column.key}
+                        style={{ width: column.width }}
+                        className={`
+                          ${column.sticky ? 'sticky left-0 z-10 bg-white' : ''}
+                          ${column.priority ? '' : 'hidden md:table-cell'}
+                          px-6 py-4 text-sm text-gray-500
+                          ${column.sticky && 'shadow-[8px_0_16px_-6px_rgba(0,0,0,0.1)]'}
+                        `}
+                      >
+                        {column.render
+                          ? column.render(item)
+                          : String(
+                              getNestedValue(
+                                item as unknown as NestedObject,
+                                column.key
+                              ) ?? ""
+                            )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
-          <div className="flex items-center">
-            <span className="text-sm text-gray-700">
-              Showing {(currentPage - 1) * pageSize + 1} to{" "}
-              {Math.min(currentPage * pageSize, filteredData.length)} of{" "}
-              {filteredData.length} results
-            </span>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
+          <div className="flex items-center text-sm text-gray-700">
+            Showing {(currentPage - 1) * pageSize + 1} to{" "}
+            {Math.min(currentPage * pageSize, filteredData.length)} of{" "}
+            {filteredData.length} results
           </div>
           <div className="flex items-center space-x-2">
             <button

@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import TimeZoneWrapper from "@/components/providers/TimeZoneWrapper";
+import DeviceWrapper from "@/components/providers/DeviceWrapper";
+import { isMobileDevice } from "@/utils/device-detection";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,11 +21,13 @@ export const metadata = {
   description: "Property management and lease tracking solution",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isMobile = await isMobileDevice();
+
   return (
     <html lang="en">
       <body
@@ -32,7 +35,9 @@ export default function RootLayout({
       >
         <Providers>
           <TimeZoneWrapper>
-            {children}
+            <DeviceWrapper isMobile={isMobile}>
+              {children}
+            </DeviceWrapper>
           </TimeZoneWrapper>
         </Providers>
       </body>
