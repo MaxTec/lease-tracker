@@ -108,6 +108,7 @@ model Lease {
   depositAmount Decimal   @db.Decimal(10, 2)
   paymentDay    Int       // Day of month when payment is due
   status        LeaseStatus @default(ACTIVE)
+  totalPayments Int       @default(0)  // Total number of payments made
   payments      Payment[]
   documents     Document[]
   clauses       LeasesToClauses[]
@@ -136,6 +137,7 @@ model Payment {
   status        PaymentStatus @default(PENDING)
   paymentMethod PaymentMethod?
   transactionId String?
+  paymentNumber Int       @default(0)  // Sequential number of this payment within the lease
   voucher       Voucher?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

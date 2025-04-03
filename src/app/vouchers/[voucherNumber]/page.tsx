@@ -20,6 +20,7 @@ interface Voucher {
     paidDate: string;
     paymentMethod: string;
     transactionId: string | null;
+    paymentNumber: number;
     lease: {
       tenant: {
         user: {

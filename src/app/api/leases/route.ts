@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { Prisma } from "@prisma/client";
-import { differenceInMonths } from "date-fns";
-import { uploadToR2 } from '@/utils/leaseUtils';
+import { differenceInMonths, addMonths, isEqual, addDays } from "date-fns";
+import { uploadToR2 } from "@/utils/leaseUtils";
 // import { generateLeasePDF, sendLeaseEmail } from '@/utils/leaseUtils';
 
 export async function GET(request: NextRequest) {
@@ -74,7 +74,6 @@ export async function GET(request: NextRequest) {
           overdueMonths = differenceInMonths(today, startDate);
         }
       }
-
       return {
         ...lease,
         rentAmount:
@@ -104,8 +103,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const body = JSON.parse(formData.get('data') as string);
-    const signedLeaseFile = formData.get('signedLeaseFile') as File | null;
+    const body = JSON.parse(formData.get("data") as string);
+    const signedLeaseFile = formData.get("signedLeaseFile") as File | null;
 
     const {
       unitId,
@@ -137,6 +136,10 @@ export async function POST(request: NextRequest) {
     const selectedClauses = body.selectedClauses;
 
     // Create the lease
+    const totalPayments = getAccurateLeaseMonths(
+      new Date(startDate),
+      new Date(endDate)
+    );
     const lease = await prisma.lease.create({
       data: {
         unitId: parseInt(unitId),
@@ -146,6 +149,7 @@ export async function POST(request: NextRequest) {
         rentAmount: new Prisma.Decimal(rentAmount),
         depositAmount: new Prisma.Decimal(depositAmount),
         paymentDay: parseInt(paymentDay),
+        totalPayments: totalPayments > 0 ? totalPayments : 0,
         status: "PENDING",
       },
       include: {
@@ -172,8 +176,8 @@ export async function POST(request: NextRequest) {
       const document = await prisma.document.create({
         data: {
           leaseId: lease.id,
-          name: 'Signed Lease Agreement',
-          type: 'LEASE_AGREEMENT',
+          name: "Signed Lease Agreement",
+          type: "LEASE_AGREEMENT",
           fileUrl: fileUrl,
         },
       });
@@ -257,3 +261,15 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const getAccurateLeaseMonths = (start: Date, end: Date): number => {
+  const cleanEnd = addMonths(start, differenceInMonths(end, start));
+
+  const isExactEnd = isEqual(end, cleanEnd);
+
+  // Case: user set exact monthly period (e.g. Apr 1 → Oct 1)
+  if (isExactEnd) return differenceInMonths(end, start);
+
+  // Case: ends 1 day before full month (e.g. Mar 31 vs Apr 1)
+  return differenceInMonths(addDays(end, 1), start);
+};

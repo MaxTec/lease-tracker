@@ -78,7 +78,7 @@ export const RentCollectionChart = ({ data }: RentCollectionChartProps) => {
               tickFormatter={(value) => `$${value.toLocaleString()}`}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="totalAmount" fill="#10B981" name="Paid" />
+            <Bar dataKey="totalAmount" fill="#10B981" name="Paid" maxBarSize={70} />
             {/* <Bar dataKey="pending" fill="#F59E0B" name="Pending" /> */}
             {/* <Bar dataKey="overdue" fill="#EF4444" name="Overdue" /> */}
           </BarChart>

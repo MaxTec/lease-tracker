@@ -94,7 +94,14 @@ const CompletedPayments: React.FC<CompletedPaymentsProps> = ({ payments }) => {
       label: "Voucher",
       render: (payment: Payment) =>
         payment.voucher ? (
-          <Link href={`/vouchers/${payment.voucher.voucherNumber}`}>
+          <Link
+            href={`/vouchers/${payment.voucher.voucherNumber}`}
+            className="text-indigo-600 hover:underline"
+            aria-label={`View voucher number ${payment.voucher.voucherNumber}`}
+            tabIndex={0}
+            onClick={() => {}}
+            onKeyDown={(e) => e.key === 'Enter' && {}}
+          >
             {payment.voucher.voucherNumber}
           </Link>
         ) : (

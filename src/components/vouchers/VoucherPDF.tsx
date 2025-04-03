@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo } from "react";
 import {
   Document,
   Page,
@@ -22,6 +22,7 @@ interface Voucher {
     paidDate: string;
     paymentMethod: string;
     transactionId: string | null;
+    paymentNumber: number;
     lease: {
       tenant: {
         user: {
@@ -70,8 +71,8 @@ const styles = StyleSheet.create({
     color: "#1a1a1a",
   },
   voucherInfo: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "column",
+    alignItems: "flex-start",
     gap: 4,
   },
   voucherNumber: {
@@ -108,16 +109,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   inlineLabel: {
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: "Helvetica-Bold",
     fontSize: 12,
-    color: '#1a1a1a',
+    color: "#1a1a1a",
   },
   inlineText: {
     fontSize: 12,
-    color: '#1a1a1a',
+    color: "#1a1a1a",
   },
   inlineContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 8,
     gap: 4,
   },
@@ -129,14 +130,14 @@ const styles = StyleSheet.create({
   paymentDetailsTitle: {
     fontSize: 14,
     color: "#656565",
-    marginBottom: '5mm'
+    marginBottom: "5mm",
   },
   paymentGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
   },
   paymentGridItem: {
-    width: "25%"
+    width: "25%",
   },
   label: {
     fontSize: 12,
@@ -201,6 +202,10 @@ const VoucherPDF: React.FC<VoucherPDFProps> = memo(({ voucher }) => (
           <View style={styles.voucherInfo}>
             <Text style={styles.voucherDate}>
               {format(new Date(), "MMM dd, yyyy")}
+            </Text>
+            <Text style={styles.voucherNumber}>
+              Payment {voucher.payment.paymentNumber} of{" "}
+              {voucher.payment.lease.totalPayments}
             </Text>
           </View>
         </View>
@@ -295,7 +300,7 @@ const VoucherPDF: React.FC<VoucherPDFProps> = memo(({ voucher }) => (
   </Document>
 ));
 
-VoucherPDF.displayName = 'VoucherPDF';
+VoucherPDF.displayName = "VoucherPDF";
 
 export default VoucherPDF;
 

@@ -5,9 +5,11 @@ export interface Payment {
     paidDate: string | null;
     status: 'PENDING' | 'PAID' | 'OVERDUE' | 'CANCELLED';
     paymentMethod: string | null;
+    paymentNumber: number;
     lease: {
         id: string;
         rentAmount: number;
+        totalPayments: number;
         tenant: {
             user: {
                 name: string;

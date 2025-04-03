@@ -180,16 +180,14 @@ export default function LeaseDetailsPage() {
       setPayments((prevPayments) => [...prevPayments, newPayment]);
       console.log(newPayment);
 
-      // Show success notification with voucher link
       setNotification({
         show: true,
-        voucherNumber: newPayment.voucher?.voucherNumber,
+        message: "Payment recorded successfully.",
+        type: "success",
       });
-
-      // Hide notification after 5 seconds
       setTimeout(() => {
-        setNotification({ show: false });
-      }, 5000);
+        router.push(`/vouchers/${newPayment.voucher?.voucherNumber}`);
+      }, 2000);
     } catch (error) {
       console.error("Error recording payment:", error);
       setNotification({
@@ -449,20 +447,6 @@ export default function LeaseDetailsPage() {
             type={notification.type as "success" | "error"}
             title={notification.type === "error" ? "Error" : "Success"}
             message={notification.message as string}
-            action={
-              notification.voucherNumber
-                ? {
-                    label: "View Voucher",
-                    onClick: () =>
-                      notification.voucherNumber &&
-                      router.push(
-                        `/vouchers/${encodeURIComponent(
-                          notification.voucherNumber
-                        )}`
-                      ),
-                  }
-                : undefined
-            }
             onClose={() => setNotification({ show: false })}
           />
         )}
