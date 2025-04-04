@@ -11,16 +11,7 @@ import { FaPlus, FaUsers } from "react-icons/fa";
 import TenantForm from "@/components/tenants/TenantForm";
 import Modal from "@/components/ui/Modal";
 import { useDevice } from "@/contexts/DeviceContext";
-
-interface Tenant {
-  id: number;
-  phone: string;
-  emergencyContact: string | null;
-  user: {
-    name: string;
-    email: string;
-  };
-}
+import { Tenant } from "@/types/tenant";
 
 export default function TenantsPage() {
   const { data: session, status: authStatus } = useSession();
@@ -90,7 +81,9 @@ export default function TenantsPage() {
 
   const handleUpdateTenants = (updatedTenant: Tenant) => {
     setTenants((prevTenants) => {
-      const existingTenantIndex = prevTenants.findIndex(t => t.id === updatedTenant.id);
+      const existingTenantIndex = prevTenants.findIndex(
+        (t) => t.id === updatedTenant.id
+      );
       if (existingTenantIndex > -1) {
         // Update existing tenant
         const updatedTenants = [...prevTenants];
@@ -208,7 +201,11 @@ export default function TenantsPage() {
         isOpen={isModalOpen}
         onClose={handleModalClose}
       >
-        <TenantForm tenantId={currentTenant?.id} onClose={handleModalClose} onSuccess={handleUpdateTenants} />
+        <TenantForm
+          tenantId={currentTenant?.id}
+          onClose={handleModalClose}
+          onSuccess={handleUpdateTenants}
+        />
       </Modal>
     </Layout>
   );

@@ -11,25 +11,9 @@ import { FaPlus, FaBuilding } from "react-icons/fa";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { formatDate } from "@/utils/dateUtils";
 import { FORMAT_DATE } from "@/constants";
-
-interface Lease {
-  id: number;
-  startDate: string;
-  endDate: string;
-  rentAmount: number;
-  status: string;
-  tenant: {
-    user: {
-      name: string;
-    };
-  };
-  unit: {
-    unitNumber: string;
-    property: {
-      name: string;
-    };
-  };
-}
+import Badge from "@/components/ui/Badge";
+import { FaEye, FaFilePdf } from "react-icons/fa";
+import { Lease } from "@/types/lease";
 
 export default function LeasesPage() {
   const { data: session, status: authStatus } = useSession();
@@ -49,6 +33,7 @@ export default function LeasesPage() {
         const response = await fetch("/api/leases");
         if (!response.ok) throw new Error("Failed to fetch leases");
         const data = await response.json();
+        console.log("data", data);
         setLeases(Array.isArray(data) ? data : [data]);
       } catch (err) {
         console.error("Error fetching leases:", err);
@@ -63,23 +48,6 @@ export default function LeasesPage() {
 
   const handleViewLease = (leaseId: number) => {
     router.push(`/leases/${leaseId}`);
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusClass =
-      {
-        ACTIVE: "bg-green-100 text-green-800",
-        EXPIRED: "bg-yellow-100 text-yellow-800",
-        TERMINATED: "bg-red-100 text-red-800",
-      }[status] || "bg-gray-100 text-gray-800";
-
-    return (
-      <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}
-      >
-        {status}
-      </span>
-    );
   };
 
   const columns = [
@@ -111,15 +79,40 @@ export default function LeasesPage() {
     {
       key: "status",
       label: "Status",
-      render: (lease: Lease) => getStatusBadge(lease.status),
+      render: (lease: Lease) => {
+        const status = lease.status;
+        return <Badge status={getBadgeStatus(status)}>{status}</Badge>;
+      },
+    },
+    {
+      key: "document",
+      label: "Lease Agreement",
+      render: (lease: Lease) => {
+        const hasDocument = lease.documents?.some(
+          (doc) => doc.type === "LEASE_AGREEMENT"
+        );
+        console.log("hasDocument", hasDocument);
+        return hasDocument ? (
+          <Button
+            variant="outline"
+            size="md"
+            square
+            onClick={() => router.push(`/leases/${lease.id}/document`)}
+          >
+            <FaFilePdf />
+          </Button>
+        ) : (
+          <span className="text-gray-400 text-sm">No document</span>
+        );
+      },
     },
     {
       key: "actions",
       label: "Actions",
       render: (lease: Lease) => (
         <div className="flex space-x-2">
-          <Button size="sm" onClick={() => handleViewLease(lease.id)}>
-            View Details
+          <Button square size="md" onClick={() => handleViewLease(lease.id)}>
+            <FaEye />
           </Button>
         </div>
       ),
@@ -127,7 +120,20 @@ export default function LeasesPage() {
   ];
 
   const handleAddNewLease = () => {
-    router.push('/leases/new');
+    router.push("/leases/new");
+  };
+
+  const getBadgeStatus = (status: string) => {
+    switch (status) {
+      case "ACTIVE":
+        return "success";
+      case "EXPIRED":
+        return "error";
+      case "TERMINATED":
+        return "warning";
+      default:
+        return "default";
+    }
   };
 
   if (loading) {

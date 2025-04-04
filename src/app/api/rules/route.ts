@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { createRuleSchema, updateRulesOrderSchema } from "@/lib/validations/rules";
+import {
+  createRuleSchema,
+  updateRulesOrderSchema,
+} from "@/lib/validations/rules";
 import { ZodError } from "zod";
 
 export async function GET() {
@@ -16,15 +19,15 @@ export async function GET() {
         category: true,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
     return NextResponse.json(rules);
   } catch (error) {
-    console.error('Error fetching rules:', error);
+    console.error("Error fetching rules:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch rules' },
+      { error: "Failed to fetch rules" },
       { status: 500 }
     );
   }
@@ -33,7 +36,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const json = await request.json();
-    
+
     // Validate the input data
     const validatedData = createRuleSchema.parse(json);
 
@@ -53,7 +56,7 @@ export async function POST(request: Request) {
       );
     }
 
-    console.error('Error creating rule:', error);
+    console.error("Error creating rule:", error);
     return NextResponse.json(
       { error: "Failed to create rule" },
       { status: 500 }
@@ -64,15 +67,15 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const json = await request.json();
-    
+
     // Validate the input data
     const validatedData = updateRulesOrderSchema.parse(json);
-    
+
     // Update rules in sequence
     for (const rule of validatedData.rules) {
       await prisma.leaseRule.update({
         where: { id: rule.id },
-        data: { updatedAt: new Date() }
+        data: { updatedAt: new Date() },
       });
     }
 
@@ -85,10 +88,10 @@ export async function PUT(request: Request) {
       );
     }
 
-    console.error('Error updating rules:', error);
+    console.error("Error updating rules:", error);
     return NextResponse.json(
       { error: "Failed to update rules order" },
       { status: 500 }
     );
   }
-} 
+}

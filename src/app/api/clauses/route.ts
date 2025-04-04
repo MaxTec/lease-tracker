@@ -14,15 +14,15 @@ export async function GET() {
         type: true,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
     return NextResponse.json(clauses);
   } catch (error) {
-    console.error('Error fetching clauses:', error);
+    console.error("Error fetching clauses:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch clauses' },
+      { error: "Failed to fetch clauses" },
       { status: 500 }
     );
   }
@@ -43,6 +43,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(clause);
   } catch (error) {
+    console.error("Error creating clause:", error);
     return NextResponse.json(
       { error: "Failed to create clause" },
       { status: 500 }
@@ -53,20 +54,21 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const { clauses } = await request.json();
-    
+
     // Update clauses in sequence
-    for (const [index, clause] of clauses.entries()) {
+    for (const clause of clauses) {
       await prisma.leaseClause.update({
         where: { id: clause.id },
-        data: { updatedAt: new Date() }
+        data: { updatedAt: new Date() },
       });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error("Error updating clauses order:", error);
     return NextResponse.json(
       { error: "Failed to update clauses order" },
       { status: 500 }
     );
   }
-} 
+}

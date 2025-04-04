@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { hash } from "bcryptjs";
 import { UserRole } from "@prisma/client";
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const tenants = await prisma.tenant.findMany({
       where: {

@@ -4,20 +4,7 @@ import { useEffect, useState } from "react";
 import Badge from "@/components/ui/Badge";
 import Table from "@/components/ui/Table";
 import EmptyState from "../ui/EmptyState";
-
-interface Ticket {
-  id: number;
-  title: string;
-  status: string;
-  priority: string;
-  createdAt: string;
-  property: {
-    name: string;
-  };
-  unit: {
-    unitNumber: string;
-  };
-}
+import { Ticket } from "@/types/ticket";
 
 export default function TicketsList() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -69,18 +56,6 @@ export default function TicketsList() {
     };
     return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
-
-  // const getPriorityColor = (priority: string) => {
-  //   const colors = {
-  //     LOW: "bg-gray-100 text-gray-800",
-  //     MEDIUM: "bg-yellow-100 text-yellow-800",
-  //     HIGH: "bg-orange-100 text-orange-800",
-  //     URGENT: "bg-red-100 text-red-800",
-  //   };
-  //   return (
-  //     colors[priority as keyof typeof colors] || "bg-gray-100 text-gray-800"
-  //   );
-  // };
 
   const columns = [
     {

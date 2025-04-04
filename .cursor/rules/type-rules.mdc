@@ -1,0 +1,58 @@
+# Type Handling Standards
+
+## Type Organization
+- Store all shared interfaces and types in `src/types` directory
+- Group related types in feature-specific files (e.g., `lease.ts`, `tenant.ts`)
+- Use descriptive type names with proper casing (PascalCase for interfaces/types)
+- Export all types as named exports
+
+## Type Definitions
+- Use TypeScript interfaces for object shapes
+- Use type aliases for unions, intersections, and simple types
+- Include comprehensive JSDoc comments for complex types
+- Define strict types instead of using 'any'
+
+## Component Props
+- Define prop interfaces with 'Props' suffix (e.g., `LeaseTableProps`)
+- Export prop types if they are used across multiple components
+- Use proper type imports/exports with explicit paths
+
+## API Response Types
+- Define separate types for API responses and internal data structures
+- Use Pick, Omit, or Partial utility types when needed
+- Include proper date types (use string or Date consistently)
+- Define status enums for state management
+
+## Type Examples from Leases Page:
+```typescript
+// Table column type
+interface Column<T> {
+  key: string;
+  label: string;
+  render: (item: T) => React.ReactNode;
+}
+
+// Status type
+type LeaseStatus = 'ACTIVE' | 'EXPIRED' | 'TERMINATED';
+
+// Badge type
+interface BadgeProps {
+  status: 'success' | 'error' | 'warning' | 'default';
+  children: React.ReactNode;
+}
+```
+
+## Type Safety Guidelines
+- Enable strict TypeScript checks in `tsconfig.json`
+- Avoid type assertions unless absolutely necessary
+- Use generics for reusable components and functions
+- Implement proper error types for error handling
+
+## State Management Types
+- Define proper types for useState hooks
+- Use proper typing for context values and providers
+- Type async function responses and error states
+
+## Examples:
+@src/types/lease.ts - Reference for complex type definitions
+@src/types/components/table.ts - Reference for component types 

@@ -53,6 +53,7 @@ export default function LeaseRulesStep() {
     isLoading: clausesLoading,
     error: clausesError,
   } = useClauses();
+  const hasExistingLease = watch('hasExistingLease');
 
   const [localRules, setLocalRules] = useState<Rule[]>([]);
   const [localClauses, setLocalClauses] = useState<Clause[]>([]);
@@ -221,135 +222,160 @@ export default function LeaseRulesStep() {
   // console.log("localClauses", localClauses);
   // TODO: After adding a new rule or clause, it must be added as checked in the form
   return (
-    <div className="space-y-8">
-      <Divider
-        title="Lease Rules"
-        lineStyle="solid"
-        actions={
-          <div className="flex items-center space-x-2">
-            <Button onClick={handleToggleAllRules} variant="outline" size="sm">
-              {areRulesSelected ? "Unselect All" : "Select All"}
-            </Button>
-            <Button onClick={() => setIsRuleModalOpen(true)} square>
-              <div className="flex items-center space-x-2">
-                <FaPlus />
-              </div>
-            </Button>
-          </div>
-        }
-      >
-        <div className="w-full space-y-4">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={(event) => handleDragEnd(event, "rules")}
-          >
-            {localRules.map((rule) => {
-              return (
-                <SortableItem key={rule.id} id={rule.id}>
-                  <div className="flex flex-col items-start space-x-3 p-2.5 bg-white rounded-lg shadow-sm border border-gray-200">
-                    <Checkbox
-                      key={rule.id}
-                      {...register("selectedRules", {
-                        onChange: (e) => {
-                          handleRuleChange(Number(rule.id), e.target.checked);
-                        },
-                      })}
-                      value={rule.id}
-                      checked={(watch("selectedRules") || [])
-                        .map(Number)
-                        .includes(rule.id)}
-                      label={rule.title}
-                    />
-                    <p className="text-sm text-gray-500">{rule.description}</p>
-                  </div>
-                </SortableItem>
-              );
-            })}
-          </DndContext>
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div className="flex items-center space-x-3">
+          <input
+            type="checkbox"
+            id="hasExistingLease"
+            {...register('hasExistingLease')}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <label htmlFor="hasExistingLease" className="text-sm font-medium text-gray-700">
+            I already have an existing lease agreement
+          </label>
         </div>
-      </Divider>
+        {hasExistingLease && (
+          <p className="text-sm text-gray-500">
+            You can skip selecting rules and clauses and proceed to upload your existing lease agreement.
+          </p>
+        )}
+      </div>
 
-      <Divider
-        title="Lease Clauses"
-        lineStyle="dashed"
-        actions={
-          <div className="flex items-center space-x-2">
-            <Button
-              onClick={handleToggleAllClauses}
-              variant="outline"
-              size="sm"
+      {!hasExistingLease && (
+        <>
+          <div className="space-y-8">
+            <Divider
+              title="Lease Rules"
+              lineStyle="solid"
+              actions={
+                <div className="flex items-center space-x-2">
+                  <Button onClick={handleToggleAllRules} variant="outline" size="sm">
+                    {areRulesSelected ? "Unselect All" : "Select All"}
+                  </Button>
+                  <Button onClick={() => setIsRuleModalOpen(true)} square>
+                    <div className="flex items-center space-x-2">
+                      <FaPlus />
+                    </div>
+                  </Button>
+                </div>
+              }
             >
-              {areClausesSelected ? "Unselect All" : "Select All"}
-            </Button>
-            <Button onClick={() => setIsClauseModalOpen(true)} square>
-              <div className="flex items-center space-x-2">
-                <FaPlus />
+              <div className="w-full space-y-4">
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event) => handleDragEnd(event, "rules")}
+                >
+                  {localRules.map((rule) => {
+                    return (
+                      <SortableItem key={rule.id} id={rule.id}>
+                        <div className="flex flex-col items-start space-x-3 p-2.5 bg-white rounded-lg shadow-sm border border-gray-200">
+                          <Checkbox
+                            key={rule.id}
+                            {...register("selectedRules", {
+                              onChange: (e) => {
+                                handleRuleChange(Number(rule.id), e.target.checked);
+                              },
+                            })}
+                            value={rule.id}
+                            checked={(watch("selectedRules") || [])
+                              .map(Number)
+                              .includes(rule.id)}
+                            label={rule.title}
+                          />
+                          <p className="text-sm text-gray-500">{rule.description}</p>
+                        </div>
+                      </SortableItem>
+                    );
+                  })}
+                </DndContext>
               </div>
-            </Button>
-          </div>
-        }
-      >
-        <div className="w-full space-y-4">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={(event) => handleDragEnd(event, "clauses")}
-          >
-            <SortableContext
-              items={localClauses}
-              strategy={verticalListSortingStrategy}
+            </Divider>
+
+            <Divider
+              title="Lease Clauses"
+              lineStyle="dashed"
+              actions={
+                <div className="flex items-center space-x-2">
+                  <Button
+                    onClick={handleToggleAllClauses}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {areClausesSelected ? "Unselect All" : "Select All"}
+                  </Button>
+                  <Button onClick={() => setIsClauseModalOpen(true)} square>
+                    <div className="flex items-center space-x-2">
+                      <FaPlus />
+                    </div>
+                  </Button>
+                </div>
+              }
             >
-              {localClauses.map((clause, index) => (
-                <SortableItem key={clause.id} id={clause.id}>
-                  <div className="flex flex-col items-start space-y-1 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-                    <Checkbox
-                      {...register("selectedClauses", {
-                        onChange: (e) => {
-                          handleClauseChange(
-                            Number(clause.id),
-                            e.target.checked
-                          );
-                        },
-                      })}
-                      value={clause.id}
-                      checked={(watch("selectedClauses") || [])
-                        .map(Number)
-                        .includes(clause.id)}
-                      label={`${getOrdinal(index + 1, {
-                        language: "es",
-                      }).toUpperCase()}`}
-                    />
-                    <p className="text-sm text-gray-500">{clause.content}</p>
-                  </div>
-                </SortableItem>
-              ))}
-            </SortableContext>
-          </DndContext>
-        </div>
-      </Divider>
+              <div className="w-full space-y-4">
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event) => handleDragEnd(event, "clauses")}
+                >
+                  <SortableContext
+                    items={localClauses}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {localClauses.map((clause, index) => (
+                      <SortableItem key={clause.id} id={clause.id}>
+                        <div className="flex flex-col items-start space-y-1 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+                          <Checkbox
+                            {...register("selectedClauses", {
+                              onChange: (e) => {
+                                handleClauseChange(
+                                  Number(clause.id),
+                                  e.target.checked
+                                );
+                              },
+                            })}
+                            value={clause.id}
+                            checked={(watch("selectedClauses") || [])
+                              .map(Number)
+                              .includes(clause.id)}
+                            label={`${getOrdinal(index + 1, {
+                              language: "es",
+                            }).toUpperCase()}`}
+                          />
+                          <p className="text-sm text-gray-500">{clause.content}</p>
+                        </div>
+                      </SortableItem>
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              </div>
+            </Divider>
+          </div>
 
-      <Modal
-        isOpen={isRuleModalOpen}
-        onClose={() => setIsRuleModalOpen(false)}
-        title="Add New Rule"
-      >
-        <RuleForm
-          onSubmit={handleAddRule}
-          onCancel={() => setIsRuleModalOpen(false)}
-        />
-      </Modal>
+          <Modal
+            isOpen={isRuleModalOpen}
+            onClose={() => setIsRuleModalOpen(false)}
+            title="Add New Rule"
+          >
+            <RuleForm
+              onSubmit={handleAddRule}
+              onCancel={() => setIsRuleModalOpen(false)}
+            />
+          </Modal>
 
-      <Modal
-        isOpen={isClauseModalOpen}
-        onClose={() => setIsClauseModalOpen(false)}
-        title="Add New Clause"
-      >
-        <ClauseForm
-          onSubmit={handleAddClause}
-          onCancel={() => setIsClauseModalOpen(false)}
-        />
-      </Modal>
+          <Modal
+            isOpen={isClauseModalOpen}
+            onClose={() => setIsClauseModalOpen(false)}
+            title="Add New Clause"
+          >
+            <ClauseForm
+              onSubmit={handleAddClause}
+              onCancel={() => setIsClauseModalOpen(false)}
+            />
+          </Modal>
+        </>
+      )}
     </div>
   );
 }

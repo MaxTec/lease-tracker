@@ -34,9 +34,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizeClasses = {
-      sm: square ? 'px-2 py-2 text-sm' : 'px-3 py-1 text-sm',
-      md: square ? 'px-3 py-2 text-sm' : 'px-4 py-2',
-      lg: square ? 'px-4 py-4 text-sm' : 'px-6 py-3 text-lg'
+      sm: square ? 'h-8 w-8 flex items-center justify-center' : 'px-3 py-1 text-sm',
+      md: square ? 'h-10 w-10 flex items-center justify-center' : 'px-4 py-2',
+      lg: square ? 'h-12 w-12 flex items-center justify-center' : 'px-6 py-3 text-lg'
     };
 
     return (

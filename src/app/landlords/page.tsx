@@ -10,17 +10,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import { FaPlus, FaUserTie } from "react-icons/fa";
 import LandlordForm from "@/components/landlords/LandlordForm";
 import Modal from "@/components/ui/Modal";
-
-interface Landlord {
-  id: number;
-  phone: string;
-  address: string;
-  companyName: string | null;
-  user: {
-    name: string;
-    email: string;
-  };
-}
+import { Landlord } from "@/types/landlord";
 
 export default function LandlordsPage() {
   const { data: session, status: authStatus } = useSession();
@@ -176,7 +166,9 @@ export default function LandlordsPage() {
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-gray-800">Landlords</h2>
+              <h2 className="text-2xl font-semibold text-gray-800">
+                Landlords
+              </h2>
               <Button onClick={handleAddLandlord}>
                 <FaPlus className="mr-2 inline-block align-middle" />
                 <span className="align-middle">Add New Landlord</span>
@@ -217,4 +209,4 @@ export default function LandlordsPage() {
       </Modal>
     </Layout>
   );
-} 
+}

@@ -1,21 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Tenant } from "@prisma/client";
-
-interface TenantFormData {
-  name: string;
-  email: string;
-  password?: string;
-  phone: string;
-  emergencyContact: string;
-}
+import { Tenant } from "@/types/tenant";
+import { TenantFormData } from "@/types/tenant";
 
 interface TenantFormProps {
   tenantId?: number;
@@ -36,7 +28,7 @@ export default function TenantForm({
   onClose,
   onSuccess,
 }: TenantFormProps) {
-  const router = useRouter();
+  // const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 

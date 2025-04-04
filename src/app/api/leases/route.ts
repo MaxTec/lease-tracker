@@ -51,6 +51,16 @@ export async function GET(request: NextRequest) {
             },
           },
         },
+        documents: {
+          where: {
+            type: "LEASE_AGREEMENT",
+          },
+          select: {
+            id: true,
+            type: true,
+            fileUrl: true,
+          },
+        },
       },
     });
 
@@ -114,6 +124,7 @@ export async function POST(request: NextRequest) {
       rentAmount,
       depositAmount,
       paymentDay,
+      hasExistingLease,
     } = body;
 
     // Validate required fields
@@ -131,9 +142,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const selectedRules = body.selectedRules;
-    const selectedClauses = body.selectedClauses;
 
     // Create the lease
     const totalPayments = getAccurateLeaseMonths(
@@ -191,66 +199,39 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const leaseRules = selectedRules.map((ruleId: string, index: number) => ({
-      leaseId: lease.id,
-      ruleId: parseInt(ruleId),
-      order: index,
-    }));
+    // Only create rules and clauses if there's no existing lease
+    if (!hasExistingLease) {
+      const selectedRules = body.selectedRules || [];
+      const selectedClauses = body.selectedClauses || [];
 
-    const leaseClauses = selectedClauses.map(
-      (clauseId: string, index: number) => ({
+      const leaseRules = selectedRules.map((ruleId: string, index: number) => ({
         leaseId: lease.id,
-        clauseId: parseInt(clauseId),
+        ruleId: parseInt(ruleId),
         order: index,
-      })
-    );
+      }));
 
-    // link leaseRules to lease
-    await prisma.leasesToRules.createMany({
-      data: leaseRules,
-    });
+      const leaseClauses = selectedClauses.map(
+        (clauseId: string, index: number) => ({
+          leaseId: lease.id,
+          clauseId: parseInt(clauseId),
+          order: index,
+        })
+      );
 
-    // link leaseClauses to lease
-    await prisma.leasesToClauses.createMany({
-      data: leaseClauses,
-    });
+      // link leaseRules to lease
+      if (leaseRules.length > 0) {
+        await prisma.leasesToRules.createMany({
+          data: leaseRules,
+        });
+      }
 
-    // const pdfBuffer = await generateLeasePDF(leaseData);
-    // const fileName = `lease_${lease.id}_${Date.now()}.pdf`;
-    // const leaseUrl = await uploadToR2(pdfBuffer, fileName);
-
-    // // Send email to tenant
-    // const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`;
-    // await sendLeaseEmail(
-    //     lease.tenant.user.email,
-    //     lease.tenant.user.name,
-    //     leaseUrl,
-    //     loginUrl
-    // );
-
-    // Create initial payment records for the lease period
-    // const start = new Date(startDate);
-    // const end = new Date(endDate);
-    // const payments = [];
-
-    // for (let date = new Date(start); date <= end; date.setMonth(date.getMonth() + 1)) {
-    //     const dueDate = new Date(date);
-    //     dueDate.setDate(paymentDay);
-
-    //     if (dueDate >= start && dueDate <= end) {
-    //         payments.push({
-    //             leaseId: lease.id,
-    //             tenantId: parseInt(tenantId),
-    //             amount: rentAmount,
-    //             dueDate,
-    //             status: 'PENDING' as const,
-    //         });
-    //     }
-    // }
-
-    // await prisma.payment.createMany({
-    //     data: payments,
-    // });
+      // link leaseClauses to lease
+      if (leaseClauses.length > 0) {
+        await prisma.leasesToClauses.createMany({
+          data: leaseClauses,
+        });
+      }
+    }
 
     return NextResponse.json(lease);
   } catch (error) {

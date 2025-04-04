@@ -10,6 +10,7 @@ import StepIndicator from "@/components/ui/StepIndicator";
 import LeaseDetailsStep from "@/components/lease/LeaseDetailsStep";
 import LeaseRulesStep from "@/components/lease/LeaseRulesStep";
 import LeasePreviewStep from "@/components/lease/LeasePreviewStep";
+import LeaseUploadStep from "@/components/lease/LeaseUploadStep";
 import Button from "@/components/ui/Button";
 import { toast } from "react-hot-toast";
 
@@ -22,6 +23,7 @@ const leaseDetailsSchema = z.object({
   depositAmount: z.string().nonempty("Deposit amount is required"), // Keep as string for form handling
   paymentDay: z.string().nonempty("Payment day is required"), // Keep as string for form handling
   customEndDate: z.boolean().default(false),
+  hasExistingLease: z.boolean().default(false),
 });
 
 const leaseRulesSchema = z.object({
@@ -48,12 +50,12 @@ type LeaseFormData = z.infer<typeof leaseSchema>;
 const steps = [
   { title: "Lease Details", description: "Enter basic lease information" },
   {
-    title: "Rules & Clauses",
-    description: "Select applicable rules and clauses",
+    title: "Rules & Upload",
+    description: "Select rules or upload existing lease",
   },
   {
     title: "Preview & Submit",
-    description: "Review and generate lease agreement",
+    description: "Review and submit lease agreement",
   },
 ];
 
@@ -67,6 +69,7 @@ const defaultFormValues = {
   depositAmount: "",
   paymentDay: "",
   customEndDate: false,
+  hasExistingLease: false,
   selectedRules: [] as string[],
   selectedClauses: [] as string[],
   agreementVerified: false,
@@ -88,10 +91,12 @@ export default function NewLeasePage() {
     handleSubmit,
     trigger,
     formState: { errors },
+    watch,
   } = methods;
 
   const validateCurrentStep = async () => {
     let fieldsToValidate: Array<keyof LeaseFormData> = [];
+    const formValues = methods.getValues();
 
     switch (currentStep) {
       case 0:
@@ -106,30 +111,31 @@ export default function NewLeasePage() {
         ];
         break;
       case 1:
+        if (formValues.hasExistingLease) {
+          return true; // Skip validation for rules if using existing lease
+        }
         fieldsToValidate = ["selectedRules", "selectedClauses"];
         break;
       case 2:
-        fieldsToValidate = ["agreementVerified"];
+        fieldsToValidate = [];
+        if (formValues.hasExistingLease) {
+          fieldsToValidate.push("signedLeaseFile" as keyof LeaseFormData);
+        } else {
+          fieldsToValidate.push("agreementVerified");
+        }
         break;
       default:
         return true;
     }
-
+    console.log("fieldsToValidate", fieldsToValidate);
     const isStepValid = await trigger(fieldsToValidate);
-    console.log("Step validation result:", isStepValid);
-    console.log("Current form values:", methods.getValues());
-    console.log("Form errors:", methods.formState.errors);
-
+    console.log("isStepValid", isStepValid);
     if (!isStepValid) {
-      const firstError = Object.values(errors)[0]?.message;
-      if (firstError) {
-        // toast.error(firstError as string);
-        Object.values(errors).forEach((error) => {
-          if (error) {
-            toast.error(error.message as string);
-          }
-        });
-      }
+      Object.values(errors).forEach((error) => {
+        if (error) {
+          toast.error(error.message as string);
+        }
+      });
     }
 
     return isStepValid;
@@ -137,12 +143,22 @@ export default function NewLeasePage() {
 
   const nextStep = async () => {
     const isValid = await validateCurrentStep();
+    console.log("errors", errors);
     if (isValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+      const formValues = methods.getValues();
+      console.log(formValues);
+      //console
+      if (currentStep === 0 && formValues.hasExistingLease) {
+        // Skip step 1 (rules) and go directly to step 2 if has existing lease
+        setCurrentStep(2);
+      } else {
+        setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+      }
     }
   };
 
   const previousStep = () => {
+    console.log(errors);
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
@@ -152,30 +168,33 @@ export default function NewLeasePage() {
       setError(null);
 
       const formData = new FormData();
-      formData.append('data', JSON.stringify({
-        ...data,
-        signedLeaseFile: undefined // Remove the file from JSON data
-      }));
-      
+      formData.append(
+        "data",
+        JSON.stringify({
+          ...data,
+          signedLeaseFile: undefined, // Remove the file from JSON data
+        })
+      );
+
       // Append the signed lease file if it exists
       if (data.signedLeaseFile) {
-        formData.append('signedLeaseFile', data.signedLeaseFile);
+        formData.append("signedLeaseFile", data.signedLeaseFile);
       }
 
-      const response = await fetch('/api/leases', {
-        method: 'POST',
+      const response = await fetch("/api/leases", {
+        method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create lease');
+        throw new Error("Failed to create lease");
       }
 
       const lease = await response.json();
       router.push(`/leases/${lease.id}`);
     } catch (error) {
-      console.error('Error creating lease:', error);
-      setError('Failed to create lease. Please try again.');
+      console.error("Error creating lease:", error);
+      setError("Failed to create lease. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -188,7 +207,11 @@ export default function NewLeasePage() {
       case 1:
         return <LeaseRulesStep />;
       case 2:
-        return <LeasePreviewStep />;
+        return watch('hasExistingLease') ? (
+          <LeaseUploadStep />
+        ) : (
+          <LeasePreviewStep />
+        );
       default:
         return null;
     }
@@ -215,7 +238,7 @@ export default function NewLeasePage() {
                     <p className="text-sm text-red-600">{error}</p>
                   </div>
                 )}
-                
+
                 {renderStep()}
 
                 <div className="flex justify-between mt-8">
@@ -239,11 +262,14 @@ export default function NewLeasePage() {
                     </Button>
                   ) : (
                     <Button
-                      disabled={!methods.formState.isValid}
                       type="submit"
+                      disabled={
+                        isSubmitting || 
+                        (watch('hasExistingLease') ? !watch('signedLeaseFile') : !watch('agreementVerified'))
+                      }
                       className="ml-auto"
                     >
-                      {isSubmitting ? 'Creating Lease...' : 'Create Lease'}
+                      {isSubmitting ? "Creating Lease..." : "Create Lease"}
                     </Button>
                   )}
                 </div>

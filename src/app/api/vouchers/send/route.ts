@@ -74,10 +74,10 @@ export async function POST(request: NextRequest) {
         {
           content: data.pdfBase64,
           filename: `voucher-${voucher.voucherNumber}.pdf`,
-          type: 'application/pdf',
-          disposition: 'attachment'
-        }
-      ]
+          type: "application/pdf",
+          disposition: "attachment",
+        },
+      ],
     });
 
     // Update voucher status

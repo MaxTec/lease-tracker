@@ -9,6 +9,7 @@ import { pdf } from "@react-pdf/renderer";
 import VoucherPDF from "@/components/vouchers/VoucherPDF";
 import Button from "@/components/ui/Button";
 import Notification from "@/components/ui/Notification";
+// import { Voucher } from "@/types/voucher";
 
 interface Voucher {
   id: string;

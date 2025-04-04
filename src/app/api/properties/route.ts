@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
-import { Prisma } from "@prisma/client";
+import { Unit } from "@prisma/client";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const properties = await prisma.property.findMany({
       where: {
@@ -44,11 +44,11 @@ export async function POST(request: NextRequest) {
         type,
         landlordId: parseInt(landlordId),
         units: {
-          create: units.map((unit: any) => ({
+          create: units.map((unit: Unit) => ({
             unitNumber: unit.unitNumber.toString(),
-            bedrooms: parseInt(unit.bedrooms),
-            bathrooms: parseInt(unit.bathrooms),
-            squareFeet: parseInt(unit.squareFeet),
+            bedrooms: parseInt(unit.bedrooms.toString()),
+            bathrooms: parseInt(unit.bathrooms.toString()),
+            squareFeet: parseInt(unit.squareFeet.toString()),
           })),
         },
       },

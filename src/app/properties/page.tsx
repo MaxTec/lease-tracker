@@ -9,23 +9,11 @@ import Table from "@/components/ui/Table";
 import EmptyState from "@/components/ui/EmptyState";
 import { FaPlus, FaBuilding } from "react-icons/fa";
 import PropertyForm from "@/components/properties/PropertyForm";
-
-interface Property {
-  id: number;
-  name: string;
-  address: string;
-  type: string;
-  units: Unit[];
-}
-
-interface Unit {
-  id: number;
-  unitNumber: string;
-}
+import { Property } from "@/types/property";
 
 export default function PropertiesPage() {
   const { data: session, status: authStatus } = useSession();
-  const router = useRouter();
+  // const router = useRouter();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +46,6 @@ export default function PropertiesPage() {
   }, []);
 
   const handleEditProperty = (propertyId: number) => {
-    // router.push(`/properties/${propertyId}`);
     setSelectedProperty(propertyId);
     setIsModalOpen(true);
   };
@@ -82,7 +69,9 @@ export default function PropertiesPage() {
 
   const handleUpdateProperties = (updatedProperty: Property) => {
     setProperties((prevProperties) => {
-      const existingPropertyIndex = prevProperties.findIndex(p => p.id === updatedProperty.id);
+      const existingPropertyIndex = prevProperties.findIndex(
+        (p) => p.id === updatedProperty.id
+      );
       if (existingPropertyIndex > -1) {
         // Update existing property
         const updatedProperties = [...prevProperties];

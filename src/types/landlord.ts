@@ -1,13 +1,7 @@
-export interface Landlord {
-    id: number;
-    userId: number;
-    phone: string;
-    address: string;
-    companyName?: string;
-    user: {
-        name: string;
-        email: string;
-    };
+import { Landlord as PrismaLandlord, User } from "@prisma/client";
+
+export interface Landlord extends PrismaLandlord {
+    user: Pick<User, "name" | "email">;
 }
 
 export interface LandlordFormData {
