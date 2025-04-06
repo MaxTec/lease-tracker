@@ -13,20 +13,20 @@ export async function GET(request: Request) {
     // Base where clause for date filtering
     const dateFilter = startDate && endDate
       ? {
-          paidDate: {
-            gte: parseISO(startDate),
-            lte: parseISO(endDate),
-          },
-        }
+        paidDate: {
+          gte: parseISO(startDate),
+          lte: parseISO(endDate),
+        },
+      }
       : {};
 
     // Property filter through Unit model
     const propertyFilter = propertyId
       ? {
-          unit: {
-            propertyId: parseInt(propertyId),
-          },
-        }
+        unit: {
+          propertyId: parseInt(propertyId),
+        },
+      }
       : {};
 
     const [
@@ -38,6 +38,8 @@ export async function GET(request: Request) {
       rentCollection,
       leaseExpirations,
       rentCollectionByMonth,
+      ticketMetrics,
+      ticketsByStatus,
     ] = await Promise.all([
       // Total properties
       prisma.property.count(),
@@ -54,13 +56,13 @@ export async function GET(request: Request) {
           ...propertyFilter,
           ...(startDate && endDate
             ? {
-                startDate: {
-                  lte: parseISO(endDate),
-                },
-                endDate: {
-                  gte: parseISO(startDate),
-                },
-              }
+              startDate: {
+                lte: parseISO(endDate),
+              },
+              endDate: {
+                gte: parseISO(startDate),
+              },
+            }
             : {}),
         },
       }),
@@ -86,13 +88,13 @@ export async function GET(request: Request) {
           ...propertyFilter,
           ...(startDate && endDate
             ? {
-                startDate: {
-                  lte: parseISO(endDate),
-                },
-                endDate: {
-                  gte: parseISO(startDate),
-                },
-              }
+              startDate: {
+                lte: parseISO(endDate),
+              },
+              endDate: {
+                gte: parseISO(startDate),
+              },
+            }
             : {}),
         },
         _count: true,
@@ -126,13 +128,13 @@ export async function GET(request: Request) {
           },
           ...(startDate && endDate
             ? {
-                startDate: {
-                  lte: parseISO(endDate),
-                },
-                endDate: {
-                  gte: parseISO(startDate),
-                },
-              }
+              startDate: {
+                lte: parseISO(endDate),
+              },
+              endDate: {
+                gte: parseISO(startDate),
+              },
+            }
             : {}),
         },
         select: {
@@ -157,6 +159,39 @@ export async function GET(request: Request) {
         ORDER BY month DESC
         LIMIT 12
       `,
+
+      // Ticket metrics
+      prisma.ticket.aggregate({
+        where: {
+          ...(propertyId ? { propertyId: parseInt(propertyId) } : {}),
+          ...(startDate && endDate
+            ? {
+              createdAt: {
+                gte: parseISO(startDate),
+                lte: parseISO(endDate),
+              },
+            }
+            : {}),
+        },
+        _count: true,
+      }),
+
+      // Tickets by status
+      prisma.ticket.groupBy({
+        by: ["status"],
+        where: {
+          ...(propertyId ? { propertyId: parseInt(propertyId) } : {}),
+          ...(startDate && endDate
+            ? {
+              createdAt: {
+                gte: parseISO(startDate),
+                lte: parseISO(endDate),
+              },
+            }
+            : {}),
+        },
+        _count: true,
+      }),
     ]);
 
     // Calculate occupancy rate
@@ -171,11 +206,13 @@ export async function GET(request: Request) {
         activeLeases,
         totalPayments: totalPayments._sum.amount || 0,
         occupancyRate: calculatedOccupancyRate,
+        totalTickets: ticketMetrics._count,
       },
       rentCollection,
       leaseExpirations,
       occupancyBreakdown: occupancyRate,
       rentCollectionByMonth,
+      ticketsByStatus,
     });
   } catch (error) {
     console.error("Dashboard data error:", error);

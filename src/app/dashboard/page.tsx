@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfMonth, endOfMonth, parse, startOfYear, endOfYear } from "date-fns";
 import Layout from "@/components/layout/Layout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { RentCollectionChart } from "@/components/dashboard/RentCollectionChart";
 // import { LeaseExpirationChart } from "@/components/dashboard/LeaseExpirationChart";
 import { OccupancyChart } from "@/components/dashboard/OccupancyChart";
+import { TicketStatusChart } from "@/components/dashboard/TicketStatusChart";
 import DateInput from "@/components/ui/DateInput";
 import Select from "@/components/ui/Select";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -18,6 +19,7 @@ interface DashboardData {
     activeLeases: number;
     totalPayments: number;
     occupancyRate: number;
+    totalTickets: number;
   };
   rentCollection: {
     status: string;
@@ -37,6 +39,10 @@ interface DashboardData {
     status: string;
     _count: number;
   }[];
+  ticketsByStatus: {
+    status: string;
+    _count: number;
+  }[];
 }
 
 interface PropertyOption {
@@ -47,8 +53,11 @@ interface PropertyOption {
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    const now = new Date();
+    return format(now, viewMode === 'month' ? "yyyy-MM" : "yyyy");
+  });
   const [selectedProperty, setSelectedProperty] = useState<string>("");
   const [propertyOptions, setPropertyOptions] = useState<PropertyOption[]>([
     { value: "", label: "All Properties" },
@@ -74,14 +83,26 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        let start: string;
+        let end: string;
+
+        if (viewMode === 'month') {
+          const monthDate = parse(selectedDate + "-01", "yyyy-MM-dd", new Date());
+          start = format(startOfMonth(monthDate), "yyyy-MM-dd");
+          end = format(endOfMonth(monthDate), "yyyy-MM-dd");
+        } else {
+          const yearDate = parse(selectedDate, "yyyy", new Date());
+          start = format(startOfYear(yearDate), "yyyy-MM-dd");
+          end = format(endOfYear(yearDate), "yyyy-MM-dd");
+        }
+        
         const params = new URLSearchParams();
-        if (startDate) params.append("startDate", startDate);
-        if (endDate) params.append("endDate", endDate);
+        params.append("startDate", start);
+        params.append("endDate", end);
         if (selectedProperty) params.append("propertyId", selectedProperty);
 
         const response = await fetch(`/api/dashboard?${params.toString()}`);
         const result = await response.json();
-        console.log("result", result);
         setData(result);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -91,7 +112,7 @@ export default function Dashboard() {
     };
 
     fetchData();
-  }, [startDate, endDate, selectedProperty]);
+  }, [selectedDate, selectedProperty, viewMode]);
 
   if (loading) {
     return (
@@ -132,33 +153,69 @@ export default function Dashboard() {
   return (
     <Layout>
       <div className="space-y-6 p-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:items-center">
-            <DateInput
-              showMonthYearPicker
-              label="Start Date"
-              value={startDate}
-              onChange={setStartDate}
-              className="w-full md:w-auto"
-            />
-            <DateInput
-              label="End Date"
-              value={endDate}
-              onChange={setEndDate}
-              showMonthYearPicker
-              className="w-full md:w-auto"
-            />
-            <Select
-              label="Property"
-              value={selectedProperty}
-              onChange={(e) => setSelectedProperty(e.target.value)}
-              options={propertyOptions}
-              className="w-full col-span-3"
-            />
+        <div className="flex flex-col gap-4">
+          <div className="bg-white">
+            {/* <h2 className="text-lg font-semibold text-gray-700 mb-4">Dashboard Filters</h2> */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">View Mode</label>
+                <div className="flex rounded-md shadow-sm">
+                  <button
+                    onClick={() => {
+                      setViewMode('month');
+                      const currentDate = viewMode === 'year'
+                        ? parse(selectedDate, "yyyy", new Date())
+                        : parse(selectedDate + "-01", "yyyy-MM-dd", new Date());
+                      setSelectedDate(format(currentDate, "yyyy-MM"));
+                    }}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-l-md ${
+                      viewMode === 'month'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                    } transition-colors`}
+                  >
+                    Month
+                  </button>
+                  <button
+                    onClick={() => {
+                      setViewMode('year');
+                      const currentDate = viewMode === 'month'
+                        ? parse(selectedDate + "-01", "yyyy-MM-dd", new Date())
+                        : parse(selectedDate, "yyyy", new Date());
+                      setSelectedDate(format(currentDate, "yyyy"));
+                    }}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-r-md ${
+                      viewMode === 'year'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                    } transition-colors`}
+                  >
+                    Year
+                  </button>
+                </div>
+              </div>
+
+              <DateInput
+                showMonthYearPicker={viewMode === 'month'}
+                showYearPicker={viewMode === 'year'}
+                label={viewMode === 'month' ? "Select Month" : "Select Year"}
+                value={selectedDate}
+                onChange={setSelectedDate}
+                className="w-full"
+              />
+
+              <Select
+                label="Property"
+                value={selectedProperty}
+                onChange={(e) => setSelectedProperty(e.target.value)}
+                options={propertyOptions}
+                className="w-full"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-5">
           {!selectedProperty && (
             <MetricCard
               title="Total Properties"
@@ -181,11 +238,20 @@ export default function Dashboard() {
             value={`${data.metrics.occupancyRate.toFixed(1)}%`}
             icon={<span className="text-xl">📊</span>}
           />
+          <MetricCard
+            title="Total Tickets"
+            value={data.metrics.totalTickets}
+            icon={<span className="text-xl">🎫</span>}
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <RentCollectionChart data={data.rentCollectionByMonth} />
           <OccupancyChart data={occupancyData} />
+        </div>
+
+        <div className="grid grid-cols-1 gap-6">
+          <TicketStatusChart data={data.ticketsByStatus} />
         </div>
 
         {/* <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -195,3 +261,5 @@ export default function Dashboard() {
     </Layout>
   );
 }
+
+

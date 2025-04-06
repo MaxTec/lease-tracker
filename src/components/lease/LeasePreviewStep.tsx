@@ -8,7 +8,6 @@ import { LeaseData } from "./LeasePDF";
 export default function LeasePreviewStep() {
   const {
     watch,
-    register,
     formState: { errors },
     setValue,
   } = useFormContext();
@@ -16,7 +15,6 @@ export default function LeasePreviewStep() {
   const [pdfData, setPdfData] = useState<LeaseData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     const fetchPreviewData = async () => {
@@ -48,11 +46,16 @@ export default function LeasePreviewStep() {
   }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.preventDefault();
     const file = event.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
       setValue("signedLeaseFile", file);
     }
+  };
+
+  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    setValue("agreementVerified", event.target.checked);
   };
 
   return (
@@ -75,7 +78,8 @@ export default function LeasePreviewStep() {
           <label className="flex items-center space-x-3">
             <input
               type="checkbox"
-              {...register("agreementVerified")}
+              checked={watch("agreementVerified")}
+              onChange={handleCheckboxChange}
               className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
             />
             <span className="text-sm text-gray-700">

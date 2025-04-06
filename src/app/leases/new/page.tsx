@@ -14,36 +14,70 @@ import LeaseUploadStep from "@/components/lease/LeaseUploadStep";
 import Button from "@/components/ui/Button";
 import { toast } from "react-hot-toast";
 
-const leaseDetailsSchema = z.object({
-  unitId: z.string().nonempty("Unit is required"),
-  tenantId: z.string().nonempty("Tenant is required"),
-  startDate: z.string().nonempty("Start date is required"),
-  endDate: z.string().nonempty("End date is required"),
-  rentAmount: z.string().nonempty("Rent amount is required"), // Keep as string for form handling
-  depositAmount: z.string().nonempty("Deposit amount is required"), // Keep as string for form handling
-  paymentDay: z.string().nonempty("Payment day is required"), // Keep as string for form handling
-  customEndDate: z.boolean().default(false),
-  hasExistingLease: z.boolean().default(false),
-});
-
-const leaseRulesSchema = z.object({
-  selectedRules: z
-    .array(z.string())
-    .min(1, "At least one rule must be selected")
-    .default([]),
-  selectedClauses: z
-    .array(z.string())
-    .min(1, "At least one clause must be selected")
-    .default([]),
-});
-
-// Combined schema for the entire form
-const leaseSchema = leaseDetailsSchema.merge(leaseRulesSchema).extend({
-  agreementVerified: z.boolean().refine((val) => val === true, {
-    message: "You must verify that you have reviewed the lease agreement",
-  }),
-  signedLeaseFile: z.instanceof(File).optional(),
-});
+const leaseSchema = z
+  .object({
+    unitId: z.string().nonempty("Unit is required"),
+    tenantId: z.string().nonempty("Tenant is required"),
+    startDate: z.string().nonempty("Start date is required"),
+    endDate: z.string().nonempty("End date is required"),
+    rentAmount: z.string().nonempty("Rent amount is required"),
+    depositAmount: z.string().nonempty("Deposit amount is required"),
+    paymentDay: z.string().nonempty("Payment day is required"),
+    customEndDate: z.boolean().default(false),
+    hasExistingLease: z.boolean().default(false),
+    selectedRules: z.array(z.string()).default([]),
+    selectedClauses: z.array(z.string()).default([]),
+    agreementVerified: z.boolean().default(false),
+    signedLeaseFile: z.instanceof(File).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.hasExistingLease) {
+        return !!data.signedLeaseFile;
+      }
+      return true;
+    },
+    {
+      message: "You must upload a signed lease file",
+      path: ["signedLeaseFile"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (!data.hasExistingLease) {
+        return data.selectedRules.length > 0;
+      }
+      return true;
+    },
+    {
+      message: "At least one rule must be selected",
+      path: ["selectedRules"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (!data.hasExistingLease) {
+        return data.selectedClauses.length > 0;
+      }
+      return true;
+    },
+    {
+      message: "At least one clause must be selected",
+      path: ["selectedClauses"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (!data.hasExistingLease) {
+        return data.agreementVerified === true;
+      }
+      return true;
+    },
+    {
+      message: "You must verify that you have reviewed the lease agreement",
+      path: ["agreementVerified"],
+    }
+  );
 
 type LeaseFormData = z.infer<typeof leaseSchema>;
 
@@ -59,7 +93,6 @@ const steps = [
   },
 ];
 
-// Fix the defaultFormValues to match the schema types
 const defaultFormValues = {
   unitId: "",
   tenantId: "",
@@ -70,8 +103,9 @@ const defaultFormValues = {
   paymentDay: "",
   customEndDate: false,
   hasExistingLease: false,
-  selectedRules: [] as string[],
-  selectedClauses: [] as string[],
+  signedLeaseFile: undefined,
+  selectedRules: [],
+  selectedClauses: [],
   agreementVerified: false,
 };
 
@@ -141,8 +175,10 @@ export default function NewLeasePage() {
     return isStepValid;
   };
 
-  const nextStep = async () => {
+  const nextStep = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent form submission
     const isValid = await validateCurrentStep();
+    console.log("isValid", isValid);
     console.log("errors", errors);
     if (isValid) {
       const formValues = methods.getValues();
@@ -166,7 +202,7 @@ export default function NewLeasePage() {
     try {
       setIsSubmitting(true);
       setError(null);
-
+      console.log("data", data);
       const formData = new FormData();
       formData.append(
         "data",
@@ -255,7 +291,7 @@ export default function NewLeasePage() {
                   {currentStep < steps.length - 1 ? (
                     <Button
                       type="button"
-                      onClick={nextStep}
+                      onClick={(e) => nextStep(e)}
                       className="ml-auto"
                     >
                       Next
@@ -273,6 +309,12 @@ export default function NewLeasePage() {
                     </Button>
                   )}
                 </div>
+                <button type="button" onClick={() => {
+                  console.log(methods.getValues());
+                  console.log(errors);
+                }}>
+                  console.log
+                </button>
               </form>
             </FormProvider>
           </div>

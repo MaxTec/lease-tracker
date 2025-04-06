@@ -2,7 +2,7 @@
 
 import { forwardRef, useEffect, useState } from 'react';
 import ReactDatePicker from 'react-datepicker';
-import { format, parse } from 'date-fns';
+import { format as formatDate, parse } from 'date-fns';
 import 'react-datepicker/dist/react-datepicker.css';
 
 interface DateInputProps {
@@ -12,33 +12,47 @@ interface DateInputProps {
   error?: string;
   className?: string;
   showMonthYearPicker?: boolean;
+  showYearPicker?: boolean;
   disabled?: boolean;
 }
 
 const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
-  ({ label, value, onChange, error, className = '', ...props }, ref) => {
-    const [selectedDate, setSelectedDate] = useState<Date | null>(
-      value ? parse(value, 'yyyy-MM-dd', new Date()) : null
-    );
+  ({ label, value, onChange, error, className = '', showMonthYearPicker, showYearPicker, ...props }, ref) => {
+    const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
+      if (!value) return null;
+      try {
+        let dateFormat = 'yyyy-MM-dd';
+        if (showMonthYearPicker) dateFormat = 'yyyy-MM';
+        if (showYearPicker) dateFormat = 'yyyy';
+        return parse(value, dateFormat, new Date());
+      } catch {
+        return null;
+      }
+    });
 
-    // Update the date when the value prop changes
     useEffect(() => {
-      if (value) {
-        try {
-          setSelectedDate(parse(value, 'yyyy-MM-dd', new Date()));
-        } catch {
-          // If date parsing fails, set to null
-          setSelectedDate(null);
-        }
-      } else {
+      if (!value) {
+        setSelectedDate(null);
+        return;
+      }
+      try {
+        let dateFormat = 'yyyy-MM-dd';
+        if (showMonthYearPicker) dateFormat = 'yyyy-MM';
+        if (showYearPicker) dateFormat = 'yyyy';
+        const date = parse(value, dateFormat, new Date());
+        setSelectedDate(date);
+      } catch {
         setSelectedDate(null);
       }
-    }, [value]);
+    }, [value, showMonthYearPicker, showYearPicker]);
 
     const handleChange = (date: Date | null) => {
       setSelectedDate(date);
       if (date) {
-        onChange(format(date, 'yyyy-MM-dd'));
+        let dateFormat = 'yyyy-MM-dd';
+        if (showMonthYearPicker) dateFormat = 'yyyy-MM';
+        if (showYearPicker) dateFormat = 'yyyy';
+        onChange(formatDate(date, dateFormat));
       } else {
         onChange('');
       }
@@ -53,14 +67,16 @@ const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
           {...props}
           selected={selectedDate}
           onChange={handleChange}
-          dateFormat="yyyy-MM-dd"
+          dateFormat={showYearPicker ? "yyyy" : (showMonthYearPicker ? "MMMM yyyy" : "yyyy-MM-dd")}
           className={`w-full p-2 border rounded-md ${
             error ? 'border-red-500' : 'border-gray-300'
           }`}
-          placeholderText="YYYY-MM-DD"
+          placeholderText={showYearPicker ? "Select Year" : (showMonthYearPicker ? "Select Month" : "YYYY-MM-DD")}
           isClearable
-          showMonthDropdown
-          showYearDropdown
+          showMonthDropdown={!showMonthYearPicker && !showYearPicker}
+          showYearDropdown={!showMonthYearPicker && !showYearPicker}
+          showMonthYearPicker={showMonthYearPicker}
+          showYearPicker={showYearPicker}
           dropdownMode="select"
         />
         {error && (
