@@ -143,6 +143,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if tenant already has an active lease
+    const existingTenantLease = await prisma.lease.findFirst({
+      where: {
+        tenantId: parseInt(tenantId),
+        status: "ACTIVE",
+      },
+    });
+
+    if (existingTenantLease) {
+      return NextResponse.json(
+        { error: "Tenant already has an active lease" },
+        { status: 400 }
+      );
+    }
+
+    // Check if unit is already taken (has an active lease)
+    const existingUnitLease = await prisma.lease.findFirst({
+      where: {
+        unitId: parseInt(unitId),
+        status: "ACTIVE",
+      },
+    });
+
+    if (existingUnitLease) {
+      return NextResponse.json(
+        { error: "Unit is already occupied with an active lease" },
+        { status: 400 }
+      );
+    }
+
     // Create the lease
     const totalPayments = getAccurateLeaseMonths(
       new Date(startDate),

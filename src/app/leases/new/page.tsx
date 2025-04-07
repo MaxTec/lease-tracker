@@ -222,15 +222,19 @@ export default function NewLeasePage() {
         body: formData,
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to create lease");
+        throw new Error(result.error || "Failed to create lease");
       }
 
-      const lease = await response.json();
-      router.push(`/leases/${lease.id}`);
+      toast.success("Lease created successfully!");
+      router.push(`/leases/${result.id}`);
     } catch (error) {
       console.error("Error creating lease:", error);
-      setError("Failed to create lease. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Failed to create lease. Please try again.";
+      // toast.error(errorMessage);
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

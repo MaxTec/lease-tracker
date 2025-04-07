@@ -57,6 +57,7 @@ export default function TenantForm({
         setValue("emergencyContact", data.emergencyContact || "");
       } catch (err) {
         console.error("Error fetching tenant:", err);
+        // get the error message from the error object
         setError(err instanceof Error ? err.message : "Failed to fetch tenant");
       } finally {
         setLoading(false);
@@ -81,20 +82,14 @@ export default function TenantForm({
         },
         body: JSON.stringify(data),
       });
-      if (!response.ok) {
-        const errorText = await response.text();
-        const errorData = errorText
-          ? JSON.parse(errorText)
-          : { message: "Failed to save tenant" };
-        console.log(errorData);
-        throw new Error(errorData.message || "Failed to save tenant");
-      }
-
       const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to save tenant");
+      }
       onSuccess(result);
       onClose();
     } catch (err) {
-      console.error("Error saving tenant:", err);
+      console.log("Error saving tenant:", err);
       setError(err instanceof Error ? err.message : "Failed to save tenant");
     } finally {
       setLoading(false);
