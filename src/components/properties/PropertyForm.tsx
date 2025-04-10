@@ -9,6 +9,7 @@ import Select from "@/components/ui/Select";
 import Fieldset from "@/components/ui/Fieldset";
 import Modal from "@/components/ui/Modal";
 import LoadingSpinner from "../ui/LoadingSpinner";
+import { Property } from "@/types/property";
 
 // Define the Zod schema for Property
 const propertySchema = z.object({
@@ -28,19 +29,7 @@ const propertySchema = z.object({
     .min(1, "At least one unit is required"),
 });
 
-interface Property {
-  id?: number;
-  name: string;
-  address: string;
-  type: string;
-  landlordId: number;
-  units: {
-    unitNumber: string;
-    bedrooms: string;
-    bathrooms: string;
-    squareFeet: string;
-  }[];
-}
+type PropertyFormData = z.infer<typeof propertySchema>;
 
 interface Landlord {
   id: number;
@@ -66,27 +55,29 @@ export default function PropertyForm({
     register,
     handleSubmit,
     control,
-    setValue,
     reset,
     getValues,
     formState: { errors },
-  } = useForm<Property>({
+  } = useForm<PropertyFormData>({
     resolver: zodResolver(propertySchema),
     defaultValues: {
       name: "",
       address: "",
       type: "",
       landlordId: undefined,
-      units: [{ unitNumber: "" }],
+      units: [
+        { unitNumber: "", bedrooms: "0", bathrooms: "0", squareFeet: "0" },
+      ],
     },
   });
+
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "units", // Name of the field array
+    name: "units",
   });
 
   const [landlords, setLandlords] = useState<Landlord[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -104,40 +95,62 @@ export default function PropertyForm({
           const propertyRes = await fetch(`/api/properties/${propertyId}`);
           if (!propertyRes.ok) throw new Error("Failed to fetch property");
           const propertyData = await propertyRes.json();
-          // Convert landlordId to string
-          propertyData.landlordId = String(propertyData.landlordId);
-          // cast bedrooms, bathrooms, squareFeet to string
-          propertyData.units.forEach((unit: any) => {
-            unit.bedrooms = String(unit.bedrooms);
-            unit.bathrooms = String(unit.bathrooms);
-            unit.squareFeet = String(unit.squareFeet);
-          });
-          reset(propertyData);
-          setLoading(false);
-        } else {
-          reset({
-            name: "",
-            address: "",
-            type: "",
-            landlordId: undefined,
-            units: [{ unitNumber: "" }],
-          });
-          setLoading(false);
+
+          // Convert numbers to strings for form data
+          const formData: PropertyFormData = {
+            name: propertyData.name,
+            address: propertyData.address,
+            type: propertyData.type,
+            landlordId: String(propertyData.landlordId),
+            units: propertyData.units.map(
+              (unit: {
+                unitNumber: string;
+                bedrooms: number;
+                bathrooms: number;
+                squareFeet: number;
+              }) => ({
+                unitNumber: unit.unitNumber,
+                bedrooms: String(unit.bedrooms),
+                bathrooms: String(unit.bathrooms),
+                squareFeet: String(unit.squareFeet),
+              })
+            ),
+          };
+
+          reset(formData);
         }
       } catch (err) {
-        setError("Failed to load form data");
+        setFormError(
+          err instanceof Error ? err.message : "Failed to load form data"
+        );
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
-  }, [propertyId, setValue, append]);
+  }, [propertyId, reset]);
 
-  const onSubmit = async (data: Property) => {
+  const onSubmit = async (formData: PropertyFormData) => {
     setLoading(true);
-    setError(null);
+    setFormError(null);
 
     try {
+      // Convert string values to numbers for API
+      const apiData = {
+        ...formData,
+        landlordId: formData.landlordId
+          ? parseInt(formData.landlordId, 10)
+          : undefined,
+        units: formData.units.map((unit) => ({
+          ...unit,
+          bedrooms: parseInt(unit.bedrooms, 10) || 0,
+          bathrooms: parseInt(unit.bathrooms, 10) || 0,
+          squareFeet: parseInt(unit.squareFeet, 10) || 0,
+        })),
+      };
+
       const url = propertyId
         ? `/api/properties/${propertyId}`
         : "/api/properties";
@@ -148,7 +161,7 @@ export default function PropertyForm({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(apiData),
       });
 
       if (!response.ok) {
@@ -156,10 +169,11 @@ export default function PropertyForm({
       }
       const responseData = await response.json();
       onClose();
-      console.log("response", responseData);
-      onUpdate(responseData);
+      onUpdate(Array.isArray(responseData) ? responseData : [responseData]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save property");
+      setFormError(
+        err instanceof Error ? err.message : "Failed to save property"
+      );
     } finally {
       setLoading(false);
     }
@@ -168,126 +182,117 @@ export default function PropertyForm({
   console.log("values", getValues());
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={propertyId ? "Edit Property" : "Add New Property"}
-    >
-      {loading ? (
-        <div className="flex justify-center items-center min-h-[250px]">
-          <LoadingSpinner />
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <Input
-            {...register("name")}
-            label="Property Name"
-            error={errors.name?.message}
-          />
-
-          <Input
-            {...register("address")}
-            label="Address"
-            error={errors.address?.message}
-          />
-
-          <div className="grid grid-cols-2 gap-4">
-            <Select
-              {...register("type")}
-              label="Property Type"
-              options={[
-                { value: "APARTMENT", label: "Apartment" },
-                { value: "HOUSE", label: "House" },
-                { value: "COMMERCIAL", label: "Commercial" },
-                { value: "OTHER", label: "Other" },
-              ]}
-              error={errors.type?.message}
-            />
-
-            <Select
-              {...register("landlordId")}
-              label="Landlord"
-              options={landlords.map((landlord) => {
-                console.log("landlord", landlord);
-                return {
-                  value: landlord.id,
-                  label: landlord.user.name,
-                };
-              })}
-              error={errors.landlordId?.message}
-            />
-          </div>
-
-          <Fieldset legend="Units">
-            {fields.map((unit, index) => (
-              <div key={unit.id} className="flex space-x-4 mb-4 relative pr-20">
-                <Input
-                  {...register(`units.${index}.unitNumber`)}
-                  label="Number"
-                  error={errors.units?.[index]?.unitNumber?.message}
-                />
-                <Input
-                  {...register(`units.${index}.bedrooms`)}
-                  label="Bedrooms"
-                  min={0}
-                  type="number"
-                  error={errors.units?.[index]?.bedrooms?.message}
-                />
-                <Input
-                  {...register(`units.${index}.bathrooms`)}
-                  label="Bathrooms"
-                  min={0}
-                  type="number"
-                  error={errors.units?.[index]?.bathrooms?.message}
-                />
-                <Input
-                  {...register(`units.${index}.squareFeet`)}
-                  label="m2"
-                  min={0}
-                  type="number"
-                  error={errors.units?.[index]?.squareFeet?.message}
-                />
-                <Button
-                  disabled={fields.length === 1}
-                  className="absolute right-0 top-[23px]"
-                  size="lg"
-                  variant="danger"
-                  onClick={() => remove(index)}
-                >
-                  <FaTrash />
-                </Button>
-              </div>
-            ))}
-            <Button
-              type="button"
-              className="mt-4"
-              onClick={() =>
-                append({
-                  unitNumber: "",
-                  bedrooms: 1,
-                  bathrooms: 2,
-                  squareFeet: 100,
-                })
-              }
-            >
-              Add Unit
-            </Button>
-          </Fieldset>
-
-          <div className="flex justify-end space-x-4">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading
-                ? "Saving..."
-                : propertyId
-                ? "Update Property"
-                : "Create Property"}
-            </Button>
-          </div>
-        </form>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {formError && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-md">{formError}</div>
       )}
-    </Modal>
+      <Input
+        {...register("name")}
+        label="Property Name"
+        error={errors.name?.message}
+      />
+
+      <Input
+        {...register("address")}
+        label="Address"
+        error={errors.address?.message}
+      />
+
+      <div className="grid grid-cols-2 gap-4">
+        <Select
+          {...register("type")}
+          label="Property Type"
+          options={[
+            { value: "APARTMENT", label: "Apartment" },
+            { value: "HOUSE", label: "House" },
+            { value: "COMMERCIAL", label: "Commercial" },
+            { value: "OTHER", label: "Other" },
+          ]}
+          error={errors.type?.message}
+        />
+
+        <Select
+          {...register("landlordId")}
+          label="Landlord"
+          options={landlords.map((landlord) => {
+            console.log("landlord", landlord);
+            return {
+              value: landlord.id,
+              label: landlord.user.name,
+            };
+          })}
+          error={errors.landlordId?.message}
+        />
+      </div>
+
+      <Fieldset legend="Units">
+        {fields.map((unit, index) => (
+          <div key={unit.id} className="flex space-x-4 mb-4 relative pr-20">
+            <Input
+              {...register(`units.${index}.unitNumber`)}
+              label="Number"
+              error={errors.units?.[index]?.unitNumber?.message}
+            />
+            <Input
+              {...register(`units.${index}.bedrooms`)}
+              label="Bedrooms"
+              min={0}
+              type="number"
+              error={errors.units?.[index]?.bedrooms?.message}
+            />
+            <Input
+              {...register(`units.${index}.bathrooms`)}
+              label="Bathrooms"
+              min={0}
+              type="number"
+              error={errors.units?.[index]?.bathrooms?.message}
+            />
+            <Input
+              {...register(`units.${index}.squareFeet`)}
+              label="m2"
+              min={0}
+              type="number"
+              error={errors.units?.[index]?.squareFeet?.message}
+            />
+            <Button
+              disabled={fields.length === 1}
+              className="absolute right-0 top-[23px]"
+              size="lg"
+              variant="danger"
+              onClick={() => remove(index)}
+            >
+              <FaTrash />
+            </Button>
+          </div>
+        ))}
+        <Button
+          type="button"
+          className="mt-4"
+          onClick={() =>
+            append({
+              unitNumber: "",
+              bedrooms: "0",
+              bathrooms: "0",
+              squareFeet: "0",
+            })
+          }
+        >
+          Add Unit
+        </Button>
+      </Fieldset>
+
+      <div className="flex justify-end space-x-4">
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={loading}>
+          {loading
+            ? "Saving..."
+            : propertyId
+            ? "Update Property"
+            : "Create Property"}
+        </Button>
+      </div>
+    </form>
   );
 }

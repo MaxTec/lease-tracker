@@ -18,7 +18,7 @@ interface LeaseData {
 
 const s3Client = new S3Client({
   region: 'auto',
-  endpoint: process.env.CLOUDFLARE_BUCKET_PUBLIC_URL,
+  endpoint: process.env.CLOUDFLARE_API_ENDPOINT,
   credentials: {
     accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID!,
     secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY!,

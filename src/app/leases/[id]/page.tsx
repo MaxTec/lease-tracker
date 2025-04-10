@@ -17,6 +17,8 @@ import { formatDate } from "@/utils/dateUtils";
 import EmptyState from "@/components/ui/EmptyState";
 import Descriptions from "@/components/ui/Descriptions";
 import Badge from "@/components/ui/Badge";
+import Modal from "@/components/ui/Modal";
+import LeaseActivationForm from "@/components/lease/LeaseActivationForm";
 
 interface Lease {
   id: number;
@@ -93,6 +95,7 @@ export default function LeaseDetailsPage() {
   const [notification, setNotification] = useState<SuccessNotification>({
     show: false,
   });
+  const [isActivationModalOpen, setIsActivationModalOpen] = useState(false);
 
   // Redirect if not admin
   if (authStatus === "authenticated" && session?.user?.role !== "ADMIN") {
@@ -230,38 +233,19 @@ export default function LeaseDetailsPage() {
     }
   };
 
-  const handleActivateLease = async () => {
-    if (!lease) return;
-
-    try {
-      const response = await fetch(`/api/leases/${lease.id}`, {
-        method: "PUT",
-        body: JSON.stringify({ status: "ACTIVE" }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to activate lease");
-      }
-
-      // Show success notification
-      setNotification({
-        show: true,
-        message: "Lease activated successfully.",
-        type: "success",
-      });
-      setTimeout(() => {
-        // Optionally, you can refresh the lease data or redirect
-        router.push("/leases"); // Redirect to the leases list or another page
-      }, 2000); // Delay of 1 second before showing the notification
-    } catch (error) {
-      console.error("Error activating lease:", error);
-      setNotification({
-        show: true,
-        message: "Failed to activate lease. Please try again.",
-        type: "error",
-      });
-    }
+  const handleActivateLease = () => {
+    setIsActivationModalOpen(true);
   };
+
+  const handleActivationSuccess = () => {
+    setIsActivationModalOpen(false);
+    window.location.reload();
+  };
+
+  const handleActivationCancel = () => {
+    setIsActivationModalOpen(false);
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -286,19 +270,26 @@ export default function LeaseDetailsPage() {
         <Card
           title="Details"
           actions={[
-            <Button
-              key={lease?.status}
-              variant={lease?.status === "ACTIVE" ? "danger" : "success"}
-              onClick={
-                lease?.status === "ACTIVE"
-                  ? handleTerminateLease
-                  : handleActivateLease
-              }
-            >
-              {lease?.status === "ACTIVE"
-                ? "Terminate Lease"
-                : "Activate Lease"}
-            </Button>,
+            <div className="flex space-x-2" key={lease?.status}>
+              {lease?.status !== "ACTIVE" && (
+                <Button
+                  key="activate-lease"
+                  variant="success"
+                  onClick={handleActivateLease}
+                >
+                  Activate Lease
+                </Button>
+              )}
+              {lease?.status === "ACTIVE" && (
+                <Button
+                  key="terminate-lease"
+                  variant="danger"
+                  onClick={handleTerminateLease}
+                >
+                  Terminate Lease
+                </Button>
+              )}
+            </div>,
           ]}
         >
           <div className="grid grid-cols-1 gap-2">
@@ -441,6 +432,19 @@ export default function LeaseDetailsPage() {
             />
           </div>
         )}
+
+        {/* Activation Modal */}
+        <Modal
+          isOpen={isActivationModalOpen}
+          onClose={handleActivationCancel}
+          title="Activate Lease"
+        >
+          <LeaseActivationForm
+            leaseId={parseInt(leaseId)}
+            onSuccess={handleActivationSuccess}
+            onCancel={handleActivationCancel}
+          />
+        </Modal>
 
         {notification.show && (
           <Notification

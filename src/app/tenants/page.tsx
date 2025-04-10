@@ -10,6 +10,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import { FaPlus, FaUsers } from "react-icons/fa";
 import TenantForm from "@/components/tenants/TenantForm";
 import Modal from "@/components/ui/Modal";
+import PopConfirm from "@/components/ui/PopConfirm";
 import { useDevice } from "@/contexts/DeviceContext";
 import { Tenant } from "@/types/tenant";
 
@@ -20,6 +21,8 @@ export default function TenantsPage() {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [tenantToDelete, setTenantToDelete] = useState<number | null>(null);
   const { isMobile } = useDevice();
   // Redirect if not admin
   if (authStatus === "authenticated" && session?.user?.role !== "ADMIN") {
@@ -52,17 +55,22 @@ export default function TenantsPage() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteTenant = async (tenantId: number) => {
-    if (!confirm("Are you sure you want to delete this tenant?")) return;
+  const handleDeleteClick = (tenantId: number) => {
+    setTenantToDelete(tenantId);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!tenantToDelete) return;
 
     try {
-      const response = await fetch(`/api/tenants/${tenantId}`, {
+      const response = await fetch(`/api/tenants/${tenantToDelete}`, {
         method: "DELETE",
       });
 
       if (!response.ok) throw new Error("Failed to delete tenant");
 
-      setTenants(tenants.filter((t) => t.id !== tenantId));
+      setTenants(tenants.filter((t) => t.id !== tenantToDelete));
     } catch (err) {
       console.error("Error deleting tenant:", err);
       alert("Failed to delete tenant");
@@ -135,7 +143,7 @@ export default function TenantsPage() {
           <Button
             size="sm"
             variant="danger"
-            onClick={() => handleDeleteTenant(tenant.id)}
+            onClick={() => handleDeleteClick(tenant.id)}
           >
             Delete
           </Button>
@@ -197,7 +205,7 @@ export default function TenantsPage() {
       </div>
 
       <Modal
-        title="Add New Tenant"
+        title={currentTenant ? "Edit Tenant" : "Add New Tenant"}
         isOpen={isModalOpen}
         onClose={handleModalClose}
       >
@@ -207,6 +215,19 @@ export default function TenantsPage() {
           onSuccess={handleUpdateTenants}
         />
       </Modal>
+
+      <PopConfirm
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Tenant"
+        confirmText="Delete"
+        cancelText="Cancel"
+      >
+        <p className="text-gray-600">
+          Are you sure you want to delete this tenant? This action cannot be undone.
+        </p>
+      </PopConfirm>
     </Layout>
   );
 }
