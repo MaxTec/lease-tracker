@@ -161,10 +161,12 @@ export default function LeasesPage() {
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-gray-800">Leases</h2>
-              <Button onClick={handleAddNewLease}>
-                <FaPlus className="mr-2 inline-block align-middle" />
-                <span className="align-middle">Add New Lease</span>
-              </Button>
+              {leases.length > 0 && (
+                <Button onClick={handleAddNewLease}>
+                  <FaPlus className="mr-2 inline-block align-middle" />
+                  <span className="align-middle">Add New Lease</span>
+                </Button>
+              )}
             </div>
 
             {leases.length > 0 ? (
