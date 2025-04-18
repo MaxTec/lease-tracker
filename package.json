@@ -36,6 +36,7 @@
     "date-fns-tz": "^3.2.0",
     "next": "15.1.7",
     "next-auth": "^4.24.11",
+    "next-intl": "^4.0.2",
     "numero-a-letras": "^1.0.6",
     "pdf-lib": "^1.17.1",
     "react": "^19.0.0",

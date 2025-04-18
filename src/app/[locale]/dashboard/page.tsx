@@ -5,12 +5,12 @@ import { format, parseISO, startOfMonth, endOfMonth, parse, startOfYear, endOfYe
 import Layout from "@/components/layout/Layout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { RentCollectionChart } from "@/components/dashboard/RentCollectionChart";
-// import { LeaseExpirationChart } from "@/components/dashboard/LeaseExpirationChart";
 import { OccupancyChart } from "@/components/dashboard/OccupancyChart";
 import { TicketStatusChart } from "@/components/dashboard/TicketStatusChart";
 import DateInput from "@/components/ui/DateInput";
 import Select from "@/components/ui/Select";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { useTranslations } from "next-intl";
 
 interface DashboardData {
   metrics: {
@@ -51,6 +51,7 @@ interface PropertyOption {
 }
 
 export default function Dashboard() {
+  const t = useTranslations();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
@@ -60,7 +61,7 @@ export default function Dashboard() {
   });
   const [selectedProperty, setSelectedProperty] = useState<string>("");
   const [propertyOptions, setPropertyOptions] = useState<PropertyOption[]>([
-    { value: "", label: "All Properties" },
+    { value: "", label: t("dashboard.filters.allProperties") },
   ]);
 
   useEffect(() => {
@@ -69,7 +70,7 @@ export default function Dashboard() {
         const response = await fetch("/api/properties/options");
         const options = await response.json();
         setPropertyOptions([
-          { value: "", label: "All Properties" },
+          { value: "", label: t("dashboard.filters.allProperties") },
           ...options,
         ]);
       } catch (error) {
@@ -78,7 +79,7 @@ export default function Dashboard() {
     };
 
     fetchPropertyOptions();
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -128,7 +129,7 @@ export default function Dashboard() {
     return (
       <Layout>
         <div className="flex h-screen items-center justify-center">
-          <p className="text-gray-500">No data available</p>
+          <p className="text-gray-500">{t("dashboard.noData")}</p>
         </div>
       </Layout>
     );
@@ -158,7 +159,7 @@ export default function Dashboard() {
             {/* <h2 className="text-lg font-semibold text-gray-700 mb-4">Dashboard Filters</h2> */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">View Mode</label>
+                <label className="block text-sm font-medium text-gray-700">{t("dashboard.filters.viewMode")}</label>
                 <div className="flex rounded-md shadow-sm">
                   <button
                     onClick={() => {
@@ -174,7 +175,7 @@ export default function Dashboard() {
                         : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                     } transition-colors`}
                   >
-                    Month
+                    {t("common.dates.month")}
                   </button>
                   <button
                     onClick={() => {
@@ -190,7 +191,7 @@ export default function Dashboard() {
                         : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                     } transition-colors`}
                   >
-                    Year
+                    {t("common.dates.year")}
                   </button>
                 </div>
               </div>
@@ -198,14 +199,14 @@ export default function Dashboard() {
               <DateInput
                 showMonthYearPicker={viewMode === 'month'}
                 showYearPicker={viewMode === 'year'}
-                label={viewMode === 'month' ? "Select Month" : "Select Year"}
+                label={viewMode === 'month' ? t("dashboard.filters.selectMonth") : t("dashboard.filters.selectYear")}
                 value={selectedDate}
                 onChange={setSelectedDate}
                 className="w-full"
               />
 
               <Select
-                label="Property"
+                label={t("dashboard.filters.property")}
                 value={selectedProperty}
                 onChange={(e) => setSelectedProperty(e.target.value)}
                 options={propertyOptions}
@@ -218,45 +219,39 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-5">
           {!selectedProperty && (
             <MetricCard
-              title="Total Properties"
+              title={t("dashboard.summary.properties")}
               value={data.metrics.totalProperties}
               icon={<span className="text-xl">🏢</span>}
             />
           )}
           <MetricCard
-            title="Active Leases"
+            title={t("dashboard.summary.activeLeases")}
             value={data.metrics.activeLeases}
             icon={<span className="text-xl">📄</span>}
           />
           <MetricCard
-            title="Total Payments"
+            title={t("dashboard.summary.totalPayments")}
             value={`$${data.metrics.totalPayments.toLocaleString()}`}
             icon={<span className="text-xl">💰</span>}
           />
           <MetricCard
-            title="Occupancy Rate"
+            title={t("dashboard.summary.occupancyRate")}
             value={`${data.metrics.occupancyRate.toFixed(1)}%`}
             icon={<span className="text-xl">📊</span>}
           />
           <MetricCard
-            title="Total Tickets"
+            title={t("dashboard.summary.totalTickets")}
             value={data.metrics.totalTickets}
             icon={<span className="text-xl">🎫</span>}
           />
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <RentCollectionChart data={data.rentCollectionByMonth} />
-          <OccupancyChart data={occupancyData} />
+          <RentCollectionChart title={t("dashboard.charts.rentCollection")} data={data.rentCollectionByMonth} />
+          <OccupancyChart title={t("dashboard.charts.occupancyRate")} data={occupancyData} />
         </div>
-
-        <div className="grid grid-cols-1 gap-6">
-          <TicketStatusChart data={data.ticketsByStatus} />
-        </div>
-
-        {/* <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <LeaseExpirationChart data={leaseExpirationData} />
-        </div> */}
+        
+        <TicketStatusChart title={t("dashboard.charts.ticketsByStatus")} data={data.ticketsByStatus} />
       </div>
     </Layout>
   );

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { redirect, useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Layout from "@/components/layout/Layout";
 import Table from "@/components/ui/Table";
@@ -10,10 +10,11 @@ import EmptyState from "@/components/ui/EmptyState";
 import { FaPlus, FaBuilding } from "react-icons/fa";
 import PropertyForm from "@/components/properties/PropertyForm";
 import { Property } from "@/types/property";
+import { useTranslations } from "next-intl";
 
 export default function PropertiesPage() {
+  const t = useTranslations();
   const { data: session, status: authStatus } = useSession();
-  // const router = useRouter();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,13 +30,13 @@ export default function PropertiesPage() {
       try {
         setLoading(true);
         const response = await fetch("/api/properties");
-        if (!response.ok) throw new Error("Failed to fetch properties");
+        if (!response.ok) throw new Error(t("properties.errors.fetchFailed"));
         const data = await response.json();
         setProperties(data);
       } catch (err) {
         console.error("Error fetching properties:", err);
         setError(
-          err instanceof Error ? err.message : "Failed to fetch properties"
+          err instanceof Error ? err.message : t("properties.errors.fetchFailed")
         );
       } finally {
         setLoading(false);
@@ -43,7 +44,7 @@ export default function PropertiesPage() {
     };
 
     fetchProperties();
-  }, []);
+  }, [t]);
 
   const handleEditProperty = (propertyId: number) => {
     setSelectedProperty(propertyId);
@@ -51,19 +52,19 @@ export default function PropertiesPage() {
   };
 
   const handleDeleteProperty = async (propertyId: number) => {
-    if (!confirm("Are you sure you want to delete this property?")) return;
+    if (!confirm(t("properties.confirmDelete"))) return;
 
     try {
       const response = await fetch(`/api/properties/${propertyId}`, {
         method: "DELETE",
       });
 
-      if (!response.ok) throw new Error("Failed to delete property");
+      if (!response.ok) throw new Error(t("properties.errors.deleteFailed"));
 
       setProperties(properties.filter((p) => p.id !== propertyId));
     } catch (err) {
       console.error("Error deleting property:", err);
-      alert("Failed to delete property");
+      alert(t("properties.errors.deleteFailed"));
     }
   };
 
@@ -86,27 +87,27 @@ export default function PropertiesPage() {
   const columns = [
     {
       key: "name",
-      label: "Property Name",
+      label: t("properties.form.name"),
       render: (property: Property) => property.name,
     },
     {
       key: "address",
-      label: "Address",
+      label: t("properties.form.address"),
       render: (property: Property) => property.address,
     },
     {
       key: "type",
-      label: "Type",
+      label: t("properties.form.type"),
       render: (property: Property) => property.type,
     },
     {
       key: "units",
-      label: "Units",
+      label: t("properties.form.totalUnits"),
       render: (property: Property) => property.units.length,
     },
     {
       key: "actions",
-      label: "Actions",
+      label: t("common.buttons.actions"),
       render: (property: Property) => (
         <div className="flex space-x-2">
           <Button
@@ -114,14 +115,14 @@ export default function PropertiesPage() {
             variant="outline"
             onClick={() => handleEditProperty(property.id)}
           >
-            Edit
+            {t("common.buttons.edit")}
           </Button>
           <Button
             size="sm"
             variant="danger"
             onClick={() => handleDeleteProperty(property.id)}
           >
-            Delete
+            {t("common.buttons.delete")}
           </Button>
         </div>
       ),
@@ -153,7 +154,7 @@ export default function PropertiesPage() {
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-gray-800">
-                Properties
+                {t("properties.title")}
               </h2>
               <Button
                 onClick={() => {
@@ -162,7 +163,7 @@ export default function PropertiesPage() {
                 }}
               >
                 <FaPlus className="mr-2 inline-block align-middle" />
-                <span className="align-middle">Add New Property</span>
+                <span className="align-middle">{t("properties.create")}</span>
               </Button>
             </div>
 
@@ -177,9 +178,9 @@ export default function PropertiesPage() {
             ) : (
               <EmptyState
                 icon={<FaBuilding className="w-12 h-12" />}
-                title="No Properties Found"
-                description="There are no properties in the system yet. Click the button below to add your first property."
-                actionLabel="Add New Property"
+                title={t("properties.emptyState.title")}
+                description={t("properties.emptyState.description")}
+                actionLabel={t("properties.create")}
                 onAction={() => {
                   setSelectedProperty(null);
                   setIsModalOpen(true);

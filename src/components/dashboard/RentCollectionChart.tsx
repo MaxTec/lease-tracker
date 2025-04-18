@@ -12,6 +12,8 @@ import {
 import { format, parseISO } from "date-fns";
 import EmptyState from "@/components/ui/EmptyState";
 import { FaChartBar } from "react-icons/fa";
+import { useTranslations } from "next-intl";
+
 interface RentCollectionData {
   month: string;
   totalAmount: number;
@@ -19,6 +21,7 @@ interface RentCollectionData {
 
 interface RentCollectionChartProps {
   data: RentCollectionData[];
+  title: string;
 }
 
 interface CustomTooltipProps extends TooltipProps<number, string> {
@@ -47,7 +50,9 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   return null;
 };
 
-export const RentCollectionChart = ({ data }: RentCollectionChartProps) => {
+export const RentCollectionChart = ({ data, title }: RentCollectionChartProps) => {
+  const t = useTranslations();
+  
   // Sort data by month
   const sortedData = [...data].sort((a, b) => {
     const dateA = parseISO(a.month);
@@ -58,12 +63,12 @@ export const RentCollectionChart = ({ data }: RentCollectionChartProps) => {
   console.log("sortedData", sortedData);
 
   return (
-    <Card title="Rent Collection" className="h-[400px]">
+    <Card title={title} className="h-[400px]">
       {sortedData.length === 0 ? (
         <EmptyState
           icon={<FaChartBar className="w-12 h-12" />}
-          title="No rent collection data available."
-          description="Please select a property to view rent collection data."
+          title={t("dashboard.charts.noRentData.title")}
+          description={t("dashboard.charts.noRentData.description")}
         />
       ) : (
         <ResponsiveContainer width="100%" height="100%">
@@ -78,7 +83,7 @@ export const RentCollectionChart = ({ data }: RentCollectionChartProps) => {
               tickFormatter={(value) => `$${value.toLocaleString()}`}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="totalAmount" fill="#10B981" name="Paid" maxBarSize={70} />
+            <Bar dataKey="totalAmount" fill="#10B981" name={t("dashboard.charts.paid")} maxBarSize={70} />
             {/* <Bar dataKey="pending" fill="#F59E0B" name="Pending" /> */}
             {/* <Bar dataKey="overdue" fill="#EF4444" name="Overdue" /> */}
           </BarChart>

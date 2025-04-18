@@ -1,49 +1,77 @@
+import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from 'next-auth/middleware';
-import { NextResponse } from 'next/server';
+import createMiddleware from 'next-intl/middleware';
+import { locales, defaultLocale } from './i18n/settings';
 
-export default withAuth(
-    function middleware(req) {
-        const token = req.nextauth.token;
-        const isAuth = !!token;
-        const isAuthPage = req.nextUrl.pathname === '/login' ||
-            req.nextUrl.pathname === '/';
+// Define public pages that don't require authentication
+const publicPages = ['/', '/login'];
 
-        if (isAuthPage) {
-            if (isAuth) {
-                console.log('token:role', token?.role);
-                return NextResponse.redirect(new URL('/dashboard', req.url));
-            }
-            return null;
-        }
+// Create internationalization middleware
+const handleI18nRouting = createMiddleware({
+    locales,
+    defaultLocale,
+    localePrefix: 'as-needed'
+});
 
-        if (!isAuth) {
-            let from = req.nextUrl.pathname;
-            if (req.nextUrl.search) {
-                from += req.nextUrl.search;
-            }
-
-            return NextResponse.redirect(
-                new URL(`/?from=${encodeURIComponent(from)}`, req.url)
-            );
-        }
-
-        // Handle role-based access
-        if (req.nextUrl.pathname.startsWith('/admin') && token?.role !== 'ADMIN') {
-            return NextResponse.redirect(new URL('/dashboard', req.url));
-        }
+// Auth middleware with next-auth
+const authMiddleware = withAuth(
+    // This callback is invoked after successful authentication
+    function onSuccess(req) {
+        return handleI18nRouting(req);
     },
     {
         callbacks: {
-            authorized: () => true, // Let the middleware function handle the auth check
+            authorized: async ({ token, req }) => {
+                // Basic authorization check
+                if (!token) return false;
+
+                // Admin route protection
+                const pathname = req.nextUrl.pathname;
+                const pathnameWithoutLocale = pathname.replace(/^\/(?:es|en)(?=$|\/)/i, '');
+
+                if (pathnameWithoutLocale.startsWith('/admin') && token.role !== 'ADMIN') {
+                    // Redirect non-admin users trying to access admin routes
+                    const locale = pathname.match(/^\/(es|en)(?=$|\/)/)?.[1] || defaultLocale;
+                    // Create redirect response, but return false to let withAuth handle the redirect
+                    NextResponse.redirect(new URL(`/${locale}/dashboard`, req.url));
+                    return false;
+                }
+
+                return true;
+            }
         },
+        pages: {
+            signIn: '/login'
+        }
     }
 );
 
+export default function middleware(req: NextRequest) {
+    // Create regex to match public pages, accounting for locales
+    const publicPathnameRegex = RegExp(
+        `^(/(${locales.join('|')}))?(${publicPages
+            .flatMap((p) => (p === '/' ? ['', '/'] : p))
+            .join('|')})/?$`,
+        'i'
+    );
+
+    // Check for public routes that don't need auth
+    const isPublicPage = publicPathnameRegex.test(req.nextUrl.pathname);
+
+    // Check for API routes or other special paths
+    const publicPatterns = [/^\/(es|en)?\/api\//, /^\/(es|en)?\/public\//];
+    const isSpecialPublicRoute = publicPatterns.some(pattern => pattern.test(req.nextUrl.pathname));
+
+    // For public or special routes, only apply i18n middleware
+    if (isPublicPage || isSpecialPublicRoute) {
+        return handleI18nRouting(req);
+    } else {
+        // For protected routes, apply auth middleware with type assertion
+        // This is necessary because the withAuth typing expects 2 arguments
+        return (authMiddleware as any)(req);
+    }
+}
+
 export const config = {
-    matcher: [
-        '/dashboard/:path*',
-        '/admin/:path*',
-        '/login',
-        '/((?!api|_next/static|_next/image|favicon.ico|public|/).*)',
-    ],
+    matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)', '/dashboard/:path*', '/admin/:path*', '/login']
 }; 

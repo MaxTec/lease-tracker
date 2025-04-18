@@ -13,6 +13,7 @@ import LeasePreviewStep from "@/components/lease/LeasePreviewStep";
 import LeaseUploadStep from "@/components/lease/LeaseUploadStep";
 import Button from "@/components/ui/Button";
 import { toast } from "react-hot-toast";
+import { useTranslations } from "next-intl";
 
 const leaseSchema = z
   .object({
@@ -81,18 +82,6 @@ const leaseSchema = z
 
 type LeaseFormData = z.infer<typeof leaseSchema>;
 
-const steps = [
-  { title: "Lease Details", description: "Enter basic lease information" },
-  {
-    title: "Rules & Upload",
-    description: "Select rules or upload existing lease",
-  },
-  {
-    title: "Preview & Submit",
-    description: "Review and submit lease agreement",
-  },
-];
-
 const defaultFormValues = {
   unitId: "",
   tenantId: "",
@@ -110,10 +99,27 @@ const defaultFormValues = {
 };
 
 export default function NewLeasePage() {
+  const t = useTranslations();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Define steps with translations
+  const steps = [
+    { 
+      title: t("leases.new.steps.details.title"), 
+      description: t("leases.new.steps.details.description") 
+    },
+    {
+      title: t("leases.new.steps.rules.title"),
+      description: t("leases.new.steps.rules.description")
+    },
+    {
+      title: t("leases.new.steps.preview.title"),
+      description: t("leases.new.steps.preview.description")
+    },
+  ];
 
   const methods = useForm<LeaseFormData>({
     resolver: zodResolver(leaseSchema),
@@ -225,15 +231,14 @@ export default function NewLeasePage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Failed to create lease");
+        throw new Error(result.error || t("leases.errors.createFailed"));
       }
 
-      toast.success("Lease created successfully!");
+      toast.success(t("leases.notifications.createSuccess"));
       router.push(`/leases/${result.id}`);
     } catch (error) {
       console.error("Error creating lease:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to create lease. Please try again.";
-      // toast.error(errorMessage);
+      const errorMessage = error instanceof Error ? error.message : t("leases.errors.createFailed");
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -247,23 +252,22 @@ export default function NewLeasePage() {
       case 1:
         return <LeaseRulesStep />;
       case 2:
-        return watch('hasExistingLease') ? (
-          <LeaseUploadStep />
-        ) : (
-          <LeasePreviewStep />
-        );
+        return watch('hasExistingLease') ? 
+          <LeaseUploadStep /> : 
+          <LeasePreviewStep />;
       default:
         return null;
     }
   };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h1 className="text-2xl font-semibold text-gray-800 mb-6">
-              Create New Lease
-            </h1>
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+              {t("leases.new.title")}
+            </h2>
 
             <StepIndicator
               steps={steps}
@@ -272,53 +276,38 @@ export default function NewLeasePage() {
             />
 
             <FormProvider {...methods}>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mt-8">
+                {renderStep()}
+
                 {error && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-                    <p className="text-sm text-red-600">{error}</p>
+                  <div className="p-4 bg-red-50 text-red-600 rounded-md">
+                    {error}
                   </div>
                 )}
 
-                {renderStep()}
-
-                <div className="flex justify-between mt-8">
-                  {currentStep > 0 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={previousStep}
-                    >
-                      Previous
-                    </Button>
-                  )}
+                <div className="flex justify-between pt-4 mt-8 border-t border-gray-200">
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={previousStep}
+                    disabled={currentStep === 0}
+                  >
+                    {t("common.buttons.back")}
+                  </Button>
 
                   {currentStep < steps.length - 1 ? (
-                    <Button
-                      type="button"
-                      onClick={(e) => nextStep(e)}
-                      className="ml-auto"
-                    >
-                      Next
+                    <Button type="button" onClick={nextStep}>
+                      {t("common.buttons.next")}
                     </Button>
                   ) : (
                     <Button
                       type="submit"
-                      disabled={
-                        isSubmitting || 
-                        (watch('hasExistingLease') ? !watch('signedLeaseFile') : !watch('agreementVerified'))
-                      }
-                      className="ml-auto"
+                      isLoading={isSubmitting}
                     >
-                      {isSubmitting ? "Creating Lease..." : "Create Lease"}
+                      {t("leases.new.submit")}
                     </Button>
                   )}
                 </div>
-                <button type="button" onClick={() => {
-                  console.log(methods.getValues());
-                  console.log(errors);
-                }}>
-                  console.log
-                </button>
               </form>
             </FormProvider>
           </div>

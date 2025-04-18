@@ -8,6 +8,7 @@ import {
 } from "recharts";
 import EmptyState from "@/components/ui/EmptyState";
 import { FaChartBar } from "react-icons/fa";
+import { useTranslations } from "next-intl";
 
 interface OccupancyData {
   name: string;
@@ -16,6 +17,7 @@ interface OccupancyData {
 
 interface OccupancyChartProps {
   data: OccupancyData[];
+  title: string;
 }
 
 // Updated COLORS to match the specified statuses
@@ -25,16 +27,18 @@ const COLORS = {
   TERMINATED: "#EF4444" // Red
 };
 
-export const OccupancyChart = ({ data }: OccupancyChartProps) => {
+export const OccupancyChart = ({ data, title }: OccupancyChartProps) => {
+  const t = useTranslations();
+  
   console.log('pie data', data);
   return (
-    <Card title="Occupancy Rate" className="h-[400px]">
+    <Card title={title} className="h-[400px]">
       <ResponsiveContainer width="100%" height="100%">
         {data.length === 0 ? (
           <EmptyState
             icon={<FaChartBar className="w-12 h-12" />}
-            title="No occupancy data available."
-            description="Please select a property to view occupancy data."
+            title={t("dashboard.charts.noOccupancyData.title")}
+            description={t("dashboard.charts.noOccupancyData.description")}
           />
         ) : (
           <PieChart>
@@ -47,7 +51,7 @@ export const OccupancyChart = ({ data }: OccupancyChartProps) => {
               fill="#8884d8"
               dataKey="value"
               label={({ name, percent }) =>
-                `${name} ${(percent * 100).toFixed(0)}%`
+                `${t(`common.status.${name.toLowerCase()}`)} ${(percent * 100).toFixed(0)}%`
               }
             >
               {data.map((entry, index) => (

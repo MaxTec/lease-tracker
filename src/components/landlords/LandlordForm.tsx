@@ -5,15 +5,7 @@ import { z } from "zod";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { Landlord, LandlordFormData } from "@/types/landlord";
-
-const landlordSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters").optional(),
-  phone: z.string().min(1, "Phone number is required"),
-  address: z.string().min(1, "Address is required"),
-  companyName: z.string().optional(),
-});
+import { useTranslations } from "next-intl";
 
 interface LandlordFormProps {
   landlordId?: number;
@@ -22,6 +14,7 @@ interface LandlordFormProps {
 }
 
 export default function LandlordForm({ landlordId, onClose, onSuccess }: LandlordFormProps) {
+  const t = useTranslations();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<LandlordFormData>({
@@ -32,6 +25,16 @@ export default function LandlordForm({ landlordId, onClose, onSuccess }: Landlor
     companyName: "",
   });
 
+  // Define schema with translations
+  const getLandlordSchema = () => z.object({
+    name: z.string().min(1, t("common.errors.required")),
+    email: z.string().email(t("common.errors.invalidEmail")),
+    password: z.string().min(6, t("common.errors.minimumLength", { length: '6' })).optional(),
+    phone: z.string().min(1, t("common.errors.required")),
+    address: z.string().min(1, t("common.errors.required")),
+    companyName: z.string().optional(),
+  });
+
   useEffect(() => {
     const fetchLandlord = async () => {
       if (!landlordId) return;
@@ -39,7 +42,7 @@ export default function LandlordForm({ landlordId, onClose, onSuccess }: Landlor
       try {
         const response = await fetch(`/api/landlords/${landlordId}`);
         if (!response.ok) {
-          throw new Error("Failed to fetch landlord");
+          throw new Error(t("landlords.errors.fetchFailed"));
         }
 
         const landlord: Landlord = await response.json();
@@ -52,12 +55,12 @@ export default function LandlordForm({ landlordId, onClose, onSuccess }: Landlor
         });
       } catch (err) {
         console.error("Error fetching landlord:", err);
-        setErrors({ submit: "Failed to fetch landlord" });
+        setErrors({ submit: t("landlords.errors.fetchFailed") });
       }
     };
 
     fetchLandlord();
-  }, [landlordId]);
+  }, [landlordId, t]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -68,7 +71,7 @@ export default function LandlordForm({ landlordId, onClose, onSuccess }: Landlor
     const data = Object.fromEntries(formDataObj.entries());
 
     try {
-      const validatedData = landlordSchema.parse(data);
+      const validatedData = getLandlordSchema().parse(data);
       
       const url = landlordId 
         ? `/api/landlords/${landlordId}`
@@ -84,7 +87,7 @@ export default function LandlordForm({ landlordId, onClose, onSuccess }: Landlor
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || `Failed to ${landlordId ? "update" : "create"} landlord`);
+        throw new Error(error.message || (landlordId ? t("landlords.errors.updateFailed") : t("landlords.errors.createFailed")));
       }
 
       const landlord = await response.json();
@@ -101,7 +104,9 @@ export default function LandlordForm({ landlordId, onClose, onSuccess }: Landlor
         setErrors(fieldErrors);
       } else {
         console.error(`Error ${landlordId ? "updating" : "creating"} landlord:`, err);
-        setErrors({ submit: `Failed to ${landlordId ? "update" : "create"} landlord` });
+        setErrors({ 
+          submit: landlordId ? t("landlords.errors.updateFailed") : t("landlords.errors.createFailed") 
+        });
       }
     } finally {
       setLoading(false);
@@ -111,14 +116,14 @@ export default function LandlordForm({ landlordId, onClose, onSuccess }: Landlor
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Input
-        label="Name"
+        label={t("landlords.form.name")}
         name="name"
         type="text"
         defaultValue={formData.name}
         error={errors.name}
       />
       <Input
-        label="Email"
+        label={t("landlords.form.email")}
         name="email"
         type="email"
         defaultValue={formData.email}
@@ -126,28 +131,28 @@ export default function LandlordForm({ landlordId, onClose, onSuccess }: Landlor
       />
       {!landlordId && (
         <Input
-          label="Password"
+          label={t("landlords.form.password")}
           name="password"
           type="password"
           error={errors.password}
         />
       )}
       <Input
-        label="Phone"
+        label={t("landlords.form.phone")}
         name="phone"
         type="tel"
         defaultValue={formData.phone}
         error={errors.phone}
       />
       <Input
-        label="Address"
+        label={t("landlords.form.address")}
         name="address"
         type="text"
         defaultValue={formData.address}
         error={errors.address}
       />
       <Input
-        label="Company Name"
+        label={t("landlords.form.companyName")}
         name="companyName"
         type="text"
         defaultValue={formData.companyName}
@@ -160,10 +165,10 @@ export default function LandlordForm({ landlordId, onClose, onSuccess }: Landlor
 
       <div className="flex justify-end space-x-2">
         <Button type="button" variant="outline" onClick={onClose}>
-          Cancel
+          {t("common.buttons.cancel")}
         </Button>
         <Button type="submit" isLoading={loading}>
-          {landlordId ? "Update" : "Create"}
+          {landlordId ? t("landlords.form.update") : t("landlords.form.create")}
         </Button>
       </div>
     </form>

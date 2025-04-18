@@ -4,18 +4,17 @@ import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 // import Weather from "./Weather";
 import Logo from "../ui/Logo";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useTranslations } from "next-intl";
 
 export default function Header() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const t = useTranslations();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
-
-  // if (status === "unauthenticated") {
-  //   return <div>Unauthenticated</div>;
-  // }
 
   return (
     <header className='bg-white shadow-md'>
@@ -27,34 +26,20 @@ export default function Header() {
 
           {/* Hamburger Menu Button */}
           <button
-            type="button"
+            type='button'
             className='lg:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500'
             onClick={toggleMobileMenu}
-            aria-expanded={isMobileMenuOpen} 
-            aria-controls="mobile-menu"
+            aria-expanded={isMobileMenuOpen}
+            aria-controls='mobile-menu'
           >
-            <span className="sr-only">Open main menu</span>
+            <span className='sr-only'>Open main menu</span>
             {/* Icon when menu is closed */}
-            <svg
-              className={`${isMobileMenuOpen ? 'hidden' : 'block'} h-6 w-6`}
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            <svg className={`${isMobileMenuOpen ? "hidden" : "block"} h-6 w-6`} fill='none' viewBox='0 0 24 24' strokeWidth='2' stroke='currentColor' aria-hidden='true'>
+              <path strokeLinecap='round' strokeLinejoin='round' d='M4 6h16M4 12h16M4 18h16' />
             </svg>
             {/* Icon when menu is open */}
-            <svg
-              className={`${isMobileMenuOpen ? 'block' : 'hidden'} h-6 w-6`}
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <svg className={`${isMobileMenuOpen ? "block" : "hidden"} h-6 w-6`} fill='none' viewBox='0 0 24 24' strokeWidth='2' stroke='currentColor' aria-hidden='true'>
+              <path strokeLinecap='round' strokeLinejoin='round' d='M6 18L18 6M6 6l12 12' />
             </svg>
           </button>
 
@@ -64,28 +49,30 @@ export default function Header() {
 
             <div className='space-x-6'>
               <Link href='/leases' className='text-gray-600 hover:text-gray-900'>
-                Leases
+                {t("common.navigation.leases")}
               </Link>
               {session?.user?.role === "ADMIN" && (
                 <>
                   <Link href='/properties' className='text-gray-600 hover:text-gray-900'>
-                    Properties
+                    {t("common.navigation.properties")}
                   </Link>
                   <Link href='/tenants' className='text-gray-600 hover:text-gray-900'>
-                    Tenants
+                    {t("common.navigation.tenants")}
                   </Link>
                   <Link href='/landlords' className='text-gray-600 hover:text-gray-900'>
-                    Landlords
+                    {t("common.navigation.landlords")}
                   </Link>
                 </>
               )}
               <Link href='/tickets' className='text-gray-600 hover:text-gray-900'>
-                Tickets
+                {t("common.navigation.tickets")}
               </Link>
               {/* <Link href='/settings' className='text-gray-600 hover:text-gray-900'>
                 Settings
               </Link> */}
             </div>
+
+            <LanguageSwitcher />
 
             {session?.user && (
               <div className='flex items-center space-x-3 border-l pl-6'>
@@ -114,47 +101,32 @@ export default function Header() {
         </nav>
 
         {/* Mobile Navigation */}
-        <div
-          className={`${
-            isMobileMenuOpen ? 'block' : 'hidden'
-          } lg:hidden mt-4 pb-3 border-t border-gray-200`}
-          id="mobile-menu"
-        >
+        <div className={`${isMobileMenuOpen ? "block" : "hidden"} lg:hidden mt-4 pb-3 border-t border-gray-200`} id='mobile-menu'>
           <div className='space-y-3 pt-3'>
-            <Link
-              href='/leases'
-              className='block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            >
-              Leases
+            <Link href='/leases' className='block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50'>
+              {t("common.navigation.leases")}
             </Link>
             {session?.user?.role === "ADMIN" && (
               <>
-                <Link
-                  href='/properties'
-                  className='block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                >
-                  Properties
+                <Link href='/properties' className='block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50'>
+                  {t("common.navigation.properties")}
                 </Link>
-                <Link
-                  href='/tenants'
-                  className='block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                >
-                  Tenants
+                <Link href='/tenants' className='block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50'>
+                  {t("common.navigation.tenants")}
                 </Link>
-                <Link
-                  href='/landlords'
-                  className='block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                >
-                  Landlords
+                <Link href='/landlords' className='block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50'>
+                  {t("common.navigation.landlords")}
                 </Link>
               </>
             )}
-            <Link
-              href='/tickets'
-              className='block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            >
-              Tickets
+            <Link href='/tickets' className='block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50'>
+              {t("common.navigation.tickets")}
             </Link>
+
+            {/* Language Switcher Mobile */}
+            <div className='px-3 py-2 mt-2'>
+              <LanguageSwitcher />
+            </div>
           </div>
 
           {session?.user && (

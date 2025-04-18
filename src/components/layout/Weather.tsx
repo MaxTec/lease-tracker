@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { WiDaySunny, WiCloudy, WiRain, WiThunderstorm, WiSnow, WiDust, WiNa } from 'react-icons/wi';
 import { Session } from 'next-auth';
+import { useTranslations } from 'next-intl';
 
 interface WeatherData {
   main: {
@@ -34,17 +35,18 @@ const getWeatherIcon = (weatherMain: string) => {
   }
 };
 
-const getGreeting = () => {
+const getGreeting = (t: (key: string) => string) => {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 18) return 'Good afternoon';
-  return 'Good evening';
+  if (hour < 12) return t('weather.greeting.morning');
+  if (hour < 18) return t('weather.greeting.afternoon');
+  return t('weather.greeting.evening');
 };
 
 export default function Weather({ session }: WeatherProps) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const t = useTranslations();
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -87,14 +89,14 @@ export default function Weather({ session }: WeatherProps) {
   }, []);
 
   if (loading) {
-    return <div className="text-gray-600">Loading weather...</div>;
+    return <div className="text-gray-600">{t('weather.loading')}</div>;
   }
 
   if (error || !weather) {
     return (
-      <div className="flex items-center space-x-2 text-gray-400" title="Weather unavailable">
+      <div className="flex items-center space-x-2 text-gray-400" title={t('weather.unavailable')}>
         <span><WiNa size={24} /></span>
-        <span className="hidden sm:inline">Weather unavailable</span>
+        <span className="hidden sm:inline">{t('weather.unavailable')}</span>
       </div>
     );
   }
@@ -103,7 +105,7 @@ export default function Weather({ session }: WeatherProps) {
     <div className="flex items-center space-x-4 text-gray-600">
       {session?.user?.name && (
         <span className="text-sm font-medium">
-          {getGreeting()}, {session.user.name.split(' ')[0]}!
+          {getGreeting(t)}, {session.user.name.split(' ')[0]}!
         </span>
       )}
       {weather.weather[0] && (

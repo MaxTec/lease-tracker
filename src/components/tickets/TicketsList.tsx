@@ -5,8 +5,10 @@ import Badge from "@/components/ui/Badge";
 import Table from "@/components/ui/Table";
 import EmptyState from "../ui/EmptyState";
 import { Ticket } from "@/types/ticket";
+import { useTranslations } from "next-intl";
 
 export default function TicketsList() {
+  const t = useTranslations();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,22 +18,22 @@ export default function TicketsList() {
       try {
         const response = await fetch("/api/tickets");
         if (!response.ok) {
-          throw new Error("Failed to fetch tickets");
+          throw new Error(t("tickets.errors.fetchFailed"));
         }
         const data = await response.json();
         setTickets(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        setError(err instanceof Error ? err.message : t("tickets.errors.fetchFailed"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchTickets();
-  }, []);
+  }, [t]);
 
   if (loading) {
-    return <div>Loading tickets...</div>;
+    return <div>{t("common.loading")}</div>;
   }
 
   if (error) {
@@ -41,7 +43,10 @@ export default function TicketsList() {
   if (tickets.length === 0) {
     return (
       <div className="text-center py-8">
-        <EmptyState title="No tickets found" description="No tickets found" />
+        <EmptyState 
+          title={t("tickets.emptyState.title")} 
+          description={t("tickets.emptyState.description")} 
+        />
       </div>
     );
   }
@@ -60,22 +65,22 @@ export default function TicketsList() {
   const columns = [
     {
       key: "title",
-      label: "Title",
+      label: t("tickets.form.title"),
     },
     {
       key: "property.name",
-      label: "Property",
+      label: t("tickets.form.property"),
     },
     {
       key: "unit.unitNumber",
-      label: "Unit",
+      label: t("tickets.form.unit"),
     },
     {
       key: "status",
-      label: "Status",
+      label: t("tickets.form.status"),
       render: (item: Ticket) => (
         <Badge className={getStatusColor(item.status)}>
-          {item.status.replace("_", " ")}
+          {t(`tickets.status.${item.status.toLowerCase().replace("_", "")}`)}
         </Badge>
       ),
     },

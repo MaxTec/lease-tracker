@@ -1,46 +1,11 @@
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import Providers from "@/components/Providers";
-import TimeZoneWrapper from "@/components/providers/TimeZoneWrapper";
-import DeviceWrapper from "@/components/providers/DeviceWrapper";
-import { isMobileDevice } from "@/utils/device-detection";
+import { ReactNode } from "react";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// Move metadata to a separate file since we're using 'use client'
-export const metadata = {
-  title: "LeaseTracker",
-  description: "Property management and lease tracking solution",
+type Props = {
+  children: ReactNode;
 };
 
-export default async function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const isMobile = await isMobileDevice();
-
-  return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Providers>
-          <TimeZoneWrapper>
-            <DeviceWrapper isMobile={isMobile}>
-              {children}
-            </DeviceWrapper>
-          </TimeZoneWrapper>
-        </Providers>
-      </body>
-    </html>
-  );
+// Since we have a `not-found.tsx` page on the root, a layout file
+// is required, even if it's just passing children through.
+export default function RootLayout({ children }: Props) {
+  return children;
 }

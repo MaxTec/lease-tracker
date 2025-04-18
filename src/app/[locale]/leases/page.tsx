@@ -14,8 +14,10 @@ import { FORMAT_DATE } from "@/constants";
 import Badge from "@/components/ui/Badge";
 import { FaEye, FaFilePdf } from "react-icons/fa";
 import { Lease } from "@/types/lease";
+import { useTranslations } from "next-intl";
 
 export default function LeasesPage() {
+  const t = useTranslations();
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
   const [leases, setLeases] = useState<Lease[]>([]);
@@ -31,20 +33,20 @@ export default function LeasesPage() {
       try {
         setLoading(true);
         const response = await fetch("/api/leases");
-        if (!response.ok) throw new Error("Failed to fetch leases");
+        if (!response.ok) throw new Error(t("leases.errors.fetchFailed"));
         const data = await response.json();
         console.log("data", data);
         setLeases(Array.isArray(data) ? data : [data]);
       } catch (err) {
         console.error("Error fetching leases:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch leases");
+        setError(err instanceof Error ? err.message : t("leases.errors.fetchFailed"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchLeases();
-  }, []);
+  }, [t]);
 
   const handleViewLease = (leaseId: number) => {
     router.push(`/leases/${leaseId}`);
@@ -53,23 +55,23 @@ export default function LeasesPage() {
   const columns = [
     {
       key: "property",
-      label: "Property",
+      label: t("leases.list.property"),
       render: (lease: Lease) =>
-        `${lease.unit.property.name} - Unit ${lease.unit.unitNumber}`,
+        `${lease.unit.property.name} - ${t("leases.list.unit")} ${lease.unit.unitNumber}`,
     },
     {
       key: "tenant",
-      label: "Tenant",
+      label: t("leases.list.tenant"),
       render: (lease: Lease) => lease.tenant.user.name,
     },
     {
       key: "rentAmount",
-      label: "Monthly Rent",
+      label: t("leases.list.monthlyRent"),
       render: (lease: Lease) => `$${lease.rentAmount}`,
     },
     {
       key: "period",
-      label: "Lease Period",
+      label: t("leases.list.leasePeriod"),
       render: (lease: Lease) => {
         const startDate = formatDate(lease.startDate, FORMAT_DATE);
         const endDate = formatDate(lease.endDate, FORMAT_DATE);
@@ -78,15 +80,15 @@ export default function LeasesPage() {
     },
     {
       key: "status",
-      label: "Status",
+      label: t("leases.list.status"),
       render: (lease: Lease) => {
         const status = lease.status;
-        return <Badge status={getBadgeStatus(status)}>{status}</Badge>;
+        return <Badge status={getBadgeStatus(status)}>{t(`common.status.${status.toLowerCase()}`)}</Badge>;
       },
     },
     {
       key: "document",
-      label: "Lease Agreement",
+      label: t("leases.list.leaseAgreement"),
       render: (lease: Lease) => {
         const hasDocument = lease.documents?.some(
           (doc) => doc.type === "LEASE_AGREEMENT"
@@ -102,13 +104,13 @@ export default function LeasesPage() {
             <FaFilePdf />
           </Button>
         ) : (
-          <span className="text-gray-400 text-sm">No document</span>
+          <span className="text-gray-400 text-sm">{t("leases.list.noDocument")}</span>
         );
       },
     },
     {
       key: "actions",
-      label: "Actions",
+      label: t("leases.list.actions"),
       render: (lease: Lease) => (
         <div className="flex space-x-2">
           <Button square size="md" onClick={() => handleViewLease(lease.id)}>
@@ -160,10 +162,10 @@ export default function LeasesPage() {
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-gray-800">Leases</h2>
+              <h2 className="text-2xl font-semibold text-gray-800">{t("leases.title")}</h2>
               <Button onClick={handleAddNewLease}>
                 <FaPlus className="mr-2 inline-block align-middle" />
-                <span className="align-middle">Add New Lease</span>
+                <span className="align-middle">{t("leases.create")}</span>
               </Button>
             </div>
 
@@ -183,9 +185,9 @@ export default function LeasesPage() {
             ) : (
               <EmptyState
                 icon={<FaBuilding className="w-12 h-12" />}
-                title="No Leases Found"
-                description="There are no leases in the system yet. Click the button below to create your first lease."
-                actionLabel="Add New Lease"
+                title={t("leases.emptyState.title")}
+                description={t("leases.emptyState.description")}
+                actionLabel={t("leases.create")}
                 onAction={handleAddNewLease}
               />
             )}

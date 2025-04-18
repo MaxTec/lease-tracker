@@ -11,8 +11,10 @@ import { FaPlus, FaUserTie } from "react-icons/fa";
 import LandlordForm from "@/components/landlords/LandlordForm";
 import Modal from "@/components/ui/Modal";
 import { Landlord } from "@/types/landlord";
+import { useTranslations } from "next-intl";
 
 export default function LandlordsPage() {
+  const t = useTranslations();
   const { data: session, status: authStatus } = useSession();
   const [landlords, setLandlords] = useState<Landlord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,13 +32,13 @@ export default function LandlordsPage() {
       try {
         setLoading(true);
         const response = await fetch("/api/landlords");
-        if (!response.ok) throw new Error("Failed to fetch landlords");
+        if (!response.ok) throw new Error(t("landlords.errors.fetchFailed"));
         const data = await response.json();
         setLandlords(data);
       } catch (err) {
         console.error("Error fetching landlords:", err);
         setError(
-          err instanceof Error ? err.message : "Failed to fetch landlords"
+          err instanceof Error ? err.message : t("landlords.errors.fetchFailed")
         );
       } finally {
         setLoading(false);
@@ -44,7 +46,7 @@ export default function LandlordsPage() {
     };
 
     fetchLandlords();
-  }, []);
+  }, [t]);
 
   const handleEditLandlord = (landlord: Landlord) => {
     setCurrentLandlord(landlord);
@@ -52,19 +54,19 @@ export default function LandlordsPage() {
   };
 
   const handleDeleteLandlord = async (landlordId: number) => {
-    if (!confirm("Are you sure you want to delete this landlord?")) return;
+    if (!confirm(t("landlords.confirmDelete"))) return;
 
     try {
       const response = await fetch(`/api/landlords/${landlordId}`, {
         method: "DELETE",
       });
 
-      if (!response.ok) throw new Error("Failed to delete landlord");
+      if (!response.ok) throw new Error(t("landlords.errors.deleteFailed"));
 
       setLandlords(landlords.filter((l) => l.id !== landlordId));
     } catch (err) {
       console.error("Error deleting landlord:", err);
-      alert("Failed to delete landlord");
+      alert(t("landlords.errors.deleteFailed"));
     }
   };
 
@@ -94,33 +96,33 @@ export default function LandlordsPage() {
 
   const columns = [
     {
-      key: "name",
-      label: "Name",
+      key: "user.name",
+      label: t("landlords.form.name"),
       render: (landlord: Landlord) => landlord.user.name,
     },
     {
-      key: "email",
-      label: "Email",
+      key: "user.email",
+      label: t("landlords.form.email"),
       render: (landlord: Landlord) => landlord.user.email,
     },
     {
       key: "phone",
-      label: "Phone",
+      label: t("landlords.form.phone"),
       render: (landlord: Landlord) => landlord.phone,
     },
     {
       key: "companyName",
-      label: "Company",
+      label: t("landlords.form.companyName"),
       render: (landlord: Landlord) => landlord.companyName || "N/A",
     },
     {
       key: "address",
-      label: "Address",
+      label: t("landlords.form.address"),
       render: (landlord: Landlord) => landlord.address,
     },
     {
       key: "actions",
-      label: "Actions",
+      label: t("common.buttons.actions"),
       render: (landlord: Landlord) => (
         <div className="flex space-x-2">
           <Button
@@ -128,14 +130,14 @@ export default function LandlordsPage() {
             variant="outline"
             onClick={() => handleEditLandlord(landlord)}
           >
-            Edit
+            {t("common.buttons.edit")}
           </Button>
           <Button
             size="sm"
             variant="danger"
             onClick={() => handleDeleteLandlord(landlord.id)}
           >
-            Delete
+            {t("common.buttons.delete")}
           </Button>
         </div>
       ),
@@ -167,11 +169,11 @@ export default function LandlordsPage() {
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-gray-800">
-                Landlords
+                {t("landlords.title")}
               </h2>
               <Button onClick={handleAddLandlord}>
                 <FaPlus className="mr-2 inline-block align-middle" />
-                <span className="align-middle">Add New Landlord</span>
+                <span className="align-middle">{t("landlords.create")}</span>
               </Button>
             </div>
 
@@ -186,9 +188,9 @@ export default function LandlordsPage() {
             ) : (
               <EmptyState
                 icon={<FaUserTie className="w-12 h-12" />}
-                title="No Landlords Found"
-                description="There are no landlords in the system yet. Click the button below to add your first landlord."
-                actionLabel="Add New Landlord"
+                title={t("landlords.emptyState.title")}
+                description={t("landlords.emptyState.description")}
+                actionLabel={t("landlords.create")}
                 onAction={handleAddLandlord}
               />
             )}
@@ -197,7 +199,7 @@ export default function LandlordsPage() {
       </div>
 
       <Modal
-        title={currentLandlord ? "Edit Landlord" : "Add New Landlord"}
+        title={currentLandlord ? t("landlords.edit") : t("landlords.create")}
         isOpen={isModalOpen}
         onClose={handleModalClose}
       >

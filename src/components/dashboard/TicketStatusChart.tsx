@@ -3,6 +3,8 @@
 import Card from "@/components/ui/Card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import EmptyState from "@/components/ui/EmptyState";
+import { useTranslations } from "next-intl";
+
 interface TicketStatusData {
   status: string;
   _count: number;
@@ -10,6 +12,7 @@ interface TicketStatusData {
 
 interface Props {
   data: TicketStatusData[];
+  title: string;
 }
 
 const COLORS = {
@@ -20,15 +23,18 @@ const COLORS = {
   CLOSED: "#6B7280", // Gray
 };
 
-const STATUS_LABELS = {
-  OPEN: "Open",
-  IN_PROGRESS: "In Progress",
-  PENDING_REVIEW: "Pending Review",
-  RESOLVED: "Resolved",
-  CLOSED: "Closed",
-};
-
-export function TicketStatusChart({ data }: Props) {
+export function TicketStatusChart({ data, title }: Props) {
+  const t = useTranslations();
+  
+  // Use translations for status labels
+  const STATUS_LABELS: Record<string, string> = {
+    OPEN: t("tickets.status.open"),
+    IN_PROGRESS: t("tickets.status.inProgress"),
+    PENDING_REVIEW: t("tickets.status.pendingReview"),
+    RESOLVED: t("tickets.status.resolved"),
+    CLOSED: t("tickets.status.closed"),
+  };
+  
   const chartData = data.map((item) => ({
     name: STATUS_LABELS[item.status as keyof typeof STATUS_LABELS],
     value: item._count,
@@ -37,17 +43,17 @@ export function TicketStatusChart({ data }: Props) {
 
   if (data.length === 0) {
     return (
-      <Card title="Ticket Status Distribut  ion">
+      <Card title={title}>
         <EmptyState
-          title="No tickets found for the selected period"
-          description="Please select a different period or check back later."
+          title={t("dashboard.charts.noTicketData.title")}
+          description={t("dashboard.charts.noTicketData.description")}
         />
       </Card>
     );
   }
 
   return (
-    <Card title="Ticket Status Distribution">
+    <Card title={title}>
       <div className="p-6">
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">

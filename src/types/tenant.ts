@@ -1,16 +1,29 @@
-import { Tenant as PrismaTenant, User, Lease } from "@prisma/client";
-
-export interface Tenant extends PrismaTenant {
-    user: Pick<User, "name" | "email">;
-    leases: Pick<Lease, "id" | "startDate" | "endDate" | "status">[];
+export interface Tenant {
+    id: number;
+    userId: number;
+    phone: string;
+    emergencyContact?: string;
+    emergencyPhone?: string;
+    employmentInfo?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    user: {
+        name: string;
+        email: string;
+    };
+    leases?: {
+        id: number;
+        startDate: string;
+        endDate: string;
+        status: string;
+    }[];
 }
 
 export interface TenantFormData {
     name: string;
     email: string;
-    password?: string;
     phone: string;
-    emergencyContact: string;
-    emergencyPhone: string;
+    emergencyContact?: string;
+    emergencyPhone?: string;
     employmentInfo?: string;
 } 

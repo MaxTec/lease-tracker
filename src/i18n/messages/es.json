@@ -1,0 +1,517 @@
+{
+  "common": {
+    "buttons": {
+      "login": "Iniciar sesión",
+      "logout": "Cerrar sesión",
+      "submit": "Enviar",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "create": "Crear",
+      "view": "Ver",
+      "search": "Buscar",
+      "filter": "Filtrar",
+      "add": "Agregar",
+      "remove": "Eliminar",
+      "back": "Atrás",
+      "actions": "Acciones"
+    },
+    "navigation": {
+      "dashboard": "Panel principal",
+      "properties": "Propiedades",
+      "leases": "Arrendamientos",
+      "tenants": "Inquilinos",
+      "landlords": "Propietarios",
+      "tickets": "Tickets",
+      "vouchers": "Comprobantes",
+      "settings": "Configuración",
+      "profile": "Perfil",
+      "logout": "Cerrar sesión",
+      "contact": "Contacto",
+      "privacy": "Privacidad"
+    },
+    "dates": {
+      "today": "Hoy",
+      "yesterday": "Ayer",
+      "tomorrow": "Mañana",
+      "thisWeek": "Esta semana",
+      "lastWeek": "Semana pasada",
+      "thisMonth": "Este mes",
+      "lastMonth": "Mes pasado",
+      "thisYear": "Este año",
+      "lastYear": "Año pasado",
+      "dateFormat": "dd/MM/yyyy",
+      "dateTimeFormat": "dd/MM/yyyy HH:mm",
+      "month": "Mes",
+      "year": "Año",
+      "created": "Creado"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "pending": "Pendiente",
+      "completed": "Completado",
+      "cancelled": "Cancelado",
+      "paid": "Pagado",
+      "unpaid": "Sin pagar",
+      "late": "Atrasado",
+      "open": "Abierto",
+      "closed": "Cerrado",
+      "inProgress": "En progreso",
+      "resolved": "Resuelto",
+      "draft": "Borrador",
+      "terminated": "Terminado"
+    },
+    "errors": {
+      "required": "Este campo es obligatorio",
+      "invalidEmail": "Correo electrónico inválido",
+      "invalidPhone": "Número de teléfono inválido",
+      "serverError": "Error del servidor, intente nuevamente",
+      "unauthorized": "No autorizado",
+      "notFound": "No encontrado",
+      "invalidCredentials": "Credenciales inválidas",
+      "invalidDate": "Fecha inválida",
+      "invalidAmount": "Cantidad inválida",
+      "minimumLength": "Debe tener al menos {length} caracteres",
+      "passwordMismatch": "Las contraseñas no coinciden"
+    },
+    "loading": "Cargando..."
+  },
+  "home": {
+    "description": "Simplifique la gestión de sus propiedades con nuestra solución integral de seguimiento de arrendamientos. Administre propiedades, realice seguimiento de pagos y genere comprobantes, todo en un solo lugar.",
+    "developedBy": "Desarrollado por",
+    "rightsReserved": "Todos los derechos reservados"
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "forgotPassword": "¿Olvidó su contraseña?",
+      "rememberMe": "Recordarme",
+      "loginButton": "Iniciar sesión",
+      "noAccount": "¿No tiene una cuenta?",
+      "createAccount": "Crear cuenta"
+    },
+    "register": {
+      "title": "Registrarse",
+      "name": "Nombre",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "registerButton": "Registrarse",
+      "haveAccount": "¿Ya tiene una cuenta?",
+      "login": "Iniciar sesión"
+    },
+    "forgotPassword": {
+      "title": "Recuperar contraseña",
+      "email": "Correo electrónico",
+      "submitButton": "Enviar enlace de recuperación",
+      "backToLogin": "Volver a iniciar sesión"
+    }
+  },
+  "dashboard": {
+    "title": "Tablero",
+    "welcome": "Bienvenido, {name}",
+    "noData": "No hay datos disponibles",
+    "summary": {
+      "properties": "Total de Propiedades",
+      "units": "Unidades",
+      "activeLeases": "Contratos Activos",
+      "totalPayments": "Pagos Totales",
+      "occupancyRate": "Tasa de Ocupación",
+      "totalTickets": "Tickets Totales"
+    },
+    "charts": {
+      "rentCollection": "Recaudación de Alquiler",
+      "leaseExpirations": "Vencimientos de Contratos",
+      "occupancyRate": "Tasa de Ocupación",
+      "ticketsByStatus": "Distribución de Estado de Tickets",
+      "paid": "Pagado",
+      "pending": "Pendiente",
+      "overdue": "Atrasado",
+      "noRentData": {
+        "title": "No hay datos de recaudación disponibles",
+        "description": "Por favor seleccione una propiedad para ver los datos de recaudación"
+      },
+      "noOccupancyData": {
+        "title": "No hay datos de ocupación disponibles",
+        "description": "Por favor seleccione una propiedad para ver los datos de ocupación"
+      },
+      "noTicketData": {
+        "title": "No se encontraron tickets para el período seleccionado",
+        "description": "Por favor seleccione un período diferente o vuelva más tarde"
+      }
+    },
+    "filters": {
+      "dateRange": "Rango de Fechas",
+      "property": "Propiedad",
+      "startDate": "Fecha de Inicio",
+      "endDate": "Fecha Final",
+      "applyFilters": "Aplicar Filtros",
+      "resetFilters": "Restablecer Filtros",
+      "viewMode": "Modo de Vista",
+      "selectMonth": "Seleccionar Mes",
+      "selectYear": "Seleccionar Año",
+      "allProperties": "Todas las Propiedades"
+    }
+  },
+  "properties": {
+    "title": "Propiedades",
+    "create": "Crear propiedad",
+    "edit": "Editar propiedad",
+    "details": "Detalles de la propiedad",
+    "list": "Lista de propiedades",
+    "confirmDelete": "¿Está seguro de que desea eliminar esta propiedad?",
+    "emptyState": {
+      "title": "No Se Encontraron Propiedades",
+      "description": "No hay propiedades en el sistema todavía. Haga clic en el botón de abajo para agregar su primera propiedad."
+    },
+    "errors": {
+      "fetchFailed": "Error al obtener propiedades",
+      "createFailed": "Error al crear propiedad",
+      "updateFailed": "Error al actualizar propiedad",
+      "deleteFailed": "Error al eliminar propiedad",
+      "loadFormFailed": "Error al cargar datos del formulario",
+      "atLeastOneUnit": "Se requiere al menos una unidad"
+    },
+    "types": {
+      "apartment": "Apartamento",
+      "house": "Casa",
+      "commercial": "Comercial",
+      "other": "Otro"
+    },
+    "filters": {
+      "search": "Buscar propiedades",
+      "status": "Estado",
+      "type": "Tipo"
+    },
+    "form": {
+      "name": "Nombre",
+      "address": "Dirección",
+      "city": "Ciudad",
+      "state": "Estado/Provincia",
+      "zip": "Código postal",
+      "country": "País",
+      "type": "Tipo",
+      "status": "Estado",
+      "description": "Descripción",
+      "totalUnits": "Unidades",
+      "landlord": "Propietario",
+      "propertyName": "Nombre de la Propiedad",
+      "propertyType": "Tipo de Propiedad",
+      "addUnit": "Agregar Unidad",
+      "units": "Unidades",
+      "unitNumber": "Número",
+      "bedrooms": "Habitaciones",
+      "bathrooms": "Baños",
+      "squareFeet": "m²",
+      "addNewProperty": "Agregar Nueva Propiedad",
+      "editProperty": "Editar Propiedad",
+      "createProperty": "Crear Propiedad",
+      "updateProperty": "Actualizar Propiedad",
+      "saving": "Guardando..."
+    }
+  },
+  "leases": {
+    "title": "Contratos",
+    "create": "Agregar Nuevo Contrato",
+    "edit": "Editar contrato",
+    "details": "Detalles del contrato",
+    "list": {
+      "property": "Propiedad",
+      "unit": "Unidad",
+      "tenant": "Inquilino",
+      "monthlyRent": "Renta Mensual",
+      "leasePeriod": "Período de Contrato",
+      "status": "Estado",
+      "leaseAgreement": "Contrato de Arrendamiento",
+      "noDocument": "Sin documento",
+      "actions": "Acciones"
+    },
+    "emptyState": {
+      "title": "No Se Encontraron Contratos",
+      "description": "No hay contratos en el sistema todavía. Haga clic en el botón de abajo para crear su primer contrato."
+    },
+    "form": {
+      "property": "Propiedad",
+      "unit": "Unidad",
+      "tenant": "Inquilino",
+      "startDate": "Fecha de inicio",
+      "endDate": "Fecha de fin",
+      "rentAmount": "Monto del alquiler",
+      "securityDeposit": "Depósito de seguridad",
+      "paymentFrequency": "Frecuencia de pago",
+      "paymentDueDay": "Día de vencimiento",
+      "paymentDueDayHint": "Día del mes en que vence el pago",
+      "status": "Estado",
+      "notes": "Notas",
+      "customEndDate": "Establecer fecha de finalización personalizada",
+      "hasExistingLease": "Usar contrato de arrendamiento existente",
+      "hasExistingLeaseHint": "Marque esto si ya tiene un contrato de arrendamiento firmado"
+    },
+    "new": {
+      "title": "Crear Nuevo Contrato",
+      "submit": "Crear Contrato",
+      "steps": {
+        "details": {
+          "title": "Detalles del Contrato",
+          "description": "Ingrese información básica del contrato"
+        },
+        "rules": {
+          "title": "Reglas y Carga",
+          "description": "Seleccione reglas o cargue contrato existente"
+        },
+        "preview": {
+          "title": "Vista Previa y Envío",
+          "description": "Revise y envíe el contrato de arrendamiento"
+        }
+      }
+    },
+    "notifications": {
+      "createSuccess": "¡Contrato creado exitosamente!"
+    },
+    "errors": {
+      "fetchFailed": "Error al obtener contratos",
+      "createFailed": "Error al crear contrato. Por favor, inténtelo de nuevo."
+    }
+  },
+  "tenants": {
+    "title": "Inquilinos",
+    "create": "Agregar Nuevo Inquilino",
+    "edit": "Editar Inquilino",
+    "details": "Detalles del inquilino",
+    "list": "Lista de inquilinos",
+    "confirmDelete": "¿Está seguro de que desea eliminar este inquilino?",
+    "emptyState": {
+      "title": "No Se Encontraron Inquilinos",
+      "description": "No hay inquilinos en el sistema todavía. Haga clic en el botón de abajo para agregar su primer inquilino."
+    },
+    "errors": {
+      "fetchFailed": "Error al obtener inquilinos",
+      "createFailed": "Error al crear inquilino",
+      "updateFailed": "Error al actualizar inquilino",
+      "deleteFailed": "Error al eliminar inquilino",
+      "saveFailed": "Error al guardar inquilino"
+    },
+    "filters": {
+      "search": "Buscar inquilinos",
+      "status": "Estado"
+    },
+    "form": {
+      "name": "Nombre",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "email": "Correo electrónico",
+      "phone": "Teléfono",
+      "idType": "Tipo de identificación",
+      "idNumber": "Número de identificación",
+      "status": "Estado",
+      "notes": "Notas",
+      "emergencyContact": "Contacto de Emergencia",
+      "emergencyPhone": "Teléfono de Emergencia",
+      "employmentInfo": "Información de Empleo",
+      "saving": "Guardando...",
+      "createTenant": "Agregar Inquilino",
+      "updateTenant": "Actualizar Inquilino"
+    }
+  },
+  "landlords": {
+    "title": "Propietarios",
+    "create": "Agregar Nuevo Propietario",
+    "edit": "Editar Propietario",
+    "details": "Detalles del propietario",
+    "list": "Lista de propietarios",
+    "confirmDelete": "¿Está seguro de que desea eliminar este propietario?",
+    "emptyState": {
+      "title": "No Se Encontraron Propietarios",
+      "description": "No hay propietarios en el sistema todavía. Haga clic en el botón de abajo para agregar su primer propietario."
+    },
+    "errors": {
+      "fetchFailed": "Error al obtener propietarios",
+      "createFailed": "Error al crear propietario",
+      "updateFailed": "Error al actualizar propietario",
+      "deleteFailed": "Error al eliminar propietario",
+      "saveFailed": "Error al guardar propietario"
+    },
+    "filters": {
+      "search": "Buscar propietarios",
+      "status": "Estado"
+    },
+    "form": {
+      "name": "Nombre",
+      "email": "Correo electrónico",
+      "phone": "Teléfono",
+      "address": "Dirección",
+      "companyName": "Nombre de la Empresa",
+      "password": "Contraseña",
+      "taxId": "Identificación Fiscal",
+      "status": "Estado",
+      "notes": "Notas",
+      "update": "Actualizar Propietario",
+      "create": "Crear Propietario"
+    }
+  },
+  "tickets": {
+    "title": "Solicitudes de Soporte",
+    "create": "Crear Solicitud de Soporte",
+    "edit": "Editar Solicitud",
+    "details": "Detalles de la Solicitud",
+    "list": "Lista de Solicitudes",
+    "confirmDelete": "¿Está seguro de que desea eliminar esta solicitud?",
+    "emptyState": {
+      "title": "No Se Encontraron Solicitudes",
+      "description": "No hay solicitudes de soporte en el sistema todavía. Haga clic en el botón de abajo para crear su primera solicitud."
+    },
+    "errors": {
+      "fetchFailed": "Error al obtener solicitudes",
+      "createFailed": "Error al crear solicitud",
+      "updateFailed": "Error al actualizar solicitud",
+      "deleteFailed": "Error al eliminar solicitud",
+      "commentFailed": "Error al agregar comentario"
+    },
+    "filters": {
+      "search": "Buscar solicitudes",
+      "status": "Estado",
+      "priority": "Prioridad",
+      "property": "Propiedad",
+      "tenant": "Inquilino"
+    },
+    "form": {
+      "title": "Título",
+      "titleTooLong": "El título es demasiado largo (máximo 100 caracteres)",
+      "description": "Descripción",
+      "property": "Propiedad",
+      "unit": "Unidad",
+      "tenant": "Inquilino",
+      "priority": "Prioridad",
+      "status": "Estado",
+      "category": "Categoría",
+      "assignedTo": "Asignado a",
+      "attachments": "Adjuntos"
+    },
+    "status": {
+      "open": "Abierto",
+      "inProgress": "En Progreso",
+      "pendingReview": "Revisión Pendiente",
+      "resolved": "Resuelto",
+      "closed": "Cerrado"
+    },
+    "priority": {
+      "low": "Baja",
+      "medium": "Media",
+      "high": "Alta",
+      "urgent": "Urgente"
+    },
+    "comments": {
+      "title": "Comentarios",
+      "add": "Agregar Comentario",
+      "placeholder": "Agregar un comentario...",
+      "addingComment": "Agregando Comentario..."
+    }
+  },
+  "vouchers": {
+    "title": "Comprobantes",
+    "create": "Crear comprobante",
+    "edit": "Editar comprobante",
+    "details": "Detalles del comprobante",
+    "list": "Lista de comprobantes",
+    "filters": {
+      "search": "Buscar comprobantes",
+      "status": "Estado",
+      "type": "Tipo",
+      "startDate": "Fecha de inicio",
+      "endDate": "Fecha de fin"
+    },
+    "form": {
+      "lease": "Contrato",
+      "amount": "Monto",
+      "date": "Fecha",
+      "status": "Estado",
+      "type": "Tipo",
+      "description": "Descripción",
+      "notes": "Notas"
+    }
+  },
+  "weather": {
+    "loading": "Cargando clima...",
+    "unavailable": "Clima no disponible",
+    "greeting": {
+      "morning": "Buenos días",
+      "afternoon": "Buenas tardes",
+      "evening": "Buenas noches"
+    }
+  },
+  "contact": {
+    "title": "Contáctenos",
+    "description": "¿Tiene preguntas? Nos encantaría saber de usted. Envíenos un mensaje y le responderemos lo antes posible.",
+    "form": {
+      "name": "Nombre",
+      "email": "Correo electrónico",
+      "subject": "Asunto",
+      "message": "Mensaje",
+      "sending": "Enviando...",
+      "send": "Enviar Mensaje",
+      "success": "¡Gracias por su mensaje! Nos pondremos en contacto con usted pronto.",
+      "error": "Hubo un error al enviar su mensaje. Por favor, inténtelo de nuevo.",
+      "validation": {
+        "nameRequired": "El nombre debe tener al menos 2 caracteres",
+        "emailRequired": "Por favor, introduzca una dirección de correo electrónico válida",
+        "subjectRequired": "El asunto debe tener al menos 5 caracteres",
+        "messageRequired": "El mensaje debe tener al menos 10 caracteres"
+      }
+    }
+  },
+  "privacy": {
+    "title": "Política de Privacidad",
+    "lastUpdated": "Última actualización: {date}",
+    "introduction": {
+      "title": "1. Introducción",
+      "p1": "En LeaseTracker, nos tomamos su privacidad en serio. Esta Política de Privacidad explica cómo recopilamos, usamos, divulgamos y protegemos su información cuando utiliza nuestra plataforma de gestión de arrendamientos.",
+      "p2": "Por favor, lea esta política de privacidad detenidamente. Al utilizar nuestro servicio, usted acepta las prácticas descritas en esta política."
+    },
+    "informationCollected": {
+      "title": "2. Información que Recopilamos",
+      "personalInfo": {
+        "title": "2.1 Información Personal",
+        "items": [
+          "Nombre e información de contacto",
+          "Dirección de correo electrónico",
+          "Número de teléfono",
+          "Detalles de propiedades y arrendamientos",
+          "Información de pago"
+        ]
+      },
+      "usageData": {
+        "title": "2.2 Datos de Uso",
+        "description": "Recopilamos información sobre cómo utiliza nuestra plataforma, incluyendo:",
+        "items": [
+          "Datos de registro e información del dispositivo",
+          "Patrones de uso y preferencias",
+          "Preferencias de comunicación"
+        ]
+      }
+    },
+    "informationUse": {
+      "title": "3. Cómo Utilizamos su Información",
+      "description": "Utilizamos la información recopilada para diversos fines:",
+      "items": [
+        "Para proporcionar y mantener nuestro servicio",
+        "Para notificarle sobre cambios en nuestro servicio",
+        "Para brindar soporte al cliente",
+        "Para recopilar análisis o información valiosa"
+      ]
+    },
+    "dataSecurity": {
+      "title": "4. Seguridad de Datos",
+      "description": "Implementamos medidas de seguridad adecuadas para proteger su información personal. Sin embargo, ningún método de transmisión por Internet es 100% seguro, y no podemos garantizar la seguridad absoluta."
+    },
+    "contactSection": {
+      "title": "5. Contáctenos",
+      "description": "Si tiene alguna pregunta sobre esta Política de Privacidad, por favor contáctenos en:",
+      "email": "Correo electrónico: privacy@leasetracker.com",
+      "address": "Dirección: Calle Privacidad 123, Ciudad Seguridad, SC 12345"
+    }
+  }
+} 

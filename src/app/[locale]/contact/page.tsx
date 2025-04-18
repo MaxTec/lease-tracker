@@ -7,17 +7,26 @@ import Layout from "@/components/layout/Layout";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import FormGroup from "@/components/ui/FormGroup";
+import { useTranslations } from "next-intl";
 
-const contactFormSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  subject: z.string().min(5, "Subject must be at least 5 characters"),
-  message: z.string().min(10, "Message must be at least 10 characters"),
-});
-
-type ContactFormData = z.infer<typeof contactFormSchema>;
+type ContactFormData = {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+};
 
 export default function ContactPage() {
+  const t = useTranslations();
+
+  // Define the validation schema with translations
+  const contactFormSchema = z.object({
+    name: z.string().min(2, t("contact.form.validation.nameRequired")),
+    email: z.string().email(t("contact.form.validation.emailRequired")),
+    subject: z.string().min(5, t("contact.form.validation.subjectRequired")),
+    message: z.string().min(10, t("contact.form.validation.messageRequired")),
+  });
+
   const {
     register,
     handleSubmit,
@@ -32,10 +41,10 @@ export default function ContactPage() {
       // Here you would typically send the data to your API
       console.log("Form submitted:", data);
       reset();
-      alert("Thank you for your message! We will get back to you soon.");
+      alert(t("contact.form.success"));
     } catch (error) {
       console.error("Error submitting form:", error);
-      alert("There was an error sending your message. Please try again.");
+      alert(t("contact.form.error"));
     }
   };
 
@@ -43,18 +52,17 @@ export default function ContactPage() {
     <Layout>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">Contact Us</h1>
+          <h1 className="text-3xl font-bold mb-8">{t("contact.title")}</h1>
 
           <div className="bg-white rounded-lg shadow-md p-6">
             <p className="text-gray-600 mb-6">
-              Have questions? We&apos;d love to hear from you. Send us a message and
-              we&apos;ll respond as soon as possible.
+              {t("contact.description")}
             </p>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <FormGroup>
                 <Input
-                  label="Name"
+                  label={t("contact.form.name")}
                   id="name"
                   type="text"
                   {...register("name")}
@@ -69,7 +77,7 @@ export default function ContactPage() {
 
               <FormGroup>
                 <Input
-                  label="Email"
+                  label={t("contact.form.email")}
                   id="email"
                   type="email"
                   {...register("email")}
@@ -84,7 +92,7 @@ export default function ContactPage() {
 
               <FormGroup>
                 <Input
-                  label="Subject"
+                  label={t("contact.form.subject")}
                   id="subject"
                   type="text"
                   {...register("subject")}
@@ -102,7 +110,7 @@ export default function ContactPage() {
                   htmlFor="message"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Message
+                  {t("contact.form.message")}
                 </label>
                 <textarea
                   id="message"
@@ -124,7 +132,7 @@ export default function ContactPage() {
                 disabled={isSubmitting}
                 className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? "Sending..." : "Send Message"}
+                {isSubmitting ? t("contact.form.sending") : t("contact.form.send")}
               </Button>
             </form>
           </div>

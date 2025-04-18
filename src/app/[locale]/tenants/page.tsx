@@ -12,8 +12,10 @@ import TenantForm from "@/components/tenants/TenantForm";
 import Modal from "@/components/ui/Modal";
 import { useDevice } from "@/contexts/DeviceContext";
 import { Tenant } from "@/types/tenant";
+import { useTranslations } from "next-intl";
 
 export default function TenantsPage() {
+  const t = useTranslations();
   const { data: session, status: authStatus } = useSession();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,13 +33,13 @@ export default function TenantsPage() {
       try {
         setLoading(true);
         const response = await fetch("/api/tenants");
-        if (!response.ok) throw new Error("Failed to fetch tenants");
+        if (!response.ok) throw new Error(t("tenants.errors.fetchFailed"));
         const data = await response.json();
         setTenants(data);
       } catch (err) {
         console.error("Error fetching tenants:", err);
         setError(
-          err instanceof Error ? err.message : "Failed to fetch tenants"
+          err instanceof Error ? err.message : t("tenants.errors.fetchFailed")
         );
       } finally {
         setLoading(false);
@@ -45,7 +47,7 @@ export default function TenantsPage() {
     };
 
     fetchTenants();
-  }, []);
+  }, [t]);
 
   const handleEditTenant = (tenant: Tenant) => {
     setCurrentTenant(tenant);
@@ -53,19 +55,19 @@ export default function TenantsPage() {
   };
 
   const handleDeleteTenant = async (tenantId: number) => {
-    if (!confirm("Are you sure you want to delete this tenant?")) return;
+    if (!confirm(t("tenants.confirmDelete"))) return;
 
     try {
       const response = await fetch(`/api/tenants/${tenantId}`, {
         method: "DELETE",
       });
 
-      if (!response.ok) throw new Error("Failed to delete tenant");
+      if (!response.ok) throw new Error(t("tenants.errors.deleteFailed"));
 
       setTenants(tenants.filter((t) => t.id !== tenantId));
     } catch (err) {
       console.error("Error deleting tenant:", err);
-      alert("Failed to delete tenant");
+      alert(t("tenants.errors.deleteFailed"));
     }
   };
 
@@ -97,29 +99,29 @@ export default function TenantsPage() {
 
   const columns = [
     {
-      key: "name",
-      label: "Name",
+      key: "user.name",
+      label: t("tenants.form.name"),
       render: (tenant: Tenant) => tenant.user.name,
       priority: 1,
     },
     {
-      key: "email",
-      label: "Email",
+      key: "user.email",
+      label: t("tenants.form.email"),
       render: (tenant: Tenant) => tenant.user.email,
     },
     {
       key: "phone",
-      label: "Phone",
+      label: t("tenants.form.phone"),
       render: (tenant: Tenant) => tenant.phone,
     },
     {
       key: "emergencyContact",
-      label: "Emergency Contact",
+      label: t("tenants.form.emergencyContact"),
       render: (tenant: Tenant) => tenant.emergencyContact || "N/A",
     },
     {
       key: "actions",
-      label: "Actions",
+      label: t("common.buttons.actions"),
       priority: isMobile ? 1 : 0,
       sticky: isMobile ? true : false,
       width: isMobile ? "100px" : "100px",
@@ -130,14 +132,14 @@ export default function TenantsPage() {
             variant="outline"
             onClick={() => handleEditTenant(tenant)}
           >
-            Edit
+            {t("common.buttons.edit")}
           </Button>
           <Button
             size="sm"
             variant="danger"
-            onClick={() => handleDeleteTenant(tenant.id)}
+            onClick={() => handleDeleteTenant(tenant.id!)}
           >
-            Delete
+            {t("common.buttons.delete")}
           </Button>
         </div>
       ),
@@ -168,10 +170,10 @@ export default function TenantsPage() {
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-gray-800">Tenants</h2>
+              <h2 className="text-2xl font-semibold text-gray-800">{t("tenants.title")}</h2>
               <Button onClick={handleAddTenant}>
                 <FaPlus className="mr-2 inline-block align-middle" />
-                <span className="align-middle">Add New Tenant</span>
+                <span className="align-middle">{t("tenants.create")}</span>
               </Button>
             </div>
 
@@ -186,9 +188,9 @@ export default function TenantsPage() {
             ) : (
               <EmptyState
                 icon={<FaUsers className="w-12 h-12" />}
-                title="No Tenants Found"
-                description="There are no tenants in the system yet. Click the button below to add your first tenant."
-                actionLabel="Add New Tenant"
+                title={t("tenants.emptyState.title")}
+                description={t("tenants.emptyState.description")}
+                actionLabel={t("tenants.create")}
                 onAction={handleAddTenant}
               />
             )}
@@ -197,7 +199,7 @@ export default function TenantsPage() {
       </div>
 
       <Modal
-        title="Add New Tenant"
+        title={currentTenant ? t("tenants.edit") : t("tenants.create")}
         isOpen={isModalOpen}
         onClose={handleModalClose}
       >

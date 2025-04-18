@@ -1,9 +1,27 @@
-import { Property as PrismaProperty, Unit, User } from "@prisma/client";
+export interface PropertyUnit {
+    id?: number;
+    unitNumber: string;
+    bedrooms: string;
+    bathrooms: string;
+    squareFeet: string;
+    propertyId?: number;
+}
 
-export interface Property extends PrismaProperty {
-    units: Pick<Unit, "id" | "unitNumber" | "bedrooms" | "bathrooms">[];
-    landlord: {
-        user: Pick<User, "name" | "email">;
+export interface Property {
+    id?: number;
+    name: string;
+    address: string;
+    type: string;
+    landlordId: number;
+    units: PropertyUnit[];
+    createdAt?: string;
+    updatedAt?: string;
+    landlord?: {
+        id: number;
+        user: {
+            name: string;
+            email?: string;
+        };
     };
 }
 

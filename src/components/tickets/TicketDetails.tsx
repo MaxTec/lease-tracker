@@ -4,6 +4,7 @@ import Button from "@/components/ui/Button";
 import Textarea from "@/components/ui/Textarea";
 import Select from "@/components/ui/Select";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 interface Comment {
   id: number;
@@ -42,6 +43,7 @@ interface Props {
 }
 
 export default function TicketDetails({ ticket }: Props) {
+  const t = useTranslations();
   const router = useRouter();
   const [comment, setComment] = useState("");
   const [status, setStatus] = useState(ticket.status);
@@ -59,7 +61,7 @@ export default function TicketDetails({ ticket }: Props) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update ticket status");
+        throw new Error(t("tickets.errors.updateFailed"));
       }
 
       setStatus(newStatus);
@@ -80,7 +82,7 @@ export default function TicketDetails({ ticket }: Props) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update ticket priority");
+        throw new Error(t("tickets.errors.updateFailed"));
       }
 
       setPriority(newPriority);
@@ -105,7 +107,7 @@ export default function TicketDetails({ ticket }: Props) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to add comment");
+        throw new Error(t("tickets.errors.commentFailed"));
       }
 
       setComment("");
@@ -140,25 +142,50 @@ export default function TicketDetails({ ticket }: Props) {
     );
   };
 
+  const statusOptions = [
+    { value: "OPEN", label: t("tickets.status.open") },
+    { value: "IN_PROGRESS", label: t("tickets.status.inProgress") },
+    { value: "PENDING_REVIEW", label: t("tickets.status.pendingReview") },
+    { value: "RESOLVED", label: t("tickets.status.resolved") },
+    { value: "CLOSED", label: t("tickets.status.closed") }
+  ];
+
+  const priorityOptions = [
+    { value: "LOW", label: t("tickets.priority.low") },
+    { value: "MEDIUM", label: t("tickets.priority.medium") },
+    { value: "HIGH", label: t("tickets.priority.high") },
+    { value: "URGENT", label: t("tickets.priority.urgent") }
+  ];
+
   return (
     <div className="space-y-8">
       <div className="space-y-4">
         <h1 className="text-3xl font-bold">{ticket.title}</h1>
         <div className="flex gap-4 text-sm text-gray-500">
-          <span>Property: {ticket.property.name}</span>
-          <span>Unit: {ticket.unit.unitNumber}</span>
+          <span>{t("tickets.form.property")}: {ticket.property.name}</span>
+          <span>{t("tickets.form.unit")}: {ticket.unit.unitNumber}</span>
           <span>
-            Created: {new Date(ticket.createdAt).toLocaleDateString()}
+            {t("common.dates.created")}: {new Date(ticket.createdAt).toLocaleDateString()}
           </span>
         </div>
         <div className="flex gap-4">
           <div>
-            <span className="text-sm text-gray-500 mr-2">Status:</span>
-            <Select label="Status" value={status} options={[]}></Select>
+            <span className="text-sm text-gray-500 mr-2">{t("tickets.form.status")}:</span>
+            <Select 
+              label={t("tickets.form.status")} 
+              value={status} 
+              options={statusOptions}
+              onChange={(e) => handleStatusChange(e.target.value)}
+            />
           </div>
           <div>
-            <span className="text-sm text-gray-500 mr-2">Priority:</span>
-            <Select label="Priority" value={priority} options={[]}></Select>
+            <span className="text-sm text-gray-500 mr-2">{t("tickets.form.priority")}:</span>
+            <Select 
+              label={t("tickets.form.priority")} 
+              value={priority} 
+              options={priorityOptions}
+              onChange={(e) => handlePriorityChange(e.target.value)}
+            />
           </div>
         </div>
         <p className="text-gray-700 whitespace-pre-wrap">
@@ -167,16 +194,16 @@ export default function TicketDetails({ ticket }: Props) {
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Comments</h2>
+        <h2 className="text-xl font-semibold">{t("tickets.comments.title")}</h2>
         <form onSubmit={handleCommentSubmit} className="space-y-4">
           <Textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="Add a comment..."
+            placeholder={t("tickets.comments.placeholder")}
             required
           />
           <Button type="submit" disabled={loading}>
-            {loading ? "Adding Comment..." : "Add Comment"}
+            {loading ? t("common.loading") : t("tickets.comments.add")}
           </Button>
         </form>
 

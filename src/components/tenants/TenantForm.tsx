@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Resolver } from "react-hook-form";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Tenant } from "@/types/tenant";
 import { TenantFormData } from "@/types/tenant";
+import { useTranslations } from "next-intl";
 
 interface TenantFormProps {
   tenantId?: number;
@@ -15,22 +16,24 @@ interface TenantFormProps {
   onSuccess: (tenant: Tenant) => void;
 }
 
-// Define the Zod schema for validation
-const tenantSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().min(1, "Phone is required"),
-  emergencyContact: z.string().optional(),
-});
-
 export default function TenantForm({
   tenantId,
   onClose,
   onSuccess,
 }: TenantFormProps) {
-  // const router = useRouter();
+  const t = useTranslations();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Define the Zod schema for validation with translations
+  const getTenantSchema = () => z.object({
+    name: z.string().min(1, t("common.errors.required")),
+    email: z.string().email(t("common.errors.invalidEmail")),
+    phone: z.string().min(1, t("common.errors.required")),
+    emergencyContact: z.string().optional(),
+    emergencyPhone: z.string().optional(),
+    employmentInfo: z.string().optional(),
+  });
 
   const {
     register,
@@ -38,8 +41,7 @@ export default function TenantForm({
     setValue,
     formState: { errors },
   } = useForm<TenantFormData>({
-    // @ts-expect-error - Zod resolver is not typed
-    resolver: zodResolver(tenantSchema), // Use Zod for validation
+    resolver: zodResolver(getTenantSchema()) as Resolver<TenantFormData>,
   });
 
   useEffect(() => {
@@ -49,32 +51,32 @@ export default function TenantForm({
       try {
         setLoading(true);
         const response = await fetch(`/api/tenants/${tenantId}`);
-        if (!response.ok) throw new Error("Failed to fetch tenant");
+        if (!response.ok) throw new Error(t("tenants.errors.fetchFailed"));
         const data = await response.json();
         setValue("name", data.user.name);
         setValue("email", data.user.email);
         setValue("phone", data.phone);
         setValue("emergencyContact", data.emergencyContact || "");
+        setValue("emergencyPhone", data.emergencyPhone || "");
+        setValue("employmentInfo", data.employmentInfo || "");
       } catch (err) {
         console.error("Error fetching tenant:", err);
-        // get the error message from the error object
-        setError(err instanceof Error ? err.message : "Failed to fetch tenant");
+        setError(err instanceof Error ? err.message : t("tenants.errors.fetchFailed"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchTenant();
-  }, [tenantId, setValue]);
+  }, [tenantId, setValue, t]);
 
   const onSubmit = async (data: TenantFormData) => {
     setError(null);
     setLoading(true);
-    console.log(data);
     try {
       const url = tenantId ? `/api/tenants/${tenantId}` : "/api/tenants";
       const method = tenantId ? "PUT" : "POST";
-      console.log(url, method);
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -84,13 +86,13 @@ export default function TenantForm({
       });
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.error || "Failed to save tenant");
+        throw new Error(result.error || t("tenants.errors.saveFailed"));
       }
       onSuccess(result);
       onClose();
     } catch (err) {
-      console.log("Error saving tenant:", err);
-      setError(err instanceof Error ? err.message : "Failed to save tenant");
+      console.error("Error saving tenant:", err);
+      setError(err instanceof Error ? err.message : t("tenants.errors.saveFailed"));
     } finally {
       setLoading(false);
     }
@@ -105,7 +107,7 @@ export default function TenantForm({
       <div>
         <Input
           {...register("name")}
-          label="Name"
+          label={t("tenants.form.name")}
           error={errors.name?.message}
         />
       </div>
@@ -113,7 +115,7 @@ export default function TenantForm({
       <div>
         <Input
           {...register("email")}
-          label="Email"
+          label={t("tenants.form.email")}
           type="email"
           error={errors.email?.message}
         />
@@ -121,7 +123,7 @@ export default function TenantForm({
       <div>
         <Input
           {...register("phone")}
-          label="Phone"
+          label={t("tenants.form.phone")}
           error={errors.phone?.message}
         />
       </div>
@@ -129,17 +131,37 @@ export default function TenantForm({
       <div>
         <Input
           {...register("emergencyContact")}
-          label="Emergency Contact"
+          label={t("tenants.form.emergencyContact")}
           error={errors.emergencyContact?.message}
+        />
+      </div>
+
+      <div>
+        <Input
+          {...register("emergencyPhone")}
+          label={t("tenants.form.emergencyPhone")}
+          error={errors.emergencyPhone?.message}
+        />
+      </div>
+
+      <div>
+        <Input
+          {...register("employmentInfo")}
+          label={t("tenants.form.employmentInfo")}
+          error={errors.employmentInfo?.message}
         />
       </div>
 
       <div className="flex justify-end space-x-3">
         <Button type="button" variant="outline" onClick={onClose}>
-          Cancel
+          {t("common.buttons.cancel")}
         </Button>
         <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : tenantId ? "Update Tenant" : "Add Tenant"}
+          {loading
+            ? t("tenants.form.saving")
+            : tenantId
+            ? t("tenants.form.updateTenant")
+            : t("tenants.form.createTenant")}
         </Button>
       </div>
     </form>

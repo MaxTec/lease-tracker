@@ -1,17 +1,20 @@
 import Link from "next/link";
 import { FaFacebook, FaTwitter, FaInstagram } from "react-icons/fa";
+import { useTranslations } from "next-intl";
 
 export default function Footer() {
+  const t = useTranslations();
+  
   return (
     <footer className="bg-gray-50 border-t">
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="flex items-center space-x-6 text-sm">
             <Link href="/contact" className="text-gray-600 hover:text-gray-900">
-              Contact
+              {t("common.navigation.contact")}
             </Link>
             <Link href="/privacy" className="text-gray-600 hover:text-gray-900">
-              Privacy
+              {t("common.navigation.privacy")}
             </Link>
             <a
               href="mailto:support@leasetracker.com"
@@ -51,9 +54,9 @@ export default function Footer() {
           </div>
 
           <div className="text-xs text-gray-500">
-            &copy; {new Date().getFullYear()} LeaseTracker. All rights reserved.
+            &copy; {new Date().getFullYear()} LeaseTracker. {t("home.rightsReserved")}.
             <br />
-            Powered by{" "}
+            {t("home.developedBy")}{" "}
             <Link
               href="https://maximilianotec.site"
               className="text-gray-600 hover:text-gray-900"
