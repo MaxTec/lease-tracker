@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/utils/db';
+import { uploadToR2 } from '@/utils/leaseUtils';
 
 // GET /api/leases/[id] - Get a specific lease by ID
 export async function GET(
@@ -21,7 +22,8 @@ export async function GET(
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        const leaseId = parseInt(params.id);
+        const { id } = await params;
+        const leaseId = parseInt(id);
 
         if (isNaN(leaseId)) {
             return NextResponse.json({ error: 'Invalid lease ID' }, { status: 400 });
@@ -64,73 +66,73 @@ export async function GET(
 }
 
 // PATCH /api/leases/[id] - Update a lease
-export async function PATCH(
-    request: NextRequest,
-    { params }: { params: { id: string } }
-) {
-    try {
-        const session = await getServerSession(authOptions);
+// export async function PATCH(
+//     request: NextRequest,
+//     { params }: { params: { id: string } }
+// ) {
+//     try {
+//         const session = await getServerSession(authOptions);
 
-        // Check if user is authenticated
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+//         // Check if user is authenticated
+//         if (!session) {
+//             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+//         }
 
-        // Check if user is admin
-        if (session.user.role !== 'ADMIN') {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
+//         // Check if user is admin
+//         if (session.user.role !== 'ADMIN') {
+//             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+//         }
 
-        const leaseId = parseInt(params.id);
+//         const leaseId = parseInt(params.id);
 
-        if (isNaN(leaseId)) {
-            return NextResponse.json({ error: 'Invalid lease ID' }, { status: 400 });
-        }
+//         if (isNaN(leaseId)) {
+//             return NextResponse.json({ error: 'Invalid lease ID' }, { status: 400 });
+//         }
 
-        // Check if lease exists
-        const existingLease = await prisma.lease.findUnique({
-            where: { id: leaseId },
-        });
+//         // Check if lease exists
+//         const existingLease = await prisma.lease.findUnique({
+//             where: { id: leaseId },
+//         });
 
-        if (!existingLease) {
-            return NextResponse.json({ error: 'Lease not found' }, { status: 404 });
-        }
+//         if (!existingLease) {
+//             return NextResponse.json({ error: 'Lease not found' }, { status: 404 });
+//         }
 
-        // Get update data from request body
-        const data = await request.json();
+//         // Get update data from request body
+//         const data = await request.json();
 
-        // Update the lease
-        const updatedLease = await prisma.lease.update({
-            where: { id: leaseId },
-            data,
-            include: {
-                unit: {
-                    include: {
-                        property: true,
-                    },
-                },
-                tenant: {
-                    include: {
-                        user: {
-                            select: {
-                                name: true,
-                                email: true,
-                            },
-                        },
-                    },
-                },
-            },
-        });
+//         // Update the lease
+//         const updatedLease = await prisma.lease.update({
+//             where: { id: leaseId },
+//             data,
+//             include: {
+//                 unit: {
+//                     include: {
+//                         property: true,
+//                     },
+//                 },
+//                 tenant: {
+//                     include: {
+//                         user: {
+//                             select: {
+//                                 name: true,
+//                                 email: true,
+//                             },
+//                         },
+//                     },
+//                 },
+//             },
+//         });
 
-        return NextResponse.json(updatedLease);
-    } catch (error) {
-        console.error('Error updating lease:', error);
-        return NextResponse.json(
-            { error: 'Failed to update lease' },
-            { status: 500 }
-        );
-    }
-}
+//         return NextResponse.json(updatedLease);
+//     } catch (error) {
+//         console.error('Error updating lease:', error);
+//         return NextResponse.json(
+//             { error: 'Failed to update lease' },
+//             { status: 500 }
+//         );
+//     }
+// }
 
 // DELETE /api/leases/[id] - Terminate a lease
 export async function DELETE(
@@ -176,6 +178,96 @@ export async function DELETE(
         console.error('Error terminating lease:', error);
         return NextResponse.json(
             { error: 'Failed to terminate lease' },
+            { status: 500 }
+        );
+    }
+}
+
+// PUT /api/leases/[id] - Update a lease
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const session = await getServerSession(authOptions);
+
+        // Check if user is authenticated
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Check if user is admin
+        if (session.user.role !== 'ADMIN') {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+        const { id } = await params;
+        const leaseId = parseInt(id);
+
+        if (isNaN(leaseId)) {
+            return NextResponse.json({ error: 'Invalid lease ID' }, { status: 400 });
+        }
+
+        // Check if lease exists
+        const existingLease = await prisma.lease.findUnique({
+            where: { id: leaseId },
+        });
+
+        if (!existingLease) {
+            return NextResponse.json({ error: 'Lease not found' }, { status: 404 });
+        }
+
+        const formData = await request.formData();
+        const signedLeaseFile = formData.get("signedLeaseFile") as File | null;
+        const data = JSON.parse(formData.get("data") as string);
+
+        // Handle signed lease file upload if provided
+        if (signedLeaseFile) {
+            const buffer = Buffer.from(await signedLeaseFile.arrayBuffer());
+            const fileName = `signed_lease_${leaseId}_${Date.now()}.pdf`;
+            const fileUrl = await uploadToR2(buffer, fileName);
+
+            // Create document record in the database
+            await prisma.document.create({
+                data: {
+                    leaseId: leaseId,
+                    name: "Signed Lease Agreement",
+                    type: "LEASE_AGREEMENT",
+                    fileUrl: fileUrl,
+                },
+            });
+        }
+
+        // Update the lease
+        const updatedLease = await prisma.lease.update({
+            where: { id: leaseId },
+            data: {
+                ...data,
+                status: "ACTIVE",
+            },
+            include: {
+                unit: {
+                    include: {
+                        property: true,
+                    },
+                },
+                tenant: {
+                    include: {
+                        user: {
+                            select: {
+                                name: true,
+                                email: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        return NextResponse.json(updatedLease);
+    } catch (error) {
+        console.error('Error updating lease:', error);
+        return NextResponse.json(
+            { error: 'Failed to update lease' },
             { status: 500 }
         );
     }

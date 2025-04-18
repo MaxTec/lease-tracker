@@ -2,14 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { redirect, useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Layout from "@/components/layout/Layout";
 import Table from "@/components/ui/Table";
 import EmptyState from "@/components/ui/EmptyState";
 import { FaPlus, FaBuilding } from "react-icons/fa";
 import PropertyForm from "@/components/properties/PropertyForm";
+import PopConfirm from "@/components/ui/PopConfirm";
 import { Property } from "@/types/property";
+import Modal from "@/components/ui/Modal";
 
 export default function PropertiesPage() {
   const { data: session, status: authStatus } = useSession();
@@ -19,6 +21,8 @@ export default function PropertiesPage() {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<number | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [propertyToDelete, setPropertyToDelete] = useState<number | null>(null);
   // Redirect if not admin
   if (authStatus === "authenticated" && session?.user?.role !== "ADMIN") {
     redirect("/");
@@ -51,32 +55,40 @@ export default function PropertiesPage() {
   };
 
   const handleDeleteProperty = async (propertyId: number) => {
-    if (!confirm("Are you sure you want to delete this property?")) return;
+    setPropertyToDelete(propertyId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!propertyToDelete) return;
 
     try {
-      const response = await fetch(`/api/properties/${propertyId}`, {
+      const response = await fetch(`/api/properties/${propertyToDelete}`, {
         method: "DELETE",
       });
 
       if (!response.ok) throw new Error("Failed to delete property");
 
-      setProperties(properties.filter((p) => p.id !== propertyId));
+      setProperties(properties.filter((p) => p.id !== propertyToDelete));
     } catch (err) {
       console.error("Error deleting property:", err);
       alert("Failed to delete property");
     }
   };
 
-  const handleUpdateProperties = (updatedProperty: Property) => {
+  const handleUpdateProperties = (updatedProperties: Property[]) => {
+    if (updatedProperties.length === 0) return;
+
+    const updatedProperty = updatedProperties[0];
     setProperties((prevProperties) => {
       const existingPropertyIndex = prevProperties.findIndex(
         (p) => p.id === updatedProperty.id
       );
       if (existingPropertyIndex > -1) {
         // Update existing property
-        const updatedProperties = [...prevProperties];
-        updatedProperties[existingPropertyIndex] = updatedProperty;
-        return updatedProperties;
+        const updatedPropertiesList = [...prevProperties];
+        updatedPropertiesList[existingPropertyIndex] = updatedProperty;
+        return updatedPropertiesList;
       }
       // Add new property
       return [...prevProperties, updatedProperty];
@@ -155,15 +167,17 @@ export default function PropertiesPage() {
               <h2 className="text-2xl font-semibold text-gray-800">
                 Properties
               </h2>
-              <Button
-                onClick={() => {
-                  setSelectedProperty(null);
-                  setIsModalOpen(true);
-                }}
-              >
-                <FaPlus className="mr-2 inline-block align-middle" />
-                <span className="align-middle">Add New Property</span>
-              </Button>
+              {properties.length > 0 && (
+                <Button
+                  onClick={() => {
+                    setSelectedProperty(null);
+                    setIsModalOpen(true);
+                  }}
+                >
+                  <FaPlus className="mr-2 inline-block align-middle" />
+                  <span className="align-middle">Add New Property</span>
+                </Button>
+              )}
             </div>
 
             {properties.length > 0 ? (
@@ -189,12 +203,31 @@ export default function PropertiesPage() {
           </div>
         </div>
       </div>
-      <PropertyForm
+      <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        propertyId={selectedProperty ?? undefined}
-        onUpdate={handleUpdateProperties}
-      />
+        title="Add Property"
+      >
+        <PropertyForm
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          propertyId={selectedProperty ?? undefined}
+          onUpdate={handleUpdateProperties}
+        />
+      </Modal>
+      <PopConfirm
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Property"
+        confirmText="Delete"
+        cancelText="Cancel"
+      >
+        <p className="text-gray-600">
+          Are you sure you want to delete this property? This action cannot be
+          undone.
+        </p>
+      </PopConfirm>
     </Layout>
   );
 }
