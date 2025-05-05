@@ -13,6 +13,7 @@ import PopConfirm from "@/components/ui/PopConfirm";
 import { Property } from "@/types/property";
 import { useTranslations } from "next-intl";
 import Modal from "@/components/ui/Modal";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function PropertiesPage() {
   const t = useTranslations();
@@ -40,7 +41,9 @@ export default function PropertiesPage() {
       } catch (err) {
         console.error("Error fetching properties:", err);
         setError(
-          err instanceof Error ? err.message : t("properties.errors.fetchFailed")
+          err instanceof Error
+            ? err.message
+            : t("properties.errors.fetchFailed")
         );
       } finally {
         setLoading(false);
@@ -77,10 +80,12 @@ export default function PropertiesPage() {
     }
   };
 
-  const handleUpdateProperties = (updatedProperties: Property[]) => {
-    if (updatedProperties.length === 0) return;
+  const handleUpdateProperties = (updatedProperties: Property) => {
+    console.log("updatedProperties", updatedProperties);
+    if (!updatedProperties) return;
 
-    const updatedProperty = updatedProperties[0];
+    const updatedProperty = updatedProperties;
+    console.log("updatedProperty", updatedProperty);
     setProperties((prevProperties) => {
       const existingPropertyIndex = prevProperties.findIndex(
         (p) => p.id === updatedProperty.id
@@ -125,14 +130,14 @@ export default function PropertiesPage() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => handleEditProperty(property.id)}
+            onClick={() => handleEditProperty(property.id as number)}
           >
             {t("common.buttons.edit")}
           </Button>
           <Button
             size="sm"
             variant="danger"
-            onClick={() => handleDeleteProperty(property.id)}
+            onClick={() => handleDeleteProperty(property.id as number)}
           >
             {t("common.buttons.delete")}
           </Button>
@@ -144,8 +149,8 @@ export default function PropertiesPage() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-[200px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="flex items-center justify-center min-h-[500px]">
+          <LoadingSpinner size="lg" color="indigo-600" />
         </div>
       </Layout>
     );
@@ -168,15 +173,17 @@ export default function PropertiesPage() {
               <h2 className="text-2xl font-semibold text-gray-800">
                 {t("properties.title")}
               </h2>
-              <Button
-                onClick={() => {
-                  setSelectedProperty(null);
-                  setIsModalOpen(true);
-                }}
-              >
-                <FaPlus className="mr-2 inline-block align-middle" />
-                <span className="align-middle">{t("properties.create")}</span>
-              </Button>
+              {properties.length > 0 && (
+                <Button
+                  onClick={() => {
+                    setSelectedProperty(null);
+                    setIsModalOpen(true);
+                  }}
+                >
+                  <FaPlus className="mr-2 inline-block align-middle" />
+                  <span className="align-middle">{t("properties.create")}</span>
+                </Button>
+              )}
             </div>
 
             {properties.length > 0 ? (
@@ -218,14 +225,11 @@ export default function PropertiesPage() {
         isOpen={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
         onConfirm={handleConfirmDelete}
-        title="Delete Property"
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t("properties.deleteConfirm.title")}
+        confirmText={t("properties.deleteConfirm.confirm")}
+        cancelText={t("properties.deleteConfirm.cancel")}
       >
-        <p className="text-gray-600">
-          Are you sure you want to delete this property? This action cannot be
-          undone.
-        </p>
+        <p className="text-gray-600">{t("properties.confirmDelete")}</p>
       </PopConfirm>
     </Layout>
   );

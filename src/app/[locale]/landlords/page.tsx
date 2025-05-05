@@ -12,6 +12,8 @@ import LandlordForm from "@/components/landlords/LandlordForm";
 import Modal from "@/components/ui/Modal";
 import { Landlord } from "@/types/landlord";
 import { useTranslations } from "next-intl";
+import PopConfirm from "@/components/ui/PopConfirm";
+import LoadingSpinner from "@/components/ui/LoadingSpinner"
 
 export default function LandlordsPage() {
   const t = useTranslations();
@@ -21,6 +23,8 @@ export default function LandlordsPage() {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentLandlord, setCurrentLandlord] = useState<Landlord | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [landlordToDelete, setLandlordToDelete] = useState<number | null>(null);
 
   // Redirect if not admin
   if (authStatus === "authenticated" && session?.user?.role !== "ADMIN") {
@@ -53,20 +57,25 @@ export default function LandlordsPage() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteLandlord = async (landlordId: number) => {
-    if (!confirm(t("landlords.confirmDelete"))) return;
+  const handleDeleteClick = (landlordId: number) => {
+    setLandlordToDelete(landlordId);
+    setIsDeleteConfirmOpen(true);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!landlordToDelete) return;
     try {
-      const response = await fetch(`/api/landlords/${landlordId}`, {
+      const response = await fetch(`/api/landlords/${landlordToDelete}`, {
         method: "DELETE",
       });
-
       if (!response.ok) throw new Error(t("landlords.errors.deleteFailed"));
-
-      setLandlords(landlords.filter((l) => l.id !== landlordId));
+      setLandlords(landlords.filter((l) => l.id !== landlordToDelete));
     } catch (err) {
       console.error("Error deleting landlord:", err);
       alert(t("landlords.errors.deleteFailed"));
+    } finally {
+      setIsDeleteConfirmOpen(false);
+      setLandlordToDelete(null);
     }
   };
 
@@ -135,7 +144,7 @@ export default function LandlordsPage() {
           <Button
             size="sm"
             variant="danger"
-            onClick={() => handleDeleteLandlord(landlord.id)}
+            onClick={() => handleDeleteClick(landlord.id)}
           >
             {t("common.buttons.delete")}
           </Button>
@@ -147,8 +156,8 @@ export default function LandlordsPage() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-[200px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="flex items-center justify-center min-h-[500px]">
+          <LoadingSpinner size="lg" color="indigo-600" />
         </div>
       </Layout>
     );
@@ -171,10 +180,13 @@ export default function LandlordsPage() {
               <h2 className="text-2xl font-semibold text-gray-800">
                 {t("landlords.title")}
               </h2>
-              <Button onClick={handleAddLandlord}>
-                <FaPlus className="mr-2 inline-block align-middle" />
-                <span className="align-middle">{t("landlords.create")}</span>
-              </Button>
+              {landlords.length > 0 && (    
+                <Button onClick={handleAddLandlord}>
+                  <FaPlus className="mr-2 inline-block align-middle" />
+                  <span className="align-middle">{t("landlords.create")}</span>
+                </Button>
+              )}
+              
             </div>
 
             {landlords.length > 0 ? (
@@ -209,6 +221,17 @@ export default function LandlordsPage() {
           onSuccess={handleUpdateLandlords}
         />
       </Modal>
+
+      <PopConfirm
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title={t("landlords.deleteConfirm.title")}
+        confirmText={t("landlords.deleteConfirm.confirm")}
+        cancelText={t("landlords.deleteConfirm.cancel")}
+      >
+        <p className="text-gray-600">{t("landlords.confirmDelete")}</p>
+      </PopConfirm>
     </Layout>
   );
 }

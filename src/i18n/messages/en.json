@@ -164,6 +164,13 @@
     "details": "Property details",
     "list": "Property list",
     "confirmDelete": "Are you sure you want to delete this property?",
+    "deleteConfirm": {
+      "title": "Delete Property",
+      "message": "This action will delete the property and all associated data. Are you sure you want to continue?",
+      "warning": "This action is irreversible.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
     "emptyState": {
       "title": "No Properties Found",
       "description": "There are no properties in the system yet. Click the button below to add your first property."
@@ -284,6 +291,13 @@
     "details": "Tenant details",
     "list": "Tenant list",
     "confirmDelete": "Are you sure you want to delete this tenant?",
+    "deleteConfirm": {
+      "title": "Delete Tenant",
+      "message": "This action will delete the tenant and all associated data. Are you sure you want to continue?",
+      "warning": "This action is irreversible.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
     "emptyState": {
       "title": "No Tenants Found",
       "description": "There are no tenants in the system yet. Click the button below to add your first tenant."
@@ -324,6 +338,13 @@
     "details": "Landlord details",
     "list": "Landlord list",
     "confirmDelete": "Are you sure you want to delete this landlord?",
+    "deleteConfirm": {
+      "title": "Delete Landlord",
+      "message": "This action will delete the landlord and all associated data. Are you sure you want to continue?",
+      "warning": "This action is irreversible.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
     "emptyState": {
       "title": "No Landlords Found",
       "description": "There are no landlords in the system yet. Click the button below to add your first landlord."
@@ -513,5 +534,11 @@
       "email": "Email: privacy@leasetracker.com",
       "address": "Address: 123 Privacy Street, Security City, SC 12345"
     }
+  },
+  "LeaseDetailsStep": {
+    "propertyDisclaimer": "You must add a Property before creating a Lease.",
+    "addProperty": "Add a Property",
+    "tenantDisclaimer": "You must add a Tenant before creating a Lease.",
+    "addTenant": "Add a Tenant"
   }
 } 

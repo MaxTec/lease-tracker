@@ -4,7 +4,7 @@ import CreateTicketButton from "@/components/tickets/CreateTicketButton";
 import { Metadata } from "next";
 import Layout from "@/components/layout/Layout";
 import { useTranslations } from "next-intl";
-
+import LoadingSpinner from "@/components/ui/LoadingSpinner"
 export const metadata: Metadata = {
   title: "Support Tickets | Lease Tracker",
   description: "View and manage your support tickets",
@@ -21,7 +21,7 @@ export default function TicketsPage() {
           <CreateTicketButton />
         </div>
 
-        <Suspense fallback={<div>{t("common.loading")}</div>}>
+        <Suspense fallback={<LoadingSpinner />}>
           <TicketsList />
         </Suspense>
       </div>

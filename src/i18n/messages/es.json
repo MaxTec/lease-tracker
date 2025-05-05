@@ -64,7 +64,7 @@
       "terminated": "Terminado"
     },
     "errors": {
-      "required": "Este campo es obligatorio",
+      "required": "Campo requerido",
       "invalidEmail": "Correo electrónico inválido",
       "invalidPhone": "Número de teléfono inválido",
       "serverError": "Error del servidor, intente nuevamente",
@@ -164,6 +164,13 @@
     "details": "Detalles de la propiedad",
     "list": "Lista de propiedades",
     "confirmDelete": "¿Está seguro de que desea eliminar esta propiedad?",
+    "deleteConfirm": {
+      "title": "Eliminar Propiedad",
+      "message": "Esta acción eliminará la propiedad y todos los datos asociados. ¿Está seguro de que desea continuar?",
+      "warning": "Esta acción es irreversible.",
+      "confirm": "Eliminar",
+      "cancel": "Cancelar"
+    },
     "emptyState": {
       "title": "No Se Encontraron Propiedades",
       "description": "No hay propiedades en el sistema todavía. Haga clic en el botón de abajo para agregar su primera propiedad."
@@ -284,6 +291,13 @@
     "details": "Detalles del inquilino",
     "list": "Lista de inquilinos",
     "confirmDelete": "¿Está seguro de que desea eliminar este inquilino?",
+    "deleteConfirm": {
+      "title": "Eliminar Inquilino",
+      "message": "Esta acción eliminará el inquilino y todos los datos asociados. ¿Está seguro de que desea continuar?",
+      "warning": "Esta acción es irreversible.",
+      "confirm": "Eliminar",
+      "cancel": "Cancelar"
+    },
     "emptyState": {
       "title": "No Se Encontraron Inquilinos",
       "description": "No hay inquilinos en el sistema todavía. Haga clic en el botón de abajo para agregar su primer inquilino."
@@ -324,6 +338,13 @@
     "details": "Detalles del propietario",
     "list": "Lista de propietarios",
     "confirmDelete": "¿Está seguro de que desea eliminar este propietario?",
+    "deleteConfirm": {
+      "title": "Eliminar Propietario",
+      "message": "Esta acción eliminará el propietario y todos los datos asociados. ¿Está seguro de que desea continuar?",
+      "warning": "Esta acción es irreversible.",
+      "confirm": "Eliminar",
+      "cancel": "Cancelar"
+    },
     "emptyState": {
       "title": "No Se Encontraron Propietarios",
       "description": "No hay propietarios en el sistema todavía. Haga clic en el botón de abajo para agregar su primer propietario."
@@ -355,20 +376,20 @@
   },
   "tickets": {
     "title": "Solicitudes de Soporte",
-    "create": "Crear Solicitud de Soporte",
-    "edit": "Editar Solicitud",
-    "details": "Detalles de la Solicitud",
-    "list": "Lista de Solicitudes",
-    "confirmDelete": "¿Está seguro de que desea eliminar esta solicitud?",
+    "create": "Nuevo Ticket",
+    "edit": "Editar Ticket",
+    "details": "Detalles del Ticket",
+    "list": "Lista de Tickets",
+    "confirmDelete": "¿Está seguro de que desea eliminar este ticket?",
     "emptyState": {
-      "title": "No Se Encontraron Solicitudes",
-      "description": "No hay solicitudes de soporte en el sistema todavía. Haga clic en el botón de abajo para crear su primera solicitud."
+      "title": "No Se Encontraron Tickets",
+      "description": "No hay tickets en el sistema todavía. Haga clic en el botón de abajo para crear su primer ticket."
     },
     "errors": {
       "fetchFailed": "Error al obtener solicitudes",
-      "createFailed": "Error al crear solicitud",
-      "updateFailed": "Error al actualizar solicitud",
-      "deleteFailed": "Error al eliminar solicitud",
+      "createFailed": "Error al crear ticket",
+      "updateFailed": "Error al actualizar ticket",
+      "deleteFailed": "Error al eliminar ticket",
       "commentFailed": "Error al agregar comentario"
     },
     "filters": {
@@ -513,5 +534,11 @@
       "email": "Correo electrónico: privacy@leasetracker.com",
       "address": "Dirección: Calle Privacidad 123, Ciudad Seguridad, SC 12345"
     }
+  },
+  "LeaseDetailsStep": {
+    "propertyDisclaimer": "Debe agregar una propiedad antes de crear un contrato de arrendamiento.",
+    "addProperty": "Agregar una propiedad",
+    "tenantDisclaimer": "Debe agregar un inquilino antes de crear un contrato de arrendamiento.",
+    "addTenant": "Agregar un inquilino"
   }
 } 

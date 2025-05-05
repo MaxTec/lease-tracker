@@ -3,25 +3,18 @@
 import { useEffect, useState } from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import { addYears, format, getDate, parse } from "date-fns";
-import { useRouter } from "next/navigation";
-import { FiHome, FiUsers } from "react-icons/fi";
 import Select from "@/components/ui/Select";
 import Input from "@/components/ui/Input";
 import DateInput from "@/components/ui/DateInput";
 import Checkbox from "@/components/ui/Checkbox";
-import Empty from "@/components/ui/Empty";
 import { useProperties } from "@/hooks/useProperties";
 import { useTenants } from "@/hooks/useTenants";
 import toast from "react-hot-toast";
-import TenantForm from "@/components/tenants/TenantForm";
-import PropertyForm from "@/components/properties/PropertyForm";
-import Modal from "@/components/ui/Modal";
-import { Tenant } from "@/types/tenant";
-import { Property } from "@/types/property";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export default function LeaseDetailsStep() {
-  const router = useRouter();
   const {
     register,
     control,
@@ -30,19 +23,22 @@ export default function LeaseDetailsStep() {
     formState: { errors },
   } = useFormContext();
 
-  const { properties, setProperties, units, handlePropertyChange, isLoadingUnits, isLoadingProperties } = useProperties();
-  const { tenants, setTenants, isLoadingTenants } = useTenants();
+  const {
+    properties,
+    units,
+    handlePropertyChange,
+    isLoadingUnits,
+    isLoadingProperties,
+  } = useProperties();
+  const { tenants, isLoadingTenants } = useTenants();
 
   const startDate = watch("startDate");
   const customEndDate = watch("customEndDate");
   const existingPropertyId = watch("propertyId");
-  const existingUnitId = watch("unitId");
-  const existingTenantId = watch("tenantId");
-  // const existingPaymentDay = watch("paymentDay");
+
   const paymentDay = watch("paymentDay");
 
-  const [isTenantModalOpen, setTenantModalOpen] = useState(false);
-  const [isPropertyModalOpen, setPropertyModalOpen] = useState(false);
+  const t = useTranslations("LeaseDetailsStep");
 
   useEffect(() => {
     if (startDate && !customEndDate) {
@@ -57,26 +53,6 @@ export default function LeaseDetailsStep() {
   useEffect(() => {
     setIsMounted(true);
   }, []);
-
-  // useEffect(() => {
-  //   if (!isMounted) return;
-  //   if (properties.length > 0 && existingPropertyId ) {
-  //     setValue("propertyId", existingPropertyId);
-  //     // handlePropertyChange(existingPropertyId);
-  //   }
-  //   if (!units.length && existingPropertyId) {
-  //     console.log("populating units");
-  //     handlePropertyChange(existingPropertyId);
-  //   }
-
-  //   console.log("populating:", existingPropertyId, units, existingUnitId);
-  //   if (units.length > 0 && existingUnitId) {
-  //     setValue("unitId", existingUnitId);
-  //   }
-  //   if (tenants.length > 0 && existingTenantId) {
-  //     setValue("tenantId", existingTenantId);
-  //   }
-  // }, [tenants, units, existingPropertyId, isMounted]);
 
   // New effect for validating start date against payment day
   useEffect(() => {
@@ -101,97 +77,101 @@ export default function LeaseDetailsStep() {
 
       if (!isValid) {
         if (!errors.startDate) {
-          toast.error(`Start date must be on or before the ${requiredDay}${requiredDay === 1 ? "st" : "th"} of the month for the selected payment day`, { id: "startDateError" });
+          toast.error(
+            `Start date must be on or before the ${requiredDay}${
+              requiredDay === 1 ? "st" : "th"
+            } of the month for the selected payment day`,
+            { id: "startDateError" }
+          );
         }
         setValue("startDate", "");
       }
     }
   }, [startDate, paymentDay]);
 
-  const handleTenantSuccess = (tenant: Tenant) => {
-    setTenantModalOpen(false);
-    setTenants((prevTenants) => [...prevTenants, tenant]);
-    setValue("tenantId", tenant.id.toString(), { shouldValidate: true });
-  };
-
-  const handlePropertySuccess = (property: Property) => {
-    console.log("property: executed", property);
-    setPropertyModalOpen(false);
-    setProperties((prevProperties) => [...prevProperties, property]);
-    setValue("propertyId", property.id.toString(), { shouldValidate: true });
-    handlePropertyChange(property.id.toString());
-  };
-  console.log("propertyId", existingPropertyId);
   if (isLoadingTenants || isLoadingProperties) return <LoadingSpinner />;
+
+  const shouldShowPropertyFields = properties.length > 0;
+  const shouldShowTenantField = tenants.length > 0;
+
   return (
-    <div className='space-y-6'>
-      {!existingPropertyId && properties.length === 0 ? (
-        <Empty
-          icon={<FiHome className='w-8 h-8 text-yellow-500' />}
-          title='No Properties Available'
-          description='Please add a property before creating a lease.'
-          action={{
-            label: "Add Property",
-            onClick: () => setPropertyModalOpen(true),
-          }}
-        />
-      ) : (
-        <Select
-          {...register("propertyId")}
-          onChange={(e) => {
-            const selectedPropertyId = e.target.value;
-            setValue("propertyId", selectedPropertyId, {
-              shouldValidate: true,
-            });
-            // console.log("Selected propertyId:", selectedPropertyId);
-            handlePropertyChange(selectedPropertyId);
-          }}
-          label='Property'
-          options={properties.map((property) => ({
-            value: property.id.toString(),
-            label: property.name,
-          }))}
-          error={errors.propertyId?.message as string}
-        />
+    <div className="space-y-6">
+      {!shouldShowPropertyFields && (
+        <div
+          className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded-md"
+          role="alert"
+          aria-live="assertive"
+          tabIndex={0}
+        >
+          <div>
+            {t("propertyDisclaimer")}{" "}
+            <Link
+              href="/properties"
+              aria-label={t("addProperty")}
+              className="inline-block mt-2 text-blue-700 underline hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+            >
+              {t("addProperty")}
+            </Link>
+          </div>
+        </div>
       )}
 
-      {existingPropertyId && units.length === 0 ? (
-        <Empty
-          icon={<FiHome className='w-8 h-8 text-yellow-500' />}
-          title='No Units Available'
-          description='Please add a unit to this property before creating a lease.'
-          action={{
-            label: "Add Unit",
-            onClick: () => router.push(`/properties/${existingPropertyId}/units/new`),
-          }}
-        />
-      ) : (
-        <Select
-          {...register("unitId")}
-          label='Unit'
-          options={units.map((unit) => ({
-            value: unit.id.toString(),
-            label: unit.unitNumber,
-          }))}
-          error={errors.unitId?.message as string}
-          disabled={!existingPropertyId || isLoadingUnits}
-        />
+      {shouldShowPropertyFields && (
+        <>
+          <Select
+            {...register("propertyId")}
+            onChange={(e) => {
+              const selectedPropertyId = e.target.value;
+              setValue("propertyId", selectedPropertyId, {
+                shouldValidate: true,
+              });
+              handlePropertyChange(selectedPropertyId);
+            }}
+            label="Property"
+            options={properties.map((property) => ({
+              value: property.id.toString(),
+              label: property.name,
+            }))}
+            error={errors.propertyId?.message as string}
+          />
+
+          <Select
+            {...register("unitId")}
+            label="Unit"
+            options={units.map((unit) => ({
+              value: unit.id.toString(),
+              label: unit.unitNumber,
+            }))}
+            error={errors.unitId?.message as string}
+            disabled={!existingPropertyId || isLoadingUnits}
+          />
+        </>
       )}
 
-      {tenants.length === 0 ? (
-        <Empty
-          icon={<FiUsers className='w-8 h-8 text-yellow-500' />}
-          title='No Tenants Available'
-          description='Please add a tenant before creating a lease.'
-          action={{
-            label: "Add Tenant",
-            onClick: () => setTenantModalOpen(true),
-          }}
-        />
-      ) : (
+      {!shouldShowTenantField && (
+        <div
+          className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded-md"
+          role="alert"
+          aria-live="assertive"
+          tabIndex={0}
+        >
+          <div>
+            {t("tenantDisclaimer")}{" "}
+            <Link
+              href="/tenants"
+              aria-label={t("addTenant")}
+              className="inline-block mt-2 text-blue-700 underline hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+            >
+              {t("addTenant")}
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {shouldShowTenantField && (
         <Select
           {...register("tenantId")}
-          label='Tenant'
+          label="Select Tenant"
           options={tenants.map((tenant) => ({
             value: tenant.id.toString(),
             label: tenant.user.name,
@@ -200,38 +180,60 @@ export default function LeaseDetailsStep() {
         />
       )}
 
-      <Modal isOpen={isTenantModalOpen} onClose={() => setTenantModalOpen(false)} title='Add Tenant'>
-        <TenantForm onClose={() => setTenantModalOpen(false)} onSuccess={handleTenantSuccess} />
-      </Modal>
-
-      <Modal isOpen={isPropertyModalOpen} onClose={() => setPropertyModalOpen(false)} title='Add Property CUACK'>
-        <PropertyForm isOpen={isPropertyModalOpen} onClose={() => setPropertyModalOpen(false)} onUpdate={(properties) => handlePropertySuccess(properties[0])} />
-      </Modal>
-
-      <div className='grid grid-cols-2 gap-4'>
+      <div className="grid grid-cols-2 gap-4">
         <Controller
-          name='startDate'
+          name="startDate"
           control={control}
-          render={({ field }) => <DateInput label='Start Date' value={field.value} onChange={field.onChange} error={errors.startDate?.message as string} />}
+          render={({ field }) => (
+            <DateInput
+              label="Start Date"
+              value={field.value}
+              onChange={field.onChange}
+              error={errors.startDate?.message as string}
+            />
+          )}
         />
-        <div className='space-y-2'>
+        <div className="space-y-2">
           <Controller
-            name='endDate'
+            name="endDate"
             control={control}
-            render={({ field }) => <DateInput label='End Date' value={field.value} onChange={field.onChange} error={errors.endDate?.message as string} disabled={!customEndDate} />}
+            render={({ field }) => (
+              <DateInput
+                label="End Date"
+                value={field.value}
+                onChange={field.onChange}
+                error={errors.endDate?.message as string}
+                disabled={!customEndDate}
+              />
+            )}
           />
-          <Checkbox {...register("customEndDate")} label='Set custom end date' />
+          <Checkbox
+            {...register("customEndDate")}
+            label="Set custom end date"
+          />
         </div>
       </div>
 
-      <div className='grid grid-cols-3 gap-4'>
-        <Input {...register("rentAmount", { min: 0 })} label='Rent Amount' type='number' error={errors.rentAmount?.message as string} min='0' />
+      <div className="grid grid-cols-3 gap-4">
+        <Input
+          {...register("rentAmount", { min: 0 })}
+          label="Rent Amount"
+          type="number"
+          error={errors.rentAmount?.message as string}
+          min="0"
+        />
 
-        <Input {...register("depositAmount", { min: 0 })} label='Deposit Amount' type='number' error={errors.depositAmount?.message as string} min='0' />
+        <Input
+          {...register("depositAmount", { min: 0 })}
+          label="Deposit Amount"
+          type="number"
+          error={errors.depositAmount?.message as string}
+          min="0"
+        />
 
         <Select
           {...register("paymentDay")}
-          label='Payment Day'
+          label="Payment Day"
           error={errors.paymentDay?.message as string}
           options={[
             { value: "1", label: "1st of the month" },

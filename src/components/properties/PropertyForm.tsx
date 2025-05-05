@@ -7,7 +7,6 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Fieldset from "@/components/ui/Fieldset";
-import Modal from "@/components/ui/Modal";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import { useTranslations } from "next-intl";
 import { Property, PropertyUnit } from "@/types/property";
@@ -50,14 +49,12 @@ interface Landlord {
 
 interface PropertyFormProps {
   propertyId?: number;
-  isOpen: boolean;
   onClose: () => void;
   onUpdate: (data: Property) => void;
 }
 
 export default function PropertyForm({
   propertyId,
-  isOpen,
   onClose,
   onUpdate,
 }: PropertyFormProps) {
@@ -125,6 +122,7 @@ export default function PropertyForm({
 
           // Convert numbers to strings for form data
           const formData: PropertyFormData = {
+            id: propertyData.id,
             name: propertyData.name,
             address: propertyData.address,
             type: propertyData.type,
@@ -160,6 +158,7 @@ export default function PropertyForm({
   }, [propertyId, append, reset, t]);
 
   const onSubmit = async (formData: PropertyFormData) => {
+    console.log("formData", formData);
     setLoading(true);
     setFormError(null);
 
@@ -195,8 +194,9 @@ export default function PropertyForm({
         throw new Error(propertyId ? t("properties.errors.updateFailed") : t("properties.errors.createFailed"));
       }
       const responseData = await response.json();
-      onClose();
+      console.log("responseData", responseData);
       onUpdate(responseData);
+      // onClose();
     } catch (err) {
       setFormError(
         err instanceof Error ? err.message : "Failed to save property"
@@ -207,11 +207,7 @@ export default function PropertyForm({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={propertyId ? t("properties.form.editProperty") : t("properties.form.addNewProperty")}
-    >
+    <div>
       {loading ? (
         <div className="flex justify-center items-center min-h-[250px]">
           <LoadingSpinner />
@@ -330,6 +326,6 @@ export default function PropertyForm({
           </div>
         </form>
       )}
-    </Modal>
+    </div>
   );
 }

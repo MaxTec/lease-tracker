@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,6 +10,7 @@ import Textarea from "@/components/ui/Textarea";
 import { useRouter } from "next/navigation";
 import Modal from "@/components/ui/Modal";
 import { useTranslations } from "next-intl";
+import { useSession } from "next-auth/react";
 
 // Define type from schema
 type TicketFormData = {
@@ -23,13 +24,25 @@ export default function CreateTicketButton() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    if (session?.user?.role) {
+      // eslint-disable-next-line no-console
+      console.log("User role:", session.user.role);
+    }
+  }, [session?.user?.role]);
 
   // Define the validation schema with translations
-  const getTicketSchema = () => z.object({
-    title: z.string().min(1, t("common.errors.required")).max(100, t("tickets.form.titleTooLong")),
-    description: z.string().min(1, t("common.errors.required")),
-    priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-  });
+  const getTicketSchema = () =>
+    z.object({
+      title: z
+        .string()
+        .min(1, t("common.errors.required"))
+        .max(100, t("tickets.form.titleTooLong")),
+      description: z.string().min(1, t("common.errors.required")),
+      priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
+    });
 
   const {
     register,
@@ -73,9 +86,11 @@ export default function CreateTicketButton() {
 
   return (
     <div>
-      <Button onClick={() => setOpen(true)} className="mb-4">
-        {t("tickets.create")}
-      </Button>
+      {session?.user?.role !== "ADMIN" && (
+        <Button onClick={() => setOpen(true)} className="mb-4">
+          {t("tickets.create")}
+        </Button>
+      )}
       <Modal
         isOpen={open}
         onClose={() => setOpen(false)}

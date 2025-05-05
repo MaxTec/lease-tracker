@@ -42,6 +42,14 @@ const getGreeting = (t: (key: string) => string) => {
   return t('weather.greeting.evening');
 };
 
+const WEATHER_STORAGE_KEY = 'weatherData';
+const WEATHER_EXPIRY_MS = 8 * 60 * 60 * 1000; // 8 hours
+
+interface StoredWeatherData {
+  data: WeatherData;
+  timestamp: number;
+}
+
 export default function Weather({ session }: WeatherProps) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +57,30 @@ export default function Weather({ session }: WeatherProps) {
   const t = useTranslations();
 
   useEffect(() => {
+    const getStoredWeather = (): StoredWeatherData | null => {
+      if (typeof window === 'undefined') return null;
+      try {
+        const stored = localStorage.getItem(WEATHER_STORAGE_KEY);
+        // console the expiry time remaining
+        const storedData = stored ? JSON.parse(stored) as StoredWeatherData : null;
+        const expiryTime = storedData ? Date.now() - storedData.timestamp : 0;
+        console.log("expiryTime", expiryTime);
+        if (!stored) return null;
+        return JSON.parse(stored) as StoredWeatherData;
+      } catch {
+        return null;
+      }
+    };
+
+    const setStoredWeather = (data: WeatherData) => {
+      if (typeof window === 'undefined') return;
+      const toStore: StoredWeatherData = {
+        data,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(WEATHER_STORAGE_KEY, JSON.stringify(toStore));
+    };
+
     const fetchWeather = async () => {
       try {
         setError(false);
@@ -74,6 +106,7 @@ export default function Weather({ session }: WeatherProps) {
         
         const data = await response.json();
         setWeather(data);
+        setStoredWeather(data);
       } catch (error) {
         console.error('Error fetching weather:', error);
         setError(true);
@@ -82,10 +115,18 @@ export default function Weather({ session }: WeatherProps) {
       }
     };
 
-    fetchWeather();
-    // Refresh weather every 30 minutes
-    const interval = setInterval(fetchWeather, 30 * 60 * 1000);
-    return () => clearInterval(interval);
+    const checkAndLoadWeather = () => {
+      const stored = getStoredWeather();
+      if (stored && Date.now() - stored.timestamp < WEATHER_EXPIRY_MS) {
+        setWeather(stored.data);
+        setLoading(false);
+      } else {
+        console.log("fetching weather");
+        fetchWeather();
+      }
+    };
+
+    checkAndLoadWeather();
   }, []);
 
   if (loading) {

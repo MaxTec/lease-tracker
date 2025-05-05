@@ -1,20 +1,30 @@
 "use client";
 
+import { FaSpinner } from "react-icons/fa";
+import type { FC } from "react";
+
 interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg";
-  color?: string; // Color of the spinner
+  color?: string; // Tailwind color class, e.g., 'text-gray-500'
 }
 
-export default function LoadingSpinner({ size = "md" }: LoadingSpinnerProps) {
-  const sizeClasses = {
-    sm: "h-4 w-4", // Adjusted sizes for Tailwind compatibility
-    md: "h-8 w-8",
-    lg: "h-12 w-12",
-  };
+const sizeClasses: Record<NonNullable<LoadingSpinnerProps["size"]>, string> = {
+  sm: "text-lg", // ~1.125rem
+  md: "text-3xl", // ~1.875rem
+  lg: "text-5xl", // ~3rem
+};
 
+const LoadingSpinner: FC<LoadingSpinnerProps> = ({ size = "md", color = "text-gray-500" }) => {
   return (
-    <div
-      className={`animate-spin rounded-full border-b-2 border-[var(--tw-border-color)] ${sizeClasses[size]}`}
-    ></div>
+    <FaSpinner
+      className={`animate-spin ${sizeClasses[size]} ${color}`}
+      role="status"
+      aria-label="Loading"
+      tabIndex={0}
+      focusable="false"
+      data-testid="loading-spinner"
+    />
   );
-}
+};
+
+export default LoadingSpinner;

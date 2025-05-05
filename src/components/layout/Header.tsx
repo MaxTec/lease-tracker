@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
-// import Weather from "./Weather";
+import Weather from "./Weather";
 import Logo from "../ui/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslations } from "next-intl";
@@ -77,8 +77,10 @@ export default function Header() {
             {session?.user && (
               <div className='flex items-center space-x-3 border-l pl-6'>
                 <div className='text-right'>
-                  <div className='text-sm font-medium text-gray-900'>{session.user.name}</div>
-                  <div className='text-xs text-gray-500'>{session.user.role}</div>
+                  {/* <div className='text-sm font-medium text-gray-900'>{session.user.name}</div>
+                  <div className='text-xs text-gray-500'>{session.user.role}</div> */}
+                  <Weather session={session} />
+                    
                 </div>
                 <button
                   className='text-gray-600 hover:text-gray-900'

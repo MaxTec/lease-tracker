@@ -39,7 +39,9 @@ export default function LeasesPage() {
         setLeases(Array.isArray(data) ? data : [data]);
       } catch (err) {
         console.error("Error fetching leases:", err);
-        setError(err instanceof Error ? err.message : t("leases.errors.fetchFailed"));
+        setError(
+          err instanceof Error ? err.message : t("leases.errors.fetchFailed")
+        );
       } finally {
         setLoading(false);
       }
@@ -57,7 +59,9 @@ export default function LeasesPage() {
       key: "property",
       label: t("leases.list.property"),
       render: (lease: Lease) =>
-        `${lease.unit.property.name} - ${t("leases.list.unit")} ${lease.unit.unitNumber}`,
+        `${lease.unit.property.name} - ${t("leases.list.unit")} ${
+          lease.unit.unitNumber
+        }`,
     },
     {
       key: "tenant",
@@ -83,7 +87,11 @@ export default function LeasesPage() {
       label: t("leases.list.status"),
       render: (lease: Lease) => {
         const status = lease.status;
-        return <Badge status={getBadgeStatus(status)}>{t(`common.status.${status.toLowerCase()}`)}</Badge>;
+        return (
+          <Badge status={getBadgeStatus(status)}>
+            {t(`common.status.${status.toLowerCase()}`)}
+          </Badge>
+        );
       },
     },
     {
@@ -104,7 +112,9 @@ export default function LeasesPage() {
             <FaFilePdf />
           </Button>
         ) : (
-          <span className="text-gray-400 text-sm">{t("leases.list.noDocument")}</span>
+          <span className="text-gray-400 text-sm">
+            {t("leases.list.noDocument")}
+          </span>
         );
       },
     },
@@ -141,7 +151,7 @@ export default function LeasesPage() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-[200px]">
+        <div className="flex items-center justify-center min-h-[500px]">
           <LoadingSpinner size="lg" color="indigo-600" />
         </div>
       </Layout>
@@ -161,13 +171,17 @@ export default function LeasesPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-gray-800">{t("leases.title")}</h2>
-              <Button onClick={handleAddNewLease}>
-                <FaPlus className="mr-2 inline-block align-middle" />
-                <span className="align-middle">{t("leases.create")}</span>
-              </Button>
-            </div>
+            {leases.length > 0 && (
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  {t("leases.title")}
+                </h2>
+                <Button onClick={handleAddNewLease}>
+                  <FaPlus className="mr-2 inline-block align-middle" />
+                  <span className="align-middle">{t("leases.create")}</span>
+                </Button>
+              </div>
+            )}
 
             {leases.length > 0 ? (
               <Table

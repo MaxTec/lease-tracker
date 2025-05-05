@@ -14,6 +14,7 @@ import PopConfirm from "@/components/ui/PopConfirm";
 import { useDevice } from "@/contexts/DeviceContext";
 import { Tenant } from "@/types/tenant";
 import { useTranslations } from "next-intl";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function TenantsPage() {
   const t = useTranslations();
@@ -157,8 +158,8 @@ export default function TenantsPage() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-[200px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="flex items-center justify-center min-h-[500px]">
+          <LoadingSpinner size="lg" color="indigo-600" />
         </div>
       </Layout>
     );
@@ -178,11 +179,15 @@ export default function TenantsPage() {
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-gray-800">{t("tenants.title")}</h2>
-              <Button onClick={handleAddTenant}>
-                <FaPlus className="mr-2 inline-block align-middle" />
-                <span className="align-middle">{t("tenants.create")}</span>
-              </Button>
+              <h2 className="text-2xl font-semibold text-gray-800">
+                {t("tenants.title")}
+              </h2>
+              {tenants.length > 0 && (
+                <Button onClick={handleAddTenant}>
+                  <FaPlus className="mr-2 inline-block align-middle" />
+                  <span className="align-middle">{t("tenants.create")}</span>
+                </Button>
+              )}
             </div>
 
             {tenants.length > 0 ? (
@@ -222,13 +227,11 @@ export default function TenantsPage() {
         isOpen={isDeleteConfirmOpen}
         onClose={() => setIsDeleteConfirmOpen(false)}
         onConfirm={handleDeleteConfirm}
-        title="Delete Tenant"
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t("tenants.deleteConfirm.title")}
+        confirmText={t("tenants.deleteConfirm.confirm")}
+        cancelText={t("tenants.deleteConfirm.cancel")}
       >
-        <p className="text-gray-600">
-          Are you sure you want to delete this tenant? This action cannot be undone.
-        </p>
+        <p className="text-gray-600">{t("tenants.confirmDelete")}</p>
       </PopConfirm>
     </Layout>
   );
