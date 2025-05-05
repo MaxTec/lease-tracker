@@ -21,6 +21,26 @@ interface PropertyFormData {
   units: PropertyUnit[];
 }
 
+// Define the Zod schema for Property
+const propertySchema = z.object({
+  name: z.string().min(1, "Property name is required"),
+  address: z.string().min(1, "Address is required"),
+  type: z.string().min(1, "Property type is required"),
+  landlordId: z.string().optional(),
+  units: z
+    .array(
+      z.object({
+        unitNumber: z.string().min(1, "required"),
+        bedrooms: z.string(),
+        bathrooms: z.string(),
+        squareFeet: z.string(),
+      })
+    )
+    .min(1, "At least one unit is required"),
+});
+
+type PropertyFormData = z.infer<typeof propertySchema>;
+
 interface Landlord {
   id: number;
   user: {
@@ -65,7 +85,6 @@ export default function PropertyForm({
     register,
     handleSubmit,
     control,
-    setValue,
     reset,
     formState: { errors },
   } = useForm<PropertyFormData>({
@@ -78,9 +97,10 @@ export default function PropertyForm({
       units: [{ unitNumber: "", bedrooms: "", bathrooms: "", squareFeet: "" }],
     },
   });
+
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "units", // Name of the field array
+    name: "units",
   });
 
   const [landlords, setLandlords] = useState<Landlord[]>([]);
@@ -102,54 +122,59 @@ export default function PropertyForm({
           const propertyRes = await fetch(`/api/properties/${propertyId}`);
           if (!propertyRes.ok) throw new Error(t("properties.errors.fetchFailed"));
           const propertyData = await propertyRes.json();
-          
-          // Convert data for the form
+
+          // Convert numbers to strings for form data
           const formData: PropertyFormData = {
-            ...propertyData,
+            name: propertyData.name,
+            address: propertyData.address,
+            type: propertyData.type,
             landlordId: String(propertyData.landlordId),
-            units: propertyData.units.map((unit: PropertyUnit) => ({
-              unitNumber: unit.unitNumber,
-              bedrooms: String(unit.bedrooms),
-              bathrooms: String(unit.bathrooms),
-              squareFeet: String(unit.squareFeet),
-            })),
+            units: propertyData.units.map(
+              (unit: {
+                unitNumber: string;
+                bedrooms: number;
+                bathrooms: number;
+                squareFeet: number;
+              }) => ({
+                unitNumber: unit.unitNumber,
+                bedrooms: String(unit.bedrooms),
+                bathrooms: String(unit.bathrooms),
+                squareFeet: String(unit.squareFeet),
+              })
+            ),
           };
-          
+
           reset(formData);
-          setLoading(false);
-        } else {
-          reset({
-            name: "",
-            address: "",
-            type: "",
-            landlordId: "",
-            units: [{ unitNumber: "", bedrooms: "", bathrooms: "", squareFeet: "" }],
-          });
-          setLoading(false);
         }
       } catch (err) {
-        setFormError(t("properties.errors.loadFormFailed"));
+        setFormError(
+          err instanceof Error ? err.message : "Failed to load form data"
+        );
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
-  }, [propertyId, setValue, append, reset, t]);
+  }, [propertyId, append, reset, t]);
 
   const onSubmit = async (formData: PropertyFormData) => {
     setLoading(true);
     setFormError(null);
 
     try {
-      // Convert form data to API format
-      const apiData: Property = {
+      // Convert string values to numbers for API
+      const apiData = {
         ...formData,
-        landlordId: formData.landlordId ? Number(formData.landlordId) : 0,
-        units: formData.units.map(unit => ({
+        landlordId: formData.landlordId
+          ? parseInt(formData.landlordId, 10)
+          : undefined,
+        units: formData.units.map((unit) => ({
           ...unit,
-          bedrooms: unit.bedrooms,
-          bathrooms: unit.bathrooms,
-          squareFeet: unit.squareFeet
+          bedrooms: parseInt(unit.bedrooms, 10) || 0,
+          bathrooms: parseInt(unit.bathrooms, 10) || 0,
+          squareFeet: parseInt(unit.squareFeet, 10) || 0,
         })),
       };
 
@@ -173,7 +198,9 @@ export default function PropertyForm({
       onClose();
       onUpdate(responseData);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : propertyId ? t("properties.errors.updateFailed") : t("properties.errors.createFailed"));
+      setFormError(
+        err instanceof Error ? err.message : "Failed to save property"
+      );
     } finally {
       setLoading(false);
     }

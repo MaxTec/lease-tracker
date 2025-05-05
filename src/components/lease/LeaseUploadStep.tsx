@@ -5,7 +5,7 @@ import { FiUpload } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 
 const LeaseUploadStep = () => {
-  const { register, setValue, watch } = useFormContext();
+  const { setValue, watch } = useFormContext();
   const signedLeaseFile = watch("signedLeaseFile");
 
   const onDrop = useCallback(

@@ -17,6 +17,7 @@ import { useTranslations } from "next-intl";
 
 const leaseSchema = z
   .object({
+    propertyId: z.string().nonempty("Property is required"),
     unitId: z.string().nonempty("Unit is required"),
     tenantId: z.string().nonempty("Tenant is required"),
     startDate: z.string().nonempty("Start date is required"),
@@ -170,7 +171,7 @@ export default function NewLeasePage() {
     console.log("fieldsToValidate", fieldsToValidate);
     const isStepValid = await trigger(fieldsToValidate);
     console.log("isStepValid", isStepValid);
-    if (!isStepValid) {
+    if (!isStepValid && currentStep > 0) {
       Object.values(errors).forEach((error) => {
         if (error) {
           toast.error(error.message as string);
@@ -297,14 +298,16 @@ export default function NewLeasePage() {
 
                   {currentStep < steps.length - 1 ? (
                     <Button type="button" onClick={nextStep}>
-                      {t("common.buttons.next")}
+                      {/* {t("common.buttons.next")} */}
+                      Next
                     </Button>
                   ) : (
                     <Button
                       type="submit"
                       isLoading={isSubmitting}
                     >
-                      {t("leases.new.submit")}
+                      {/* {t("leases.new.submit")} */}
+                      Submit
                     </Button>
                   )}
                 </div>

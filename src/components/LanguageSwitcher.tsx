@@ -35,8 +35,8 @@ export default function LanguageSwitcher() {
 
   // Language display names and country flags
   const languageData: Record<Locale, { name: string, flagCode: string }> = {
-    en: { name: 'English', flagCode: 'US' },
-    es: { name: 'Español', flagCode: 'MX' }
+    en: { name: 'En', flagCode: 'US' },
+    es: { name: 'Es', flagCode: 'MX' }
   };
 
   return (

@@ -207,7 +207,7 @@
       "bedrooms": "Habitaciones",
       "bathrooms": "Baños",
       "squareFeet": "m²",
-      "addNewProperty": "Agregar Nueva Propiedad",
+      "addNewProperty": " Nueva Propiedad",
       "editProperty": "Editar Propiedad",
       "createProperty": "Crear Propiedad",
       "updateProperty": "Actualizar Propiedad",
@@ -216,7 +216,7 @@
   },
   "leases": {
     "title": "Contratos",
-    "create": "Agregar Nuevo Contrato",
+    "create": "Nuevo Contrato",
     "edit": "Editar contrato",
     "details": "Detalles del contrato",
     "list": {
@@ -252,7 +252,7 @@
       "hasExistingLeaseHint": "Marque esto si ya tiene un contrato de arrendamiento firmado"
     },
     "new": {
-      "title": "Crear Nuevo Contrato",
+      "title": "Nuevo Contrato",
       "submit": "Crear Contrato",
       "steps": {
         "details": {
@@ -279,7 +279,7 @@
   },
   "tenants": {
     "title": "Inquilinos",
-    "create": "Agregar Nuevo Inquilino",
+    "create": "Nuevo Inquilino",
     "edit": "Editar Inquilino",
     "details": "Detalles del inquilino",
     "list": "Lista de inquilinos",
@@ -313,13 +313,13 @@
       "emergencyPhone": "Teléfono de Emergencia",
       "employmentInfo": "Información de Empleo",
       "saving": "Guardando...",
-      "createTenant": "Agregar Inquilino",
+      "createTenant": "Nuevo Inquilino",
       "updateTenant": "Actualizar Inquilino"
     }
   },
   "landlords": {
     "title": "Propietarios",
-    "create": "Agregar Nuevo Propietario",
+    "create": "Nuevo Propietario",
     "edit": "Editar Propietario",
     "details": "Detalles del propietario",
     "list": "Lista de propietarios",
