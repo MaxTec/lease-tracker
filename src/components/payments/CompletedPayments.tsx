@@ -3,8 +3,9 @@ import Table from "@/components/ui/Table";
 import EmptyState from "@/components/ui/EmptyState";
 import { FaCheckCircle } from "react-icons/fa";
 import { FORMAT_DATE } from "@/constants";
-import { format } from "date-fns";
+import { formatDate } from "@/utils/dateUtils";
 import Link from "next/link";
+import { formatCurrencyMXN } from "@/utils/numberUtils";  
 interface Lease {
   id: number;
   startDate: string;
@@ -62,20 +63,20 @@ const CompletedPayments: React.FC<CompletedPaymentsProps> = ({ payments }) => {
     {
       key: "amount",
       label: "Amount",
-      render: (payment: Payment) => `$${payment.amount.toFixed(2)}`,
+      render: (payment: Payment) => formatCurrencyMXN(payment.amount),
     },
     {
       key: "dueDate",
       label: "Due Date",
       render: (payment: Payment) =>
-        format(new Date(payment.dueDate), FORMAT_DATE),
+        formatDate(payment.dueDate, FORMAT_DATE),
     },
     {
       key: "paidDate",
       label: "Paid Date",
       render: (payment: Payment) =>
         payment.paidDate
-          ? format(new Date(payment.paidDate), FORMAT_DATE)
+          ? formatDate(payment.paidDate, FORMAT_DATE)
           : "-",
     },
     {
@@ -84,11 +85,11 @@ const CompletedPayments: React.FC<CompletedPaymentsProps> = ({ payments }) => {
       render: (payment: Payment) =>
         payment.paymentMethod ? payment.paymentMethod.replace("_", " ") : "-",
     },
-    {
-      key: "transactionId",
-      label: "Transaction ID",
-      render: (payment: Payment) => payment.transactionId || "-",
-    },
+    // {
+    //   key: "transactionId",
+    //   label: "Transaction ID",
+    //   render: (payment: Payment) => payment.transactionId || "-",
+    // },
     {
       key: "voucher",
       label: "Voucher",

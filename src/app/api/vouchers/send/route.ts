@@ -56,24 +56,36 @@ export async function POST(request: NextRequest) {
     const amount = Number(voucher.payment.amount);
     const voucherUrl = `${process.env.NEXT_PUBLIC_APP_URL}/vouchers/${voucher.voucherNumber}`;
 
+    // Use provided emails if valid, otherwise tenant's email
+    let recipientEmails: string[] = [tenantEmail];
+    if (Array.isArray(data.emails) && data.emails.length > 0) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      for (const email of data.emails) {
+        if (!emailRegex.test(email)) {
+          return NextResponse.json({ error: `Invalid email address: ${email}` }, { status: 400 });
+        }
+      }
+      recipientEmails = data.emails;
+    }
+
     await sgMail.send({
-      to: tenantEmail,
+      to: recipientEmails,
       from: process.env.SENDGRID_FROM_EMAIL || "noreply@example.com",
       cc: "max.tec92@hotmail.com",
-      subject: `Payment Voucher for ${propertyName} - Unit ${unitNumber}`,
+      subject: `Comprobante de Pago para ${propertyName} - Unidad ${unitNumber}`,
       html: `
-                <h1>Payment Voucher</h1>
-                <p>Dear ${tenantName},</p>
-                <p>Your payment voucher for ${propertyName} - Unit ${unitNumber} is ready.</p>
-                <p>Amount: $${amount}</p>
-                <p>Please find your payment voucher attached to this email.</p>
-                <p>You can also view your voucher online at: <a href="${voucherUrl}">${voucherUrl}</a></p>
-                <p>Thank you for your payment!</p>
+                <h1>Comprobante de Pago</h1>
+                <p>Estimado/a ${tenantName},</p>
+                <p>Su comprobante de pago para ${propertyName} - Unidad ${unitNumber} está listo.</p>
+                <p>Monto: $${amount}</p>
+                <p>Por favor, encuentre su comprobante de pago adjunto a este correo electrónico.</p>
+                <p>También puede ver su comprobante en línea en: <a href="${voucherUrl}">${voucherUrl}</a></p>
+                <p>¡Gracias por su pago!</p>
             `,
       attachments: [
         {
           content: data.pdfBase64,
-          filename: `voucher-${voucher.voucherNumber}.pdf`,
+          filename: `comprobante-${voucher.voucherNumber}.pdf`,
           type: "application/pdf",
           disposition: "attachment",
         },
@@ -90,7 +102,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      message: `Voucher ${voucher.voucherNumber} sent to ${tenantEmail}`,
+      message: `Voucher ${voucher.voucherNumber} sent to ${recipientEmails.join(", ")}`,
       voucher: updatedVoucher,
     });
   } catch (error) {

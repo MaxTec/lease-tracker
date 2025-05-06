@@ -16,14 +16,17 @@ const sizeClasses: Record<NonNullable<LoadingSpinnerProps["size"]>, string> = {
 
 const LoadingSpinner: FC<LoadingSpinnerProps> = ({ size = "md", color = "text-gray-500" }) => {
   return (
-    <FaSpinner
-      className={`animate-spin ${sizeClasses[size]} ${color}`}
-      role="status"
-      aria-label="Loading"
-      tabIndex={0}
-      focusable="false"
-      data-testid="loading-spinner"
-    />
+    <div className="flex flex-col items-center gap-2">
+      <FaSpinner
+        className={`animate-spin ${sizeClasses[size]} ${color}`}
+        role="status"
+        aria-label="Loading"
+        tabIndex={0}
+        focusable="false"
+        data-testid="loading-spinner"
+      />
+      <span className={`${color} text-sm`}>Loading...</span>
+    </div>
   );
 };
 

@@ -17,7 +17,7 @@ model User {
   email         String    @unique
   password      String?
   isActive      Boolean    @default(false)
-  role          UserRole  @default(USER)
+  role          UserRole  @default(TENANT)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   landlord      Landlord?
@@ -27,7 +27,8 @@ model User {
 
 enum UserRole {
   ADMIN
-  USER
+  LANDLORD
+  TENANT
 }
 
 // Landlord model

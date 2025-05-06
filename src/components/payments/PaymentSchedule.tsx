@@ -8,6 +8,7 @@ import { formatDate } from "@/utils/dateUtils";
 import { FORMAT_DATE } from "@/constants";
 import { PaymentForm } from "./PaymentForm";
 import Modal from "@/components/ui/Modal";
+import { formatCurrencyMXN } from "@/utils/numberUtils";
 
 interface Lease {
   id: number;
@@ -313,7 +314,7 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
         <div className="flex justify-between items-center">
           <div>
             <div className="text-lg font-semibold">
-              ${payment.amount.toFixed(2)}
+              {formatCurrencyMXN(payment.amount)}
             </div>
             <div className="text-sm text-gray-500">
               Due: {formatDate(payment.dueDate, FORMAT_DATE, "UTC")}{" "}
@@ -328,7 +329,7 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
                   setSelectedPayment(payment);
                   setIsConfirmOpen(true);
                 }}
-                variant="secondary"
+                variant="primary"
                 size="sm"
                 className="ml-2"
               >

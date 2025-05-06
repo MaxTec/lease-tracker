@@ -51,7 +51,7 @@ export default function Header() {
               <Link href='/leases' className='text-gray-600 hover:text-gray-900'>
                 {t("common.navigation.leases")}
               </Link>
-              {session?.user?.role === "ADMIN" && (
+              {session?.user?.role !== "TENANT" && (
                 <>
                   <Link href='/properties' className='text-gray-600 hover:text-gray-900'>
                     {t("common.navigation.properties")}
@@ -59,9 +59,11 @@ export default function Header() {
                   <Link href='/tenants' className='text-gray-600 hover:text-gray-900'>
                     {t("common.navigation.tenants")}
                   </Link>
-                  <Link href='/landlords' className='text-gray-600 hover:text-gray-900'>
-                    {t("common.navigation.landlords")}
-                  </Link>
+                  {session?.user?.role === "ADMIN" && (
+                    <Link href='/landlords' className='text-gray-600 hover:text-gray-900'>
+                      {t("common.navigation.landlords")}
+                    </Link>
+                  )}
                 </>
               )}
               <Link href='/tickets' className='text-gray-600 hover:text-gray-900'>

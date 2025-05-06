@@ -35,7 +35,6 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   onSubmit,
   onClose,
   leaseStartDate,
-  lastPaymentDate,
   initialData,
 }) => {
   const {
@@ -77,21 +76,21 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
       return false;
     }
 
-    if (lastPaymentDate) {
-      const lastPaymentUTC = new Date(
-        Date.UTC(
-          new Date(lastPaymentDate).getUTCFullYear(),
-          new Date(lastPaymentDate).getUTCMonth(),
-          new Date(lastPaymentDate).getUTCDate()
-        )
-      );
-      if (selectedDate < lastPaymentUTC) {
-        setError("paymentDate", {
-          message: "Payment date cannot be before the last payment date",
-        });
-        return false;
-      }
-    }
+    // if (lastPaymentDate) {
+    //   const lastPaymentUTC = new Date(
+    //     Date.UTC(
+    //       new Date(lastPaymentDate).getUTCFullYear(),
+    //       new Date(lastPaymentDate).getUTCMonth(),
+    //       new Date(lastPaymentDate).getUTCDate()
+    //     )
+    //   );
+    //   if (selectedDate < lastPaymentUTC) {
+    //     setError("paymentDate", {
+    //       message: "Payment date cannot be before the last payment date",
+    //     });
+    //     return false;
+    //   }
+    // }
 
     const leaseStartUTC = new Date(
       Date.UTC(
@@ -116,7 +115,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   const handleFormSubmit = (data: PaymentFormData) => {
     if (validatePaymentDate(data.paymentDate)) {
       console.log("data", data);
-        onSubmit(data);
+      onSubmit(data);
     }
   };
 

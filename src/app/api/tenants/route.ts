@@ -2,20 +2,39 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { hash } from "bcryptjs";
 import { UserRole } from "@prisma/client";
-export async function GET() {
+
+export async function GET(request: NextRequest) {
   try {
-    const tenants = await prisma.tenant.findMany({
-      where: {
-        NOT: {
-          leases: {
-            some: {
-              status: {
-                in: ["ACTIVE"],
+    const { searchParams } = new URL(request.url);
+    const userRole = searchParams.get("userRole");
+    const userId = searchParams.get("userId");
+
+    let whereClause = {};
+    if (userRole === "LANDLORD" && userId) {
+      // Find landlordId by userId
+      const landlord = await prisma.landlord.findUnique({
+        where: { userId: parseInt(userId) },
+        select: { id: true },
+      });
+      if (!landlord) {
+        return NextResponse.json([]);
+      }
+      // Only tenants with a lease for a unit in a property owned by this landlord
+      whereClause = {
+        leases: {
+          some: {
+            unit: {
+              property: {
+                landlordId: landlord.id,
               },
             },
           },
         },
-      },
+      };
+    }
+
+    const tenants = await prisma.tenant.findMany({
+      where: whereClause,
       include: {
         user: {
           select: {
@@ -74,7 +93,7 @@ export async function POST(request: NextRequest) {
         name,
         email,
         password: password ? await hash(password, 12) : null,
-        role: "USER" as UserRole,
+        role: "TENANT" as UserRole,
         isActive,
       };
 

@@ -1,15 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
-import { Unit } from "@prisma/client";
+import { Unit, Prisma } from "@prisma/client";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const properties = await prisma.property.findMany({
-      where: {
-        units: {
-          some: {}, // Ensures at least one unit exists
-        },
+    const { searchParams } = new URL(request.url);
+    const userRole = searchParams.get("userRole");
+    const userId = searchParams.get("userId");
+
+    const whereClause: Prisma.PropertyWhereInput = {
+      units: {
+        some: {}, // Ensures at least one unit exists
       },
+    };
+
+    if (userRole === "LANDLORD" && userId) {
+      // Find landlordId by userId
+      const landlord = await prisma.landlord.findUnique({
+        where: { userId: parseInt(userId) },
+        select: { id: true },
+      });
+      if (!landlord) {
+        return NextResponse.json([]);
+      }
+      whereClause.landlordId = landlord.id;
+    }
+
+    const properties = await prisma.property.findMany({
+      where: whereClause,
       include: {
         units: true,
       },

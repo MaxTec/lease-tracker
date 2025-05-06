@@ -9,13 +9,31 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const includePayments = searchParams.get("include") === "payments";
+    const userRole = searchParams.get("userRole");
+    const userId = searchParams.get("userId");
+
+    const whereClause: Prisma.LeaseWhereInput = {
+      status: {
+        in: ["ACTIVE", "PENDING"],
+      },
+    };
+
+    if (userRole === "LANDLORD" && userId) {
+      // Find landlordId by userId
+      const landlord = await prisma.landlord.findUnique({
+        where: { userId: parseInt(userId) },
+        select: { id: true },
+      });
+      if (!landlord) {
+        return NextResponse.json([]);
+      }
+      whereClause.unit = { property: { landlordId: landlord.id } };
+    }
+    // If ADMIN, no extra filter (all leases)
+    // If TENANT, you can add tenantId filter here if needed
 
     const leases = await prisma.lease.findMany({
-      where: {
-        status: {
-          in: ["ACTIVE", "PENDING"],
-        },
-      },
+      where: whereClause,
       include: {
         tenant: {
           include: {

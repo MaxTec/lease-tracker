@@ -540,5 +540,35 @@
     "addProperty": "Add a Property",
     "tenantDisclaimer": "You must add a Tenant before creating a Lease.",
     "addTenant": "Add a Tenant"
+  },
+  "voucherPage": {
+    "sendVoucher": "Send Voucher",
+    "sendSuccess": "Voucher sent successfully!",
+    "success": "Success",
+    "error": "Error",
+    "sendError": "Failed to send voucher",
+    "notFound": "Voucher not found",
+    "recipientEmail": "Recipient Email(s)",
+    "multipleEmailsPlaceholder": "Enter one or more emails, separated by commas",
+    "emailRequired": "At least one email is required",
+    "invalidEmail": "Invalid email address"
+  },
+  "voucherPDF": {
+    "title": "Payment Voucher",
+    "voucherNumber": "Voucher #{number}",
+    "paymentOf": "Payment {current} of {total}",
+    "property": "Property",
+    "unit": "Unit {number}",
+    "address": "Address",
+    "tenant": "Tenant",
+    "name": "Name",
+    "email": "Email",
+    "paymentDetails": "Payment Details",
+    "amount": "Amount",
+    "paymentMethod": "Payment Method",
+    "paidDate": "Paid Date",
+    "transactionId": "Transaction ID",
+    "footer1": "This is an automatically generated payment voucher.",
+    "footer2": "Please keep this for your records."
   }
 } 

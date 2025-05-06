@@ -13,6 +13,7 @@ import { Property, PropertyUnit } from "@/types/property";
 
 // Form data structure
 interface PropertyFormData {
+  id?: number;
   name: string;
   address: string;
   type: string;
@@ -21,24 +22,24 @@ interface PropertyFormData {
 }
 
 // Define the Zod schema for Property
-const propertySchema = z.object({
-  name: z.string().min(1, "Property name is required"),
-  address: z.string().min(1, "Address is required"),
-  type: z.string().min(1, "Property type is required"),
-  landlordId: z.string().optional(),
-  units: z
-    .array(
-      z.object({
-        unitNumber: z.string().min(1, "required"),
-        bedrooms: z.string(),
-        bathrooms: z.string(),
-        squareFeet: z.string(),
-      })
-    )
-    .min(1, "At least one unit is required"),
-});
+// const propertySchema = z.object({
+//   name: z.string().min(1, "Property name is required"),
+//   address: z.string().min(1, "Address is required"),
+//   type: z.string().min(1, "Property type is required"),
+//   landlordId: z.string().optional(),
+//   units: z
+//     .array(
+//       z.object({
+//         unitNumber: z.string().min(1, "required"),
+//         bedrooms: z.string(),
+//         bathrooms: z.string(),
+//         squareFeet: z.string(),
+//       })
+//     )
+//     .min(1, "At least one unit is required"),
+// });
 
-type PropertyFormData = z.infer<typeof propertySchema>;
+// type PropertyFormData = z.infer<typeof propertySchema>;
 
 interface Landlord {
   id: number;
@@ -49,6 +50,7 @@ interface Landlord {
 
 interface PropertyFormProps {
   propertyId?: number;
+  isOpen?: boolean;
   onClose: () => void;
   onUpdate: (data: Property) => void;
 }
@@ -56,6 +58,7 @@ interface PropertyFormProps {
 export default function PropertyForm({
   propertyId,
   onClose,
+
   onUpdate,
 }: PropertyFormProps) {
   const t = useTranslations();
@@ -301,6 +304,7 @@ export default function PropertyForm({
               className="mt-4"
               onClick={() =>
                 append({
+                  id: 0,
                   unitNumber: "",
                   bedrooms: "1",
                   bathrooms: "1",

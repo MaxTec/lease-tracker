@@ -54,6 +54,16 @@ export default function LeaseDetailsStep() {
     setIsMounted(true);
   }, []);
 
+  // Auto-select first unit if more than one unit exists after property selection
+  useEffect(() => {
+    console.log("Units:", units);
+    if (!existingPropertyId) return;
+    if (units.length > 0) {
+      console.log("Setting unitId:", units[0].id);
+      setValue("unitId", units[0].id.toString(), { shouldValidate: true });
+    }
+  }, [units, existingPropertyId, setValue]);
+
   // New effect for validating start date against payment day
   useEffect(() => {
     if (!isMounted) return;

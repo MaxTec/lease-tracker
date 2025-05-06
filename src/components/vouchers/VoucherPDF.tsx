@@ -7,10 +7,9 @@ import {
   StyleSheet,
   Image,
 } from "@react-pdf/renderer";
-import { format } from "date-fns";
-
-// Change the import to use the direct path
-const logoPath = "/logo-lease-tracker.png";
+import { formatDate } from "@/utils/dateUtils";
+import { LOGO_BASE64 } from "@/constants";
+import { formatCurrencyMXN } from "@/utils/numberUtils";
 
 interface Voucher {
   id: string;
@@ -37,6 +36,7 @@ interface Voucher {
           address: string;
         };
       };
+      totalPayments: number;
     };
   };
 }
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   iconPlaceholder: {
-    width: 100,
+    width: 120,
     marginRight: 15,
   },
   titleContainer: {
@@ -185,27 +185,30 @@ const styles = StyleSheet.create({
 
 interface VoucherPDFProps {
   voucher: Voucher;
+  t: (key: string, params?: Record<string, string | number | Date>) => string;
 }
 
-const VoucherPDF: React.FC<VoucherPDFProps> = memo(({ voucher }) => (
+const VoucherPDF: React.FC<VoucherPDFProps> = memo(({ voucher, t }) => (
   <Document>
     <Page size="LETTER" style={styles.page}>
       <View style={styles.header}>
-        <Image src={logoPath} style={styles.iconPlaceholder} />
+        <Image src={LOGO_BASE64} style={styles.iconPlaceholder} />
         <View style={styles.titleContainer}>
           <View>
-            <Text style={styles.title}>Payment Voucher</Text>
+            <Text style={styles.title}>{t("title")}</Text>
             <Text style={styles.voucherNumber}>
-              Voucher #{voucher.voucherNumber}
+              {t("voucherNumber", { number: voucher.voucherNumber })}
             </Text>
           </View>
           <View style={styles.voucherInfo}>
             <Text style={styles.voucherDate}>
-              {format(new Date(), "MMM dd, yyyy")}
+              {formatDate(new Date(), "MMM dd, yyyy")}
             </Text>
             <Text style={styles.voucherNumber}>
-              Payment {voucher.payment.paymentNumber} of{" "}
-              {voucher.payment.lease.totalPayments}
+              {t("paymentOf", {
+                current: voucher.payment.paymentNumber,
+                total: voucher.payment.lease.totalPayments,
+              })}
             </Text>
           </View>
         </View>
@@ -213,15 +216,15 @@ const VoucherPDF: React.FC<VoucherPDFProps> = memo(({ voucher }) => (
 
       <View style={styles.mainContent}>
         <View style={styles.column}>
-          <Text style={styles.sectionTitle}>Property</Text>
+          <Text style={styles.sectionTitle}>{t("property")}</Text>
           <Text style={styles.subtitle}>
             {voucher.payment.lease.unit.property.name}
           </Text>
           <Text style={styles.textBase}>
-            Unit {voucher.payment.lease.unit.unitNumber}
+            {t("unit", { number: voucher.payment.lease.unit.unitNumber })}
           </Text>
           <View style={styles.inlineContainer}>
-            <Text style={styles.inlineLabel}>Address:</Text>
+            <Text style={styles.inlineLabel}>{t("address")}:</Text>
             <Text style={styles.inlineText}>
               {voucher.payment.lease.unit.property.address}
             </Text>
@@ -229,15 +232,15 @@ const VoucherPDF: React.FC<VoucherPDFProps> = memo(({ voucher }) => (
         </View>
 
         <View style={styles.column}>
-          <Text style={styles.sectionTitle}>Tenant</Text>
+          <Text style={styles.sectionTitle}>{t("tenant")}</Text>
           <View style={styles.inlineContainer}>
-            <Text style={styles.inlineLabel}>Name:</Text>
+            <Text style={styles.inlineLabel}>{t("name")}:</Text>
             <Text style={styles.inlineText}>
               {voucher.payment.lease.tenant.user.name}
             </Text>
           </View>
           <View style={styles.inlineContainer}>
-            <Text style={styles.inlineLabel}>Email:</Text>
+            <Text style={styles.inlineLabel}>{t("email")}:</Text>
             <Text style={styles.inlineText}>
               {voucher.payment.lease.tenant.user.email}
             </Text>
@@ -245,28 +248,28 @@ const VoucherPDF: React.FC<VoucherPDFProps> = memo(({ voucher }) => (
         </View>
       </View>
 
-      <Text style={styles.paymentDetailsTitle}>Payment Details</Text>
+      <Text style={styles.paymentDetailsTitle}>{t("paymentDetails")}</Text>
       <View style={styles.paymentDetailsContainer}>
         <View style={styles.paymentGrid}>
           <View style={styles.paymentGridItem}>
-            <Text style={styles.label}>Amount</Text>
-            <Text style={styles.textBase}>${voucher.payment.amount}</Text>
+            <Text style={styles.label}>{t("amount")}</Text>
+            <Text style={styles.textBase}>{formatCurrencyMXN(voucher.payment.amount)}</Text>
           </View>
           <View style={styles.paymentGridItem}>
-            <Text style={styles.label}>Payment Method</Text>
+            <Text style={styles.label}>{t("paymentMethod")}</Text>
             <Text style={styles.textBase}>
               {voucher.payment.paymentMethod?.replace("_", " ")}
             </Text>
           </View>
           <View style={styles.paymentGridItem}>
-            <Text style={styles.label}>Paid Date</Text>
+            <Text style={styles.label}>{t("paidDate")}</Text>
             <Text style={styles.textBase}>
-              {format(new Date(voucher.payment.paidDate), "MMM dd, yyyy")}
+              {formatDate(voucher.payment.paidDate, "MMM dd, yyyy")}
             </Text>
           </View>
           {voucher.payment.transactionId && (
             <View style={styles.paymentGridItem}>
-              <Text style={styles.label}>Transaction ID</Text>
+              <Text style={styles.label}>{t("transactionId")}</Text>
               <Text style={styles.textBase}>
                 {voucher.payment.transactionId}
               </Text>
@@ -274,27 +277,9 @@ const VoucherPDF: React.FC<VoucherPDFProps> = memo(({ voucher }) => (
           )}
         </View>
       </View>
-
-      {/* <View style={styles.signatureSection}>
-        <View style={styles.signatureRow}>
-          <View style={styles.signatureBox}>
-            <View style={styles.signatureLine} />
-            <Text style={styles.signatureLabel}>Landlord Signature</Text>
-          </View>
-          <View style={styles.signatureBox}>
-            <View style={styles.signatureLine} />
-            <Text style={styles.signatureLabel}>Tenant Signature</Text>
-          </View>
-        </View>
-      </View> */}
-
       <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          This is an automatically generated payment voucher.
-        </Text>
-        <Text style={styles.footerText}>
-          Please keep this for your records.
-        </Text>
+        <Text style={styles.footerText}>{t("footer1")}</Text>
+        <Text style={styles.footerText}>{t("footer2")}</Text>
       </View>
     </Page>
   </Document>
@@ -303,12 +288,3 @@ const VoucherPDF: React.FC<VoucherPDFProps> = memo(({ voucher }) => (
 VoucherPDF.displayName = "VoucherPDF";
 
 export default VoucherPDF;
-
-// Recibo otorgado en calidad de PARTE ARRENDADORA por Maximiliano Tec Cocom, a la atención de
-// Jose Luis Tec Cocom en calidad de PARTE ARRENDATARIA.
-// Por este medio, Maximiliano Tec Cocom declara haber recibido de la PARTE ARRENDATARIA el pago de
-// la renta de la vivienda ubicada en: Reg. 219, Mz 27 Lote 14, calle 103.
-// Dicha renta corresponde al período comprendido entre los días 01 de junio y 30 de junio del 2024; período
-// por el cual se ha generado un monto total de $2500 MXN, exclusivamente por concepto de arrendamiento
-// del inmueble.
-// Asimismo, declara la PARTE ARRENDADORA que el pago fue recibido el día 15/07/24 en efectivo.

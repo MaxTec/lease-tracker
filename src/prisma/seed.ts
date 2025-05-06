@@ -29,7 +29,7 @@ async function main() {
             name: 'John Smith',
             email: 'john.smith@example.com',
             password: landlordPassword,
-            role: 'USER',
+            role: 'LANDLORD',
             landlord: {
                 create: {
                     companyName: 'Smith Properties',
@@ -49,7 +49,7 @@ async function main() {
             name: 'Alice Johnson',
             email: 'alice.johnson@example.com',
             password: tenant1Password,
-            role: 'USER',
+            role: 'TENANT',
             tenant: {
                 create: {
                     phone: '555-0201',
@@ -67,7 +67,7 @@ async function main() {
             name: 'Bob Wilson',
             email: 'bob.wilson@example.com',
             password: tenant2Password,
-            role: 'USER',
+            role: 'TENANT',
             tenant: {
                 create: {
                     phone: '555-0301',

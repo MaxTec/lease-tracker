@@ -540,5 +540,35 @@
     "addProperty": "Agregar una propiedad",
     "tenantDisclaimer": "Debe agregar un inquilino antes de crear un contrato de arrendamiento.",
     "addTenant": "Agregar un inquilino"
+  },
+  "voucherPage": {
+    "sendVoucher": "Enviar comprobante",
+    "sendSuccess": "¡Comprobante enviado exitosamente!",
+    "success": "Éxito",
+    "error": "Error",
+    "sendError": "No se pudo enviar el comprobante",
+    "notFound": "Comprobante no encontrado",
+    "recipientEmail": "Correo(s) destinatario(s)",
+    "multipleEmailsPlaceholder": "Ingrese uno o más correos, separados por comas",
+    "emailRequired": "Se requiere al menos un correo electrónico",
+    "invalidEmail": "Correo electrónico no válido"
+  },
+  "voucherPDF": {
+    "title": "Comprobante de Pago",
+    "voucherNumber": "Comprobante #{number}",
+    "paymentOf": "Pago {current} de {total}",
+    "property": "Propiedad",
+    "unit": "Unidad {number}",
+    "address": "Dirección",
+    "tenant": "Inquilino",
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "paymentDetails": "Detalles del Pago",
+    "amount": "Monto",
+    "paymentMethod": "Método de Pago",
+    "paidDate": "Fecha de Pago",
+    "transactionId": "ID de Transacción",
+    "footer1": "Este es un comprobante de pago generado automáticamente.",
+    "footer2": "Por favor, conserve este comprobante para sus registros."
   }
 } 

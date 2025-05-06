@@ -6,9 +6,10 @@ import Breadcrumbs from '@/components/ui/Breadcrumbs';
 
 interface LayoutProps {
   children: React.ReactNode;
+  showBreadcrumbs?: boolean;
 }
 
-export default function Layout({ children }: LayoutProps) {
+export default function Layout({ children, showBreadcrumbs = true }: LayoutProps) {
   return (
     <>
       <Toaster position="top-right" />
@@ -16,7 +17,7 @@ export default function Layout({ children }: LayoutProps) {
         <Header />
         
         <main className="flex-grow container mx-auto px-4 py-4">
-          <Breadcrumbs />
+          {showBreadcrumbs && <Breadcrumbs />}
           {children}
         </main>
 

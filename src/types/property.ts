@@ -1,5 +1,5 @@
 export interface PropertyUnit {
-    id?: number;
+    id: number;
     unitNumber: string;
     bedrooms: string;
     bathrooms: string;
@@ -8,7 +8,7 @@ export interface PropertyUnit {
 }
 
 export interface Property {
-    id?: number;
+    id: number;
     name: string;
     address: string;
     type: string;

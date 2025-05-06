@@ -91,3 +91,94 @@ export const getOrdinal = (
 
   return num.toString(); // fallback
 };
+
+/**
+ * Formats a Mexican phone number to a standard readable format.
+ * Supports local (10 digits) and international (+52 or 52 prefix) formats.
+ *
+ * @param phoneNumber - The phone number as a string or number
+ * @param options - Optional formatting options
+ *   withCountryCode: boolean (default: false) - Force output with country code
+ * @returns The formatted phone number string, or the original input if invalid
+ */
+export type FormatPhoneNumberOptions = {
+  withCountryCode?: boolean;
+};
+
+export const formatPhoneNumber = (
+  phoneNumber: string | number,
+  options: FormatPhoneNumberOptions = {}
+): string => {
+  const { withCountryCode = false } = options;
+  const raw = String(phoneNumber).replace(/\D/g, "");
+
+  // Handle country code
+  let number = raw;
+  let hasCountryCode = false;
+
+  if (number.startsWith("52")) {
+    hasCountryCode = true;
+    number = number.slice(2);
+  } else if (number.startsWith("521")) {
+    hasCountryCode = true;
+    number = number.slice(3);
+  }
+
+  if (number.length !== 10) {
+    // Invalid length for Mexican numbers
+    return String(phoneNumber);
+  }
+
+  const areaCode = number.slice(0, 3);
+  const firstPart = number.slice(3, 6);
+  const secondPart = number.slice(6, 10);
+  const formatted = `(${areaCode}) ${firstPart}-${secondPart}`;
+
+  if (hasCountryCode || withCountryCode) {
+    return `+52 ${formatted}`;
+  }
+
+  return formatted;
+};
+
+/**
+ * Formats a number as Mexican Peso (MXN) currency.
+ *
+ * @param value - The number to format
+ * @param options - Optional formatting options
+ *   showDecimals: boolean (default: true) - Show decimals
+ *   showSymbol: boolean (default: true) - Show the $ symbol
+ *   minFractionDigits: number (default: 2)
+ *   maxFractionDigits: number (default: 2)
+ * @returns The formatted currency string
+ */
+export type FormatCurrencyMXNOptions = {
+  showDecimals?: boolean;
+  showSymbol?: boolean;
+  minFractionDigits?: number;
+  maxFractionDigits?: number;
+};
+
+export const formatCurrencyMXN = (
+  value: number | string,
+  options: FormatCurrencyMXNOptions = {}
+): string => {
+  const {
+    showDecimals = true,
+    showSymbol = true,
+    minFractionDigits = showDecimals ? 2 : 0,
+    maxFractionDigits = showDecimals ? 2 : 0,
+  } = options;
+
+  const numberValue = typeof value === "string" ? Number(value) : value;
+  if (isNaN(numberValue)) return String(value);
+
+  const formatter = new Intl.NumberFormat("es-MX", {
+    style: showSymbol ? "currency" : "decimal",
+    currency: "MXN",
+    minimumFractionDigits: minFractionDigits,
+    maximumFractionDigits: maxFractionDigits,
+  });
+
+  return formatter.format(numberValue);
+};

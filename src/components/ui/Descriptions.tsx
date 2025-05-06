@@ -4,6 +4,7 @@ interface DescriptionItemProps {
   label: string;
   children: ReactNode;
   span?: number;
+  icon?: ReactNode;
 }
 
 interface DescriptionsProps {
@@ -11,14 +12,22 @@ interface DescriptionsProps {
   items: DescriptionItemProps[];
   bordered?: boolean;
   column?: number;
+  icon?: ReactNode;
   layout?: "horizontal" | "vertical";
   className?: string;
 }
 
-const DescriptionItem = ({ label, children }: DescriptionItemProps) => {
+const DescriptionItem = ({ label, children, icon }: DescriptionItemProps) => {
   return (
     <div className="flex flex-col space-y-1">
-      <span className="text-sm font-medium text-gray-500">{label}</span>
+      <span className="flex items-center gap-2 text-sm font-medium text-gray-500">
+        {icon && (
+          <span aria-hidden="true" className="inline-flex">
+            {icon}
+          </span>
+        )}
+        {label}
+      </span>
       <div className="text-gray-900">{children}</div>
     </div>
   );

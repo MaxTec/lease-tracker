@@ -44,3 +44,26 @@ export const toUTCString = (localDate: Date): string => {
   ));
   return formatInTimeZone(utcDate, 'UTC', 'yyyy-MM-dd');
 };
+
+export type SupportedLocale = 'es' | 'en';
+
+/**
+ * Devuelve una etiqueta legible para un día del mes, internacionalizada.
+ * @param day Día del mes (1-31), o 0 para el último día
+ * @param locale Idioma ('es' o 'en'), por defecto 'es'
+ * @returns Etiqueta legible en el idioma seleccionado
+ */
+export const getDayOfMonthLabel = (
+  day: number,
+  locale: SupportedLocale = 'es'
+): string => {
+  if (locale === 'en') {
+    if (day === 1) return 'First day of the month';
+    if (day === 0) return 'Last day of the month';
+    return `Every ${day} of the month`;
+  }
+  // Default: Spanish
+  if (day === 1) return 'Primer día del mes';
+  if (day === 0) return 'Último día del mes';
+  return `Cada ${day} del mes`;
+};

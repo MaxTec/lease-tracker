@@ -39,6 +39,12 @@ export const authOptions: NextAuthOptions = {
                     throw new Error('Invalid credentials');
                 }
 
+                // Only allow users with valid roles
+                const validRoles = ['LANDLORD', 'TENANT', 'ADMIN'];
+                if (!user.role || !validRoles.includes(user.role)) {
+                    throw new Error('User does not have a valid role');
+                }
+
                 const isPasswordValid = await compare(credentials.password, user.password);
 
                 if (!isPasswordValid) {
@@ -63,6 +69,10 @@ export const authOptions: NextAuthOptions = {
                     id: user.id,
                     role: user.role,
                 };
+            }
+            // Ensure token always has a valid role
+            if (!token.role || !['LANDLORD', 'TENANT', 'ADMIN'].includes(token.role as string)) {
+                token.role = 'TENANT'; // fallback to TENANT if missing/invalid
             }
             return token;
         },

@@ -3,13 +3,82 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const userRole = searchParams.get("userRole");
+    const userId = searchParams.get("userId");
+
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    console.log('session', session);
+    // if (!session) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
+
+    console.log('userRole', userRole);
+    console.log('userId', userId);
+
+    // LANDLORD: get all tickets for properties owned by this landlord
+    if (userRole === "LANDLORD" && userId) {
+      const landlord = await prisma.landlord.findUnique({
+        where: { userId: parseInt(userId) },
+        select: { id: true },
+      });
+      if (!landlord) {
+        return NextResponse.json([]);
+      }
+      const tickets = await prisma.ticket.findMany({
+        where: {
+          property: {
+            landlordId: landlord.id,
+          },
+        },
+        include: {
+          property: true,
+          unit: true,
+          comments: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      return NextResponse.json(tickets);
     }
 
+    // ADMIN: return all tickets
+    if (userRole === "ADMIN") {
+      const tickets = await prisma.ticket.findMany({
+        include: {
+          property: true,
+          unit: true,
+          comments: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      return NextResponse.json(tickets);
+    }
+
+    // TENANT: return only tickets for the tenant (current logic)
     const user = await prisma.user.findUnique({
       where: { email: session.user?.email || "" },
       include: { tenant: true },

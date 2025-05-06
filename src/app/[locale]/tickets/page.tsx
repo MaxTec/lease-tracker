@@ -1,30 +1,34 @@
-import { Suspense } from "react";
-import TicketsList from "@/components/tickets/TicketsList";
-import CreateTicketButton from "@/components/tickets/CreateTicketButton";
-import { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+// @ts-expect-error: List will be created next
+import List from "./List";
 import Layout from "@/components/layout/Layout";
-import { useTranslations } from "next-intl";
-import LoadingSpinner from "@/components/ui/LoadingSpinner"
-export const metadata: Metadata = {
-  title: "Support Tickets | Lease Tracker",
-  description: "View and manage your support tickets",
-};
+import { Ticket } from "@/types/ticket";
 
-export default function TicketsPage() {
-  const t = useTranslations();
-  
+export default async function TicketsPage() {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) redirect("/");
+  if (session.user.role === "TENANT") redirect("/");
+
+  const params = new URLSearchParams();
+  if (session.user.role) params.append("userRole", session.user.role);
+  if (session.user.id) params.append("userId", session.user.id.toString());
+
+  const res = await fetch(`${process.env.NEXTAUTH_URL || ""}/api/tickets?${params.toString()}`, { cache: "no-store" });
+  console.log('res', res);
+  if (!res.ok) {
+    return (
+      <Layout>
+        <div className="text-red-600 p-4">Failed to fetch tickets.</div>
+      </Layout>
+    );
+  }
+  const tickets: Ticket[] = await res.json();
+
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">{t("tickets.title")}</h1>
-          <CreateTicketButton />
-        </div>
-
-        <Suspense fallback={<LoadingSpinner />}>
-          <TicketsList />
-        </Suspense>
-      </div>
+      <List tickets={tickets} session={session} />
     </Layout>
   );
 }
