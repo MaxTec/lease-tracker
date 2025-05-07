@@ -27,14 +27,14 @@ const s3Client = new S3Client({
 
 export async function generateLeasePDF(leaseData: LeaseData): Promise<Buffer> {
   const pdfDoc = await PDFDocument.create();
-  
+
   // Set vertical margin (1 inch = 72 points)
   const verticalMargin = 28.35; // 1 cm margin (1 cm = 28.35 points), (0.5 cm = 14.175 points)
   const horizontalMargin = 28.35; // 1 cm margin (1 cm = 28.35 points), (0.5 cm = 14.175 points)
   const titleFontSize = 12;
   const bodyFontSize = 10;
   const lineHeight = 12; // 20 points that is 1 cm
-  
+
   // Function to create a new page
   const createNewPage = () => {
     const page = pdfDoc.addPage(PageSizes.Letter);
@@ -67,14 +67,14 @@ export async function generateLeasePDF(leaseData: LeaseData): Promise<Buffer> {
     if (currentLine) {
       lines.push(currentLine.trim());
     }
-    
+
     for (const line of lines) {
       if (y < verticalMargin + 20) { // If we're too close to the bottom margin
         const { page, y: newY } = createNewPage();
         currentPage = page;
         y = newY;
       }
-      
+
       currentPage.drawText(line, {
         x,
         y,
@@ -83,7 +83,7 @@ export async function generateLeasePDF(leaseData: LeaseData): Promise<Buffer> {
       });
       y -= lineHeight;
     }
-    
+
     return { currentPage, y };
   };
 
@@ -94,7 +94,7 @@ export async function generateLeasePDF(leaseData: LeaseData): Promise<Buffer> {
 
   // Calculate lease duration in years
   const duration = Math.ceil((leaseData.endDate.getTime() - leaseData.startDate.getTime()) / (1000 * 60 * 60 * 24 * 365));
-  
+
   // Format dates
   const startDate = format(leaseData.startDate, "d 'DE' MMMM 'DE' yyyy", { locale: es });
   const endDate = format(leaseData.endDate, "d 'DE' MMMM 'DE' yyyy", { locale: es });
@@ -114,7 +114,7 @@ export async function generateLeasePDF(leaseData: LeaseData): Promise<Buffer> {
 
   // Header
   const headerText = `QUE CELEBRAN POR UNA PARTE COMO ARRENDADOR O PROPIETARIO EL C. JOSÉ JAVIER DOLORES TEC Y CHULIM Y POR LA OTRA PARTE COMO ARRENDATARIO EL C. ${leaseData.tenantName.toUpperCase()} RESPECTO AL LOCAL UBICADO EN ${leaseData.propertyName.toUpperCase()}, UNIDAD ${leaseData.unitNumber.toUpperCase()}, SE SUJETAN A LAS SIGUIENTES:`;
-  
+
   ({ currentPage: page, y } = drawTextWithPageBreak(headerText, horizontalMargin, page, y, font, bodyFontSize));
   y -= lineHeight;
 
@@ -168,7 +168,7 @@ export async function generateLeasePDF(leaseData: LeaseData): Promise<Buffer> {
     if (y < verticalMargin + 50) {
       ({ page, y } = createNewPage());
     }
-    
+
     page.drawText(clause.title, {
       x: horizontalMargin,
       y,
@@ -186,10 +186,10 @@ export async function generateLeasePDF(leaseData: LeaseData): Promise<Buffer> {
   if (y < verticalMargin + 50) {
     ({ page, y } = createNewPage());
   }
-  
+
   y -= lineHeight * 2;
   const signatureText = `Las partes contratantes declaran y manifiestan estar debidamente enteradas de todas y cada una de las cláusulas de este convenio, como su contenido, y ratificando en la ciudad de Cancún, del Municipio de Benito Juárez, Q. Roo, a los ${currentDate}.`;
-  
+
   drawTextWithPageBreak(signatureText, horizontalMargin, page, y, font, bodyFontSize);
 
   return Buffer.from(await pdfDoc.save());
@@ -217,7 +217,7 @@ export async function sendLeaseEmail(
   if (!apiKey) {
     throw new Error('SendGrid API key is not configured');
   }
-  
+
   sgMail.setApiKey(apiKey);
 
   const msg = {
@@ -237,4 +237,6 @@ export async function sendLeaseEmail(
   };
 
   await sgMail.send(msg);
-} 
+}
+
+// generatePaymentSchedule has been moved to src/utils/paymentsUtils.ts 

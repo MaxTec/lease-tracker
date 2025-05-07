@@ -181,13 +181,15 @@ const Dashboard = ({
             onChange={setSelectedDate}
             className="w-full"
           />
-          <Select
-            label={t("dashboard.filters.property")}
-            value={selectedProperty}
-            onChange={(e) => setSelectedProperty(e.target.value)}
-            options={propertyOptions}
-            className="w-full"
-          />
+          {session.user.role !== "TENANT" && (
+            <Select
+              label={t("dashboard.filters.property")}
+              value={selectedProperty}
+              onChange={(e) => setSelectedProperty(e.target.value)}
+              options={propertyOptions}
+              className="w-full"
+            />
+          )}
         </div>
       </div>
     </div>

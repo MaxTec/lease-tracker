@@ -1,12 +1,13 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-// @ts-expect-error: Dashboard will be created next
 import Dashboard from "./Dashboard";
+import TenantDashboard from "./TenantDashboard";
 import Layout from "@/components/layout/Layout";
 import { DashboardData } from "@/types/dashboard";
+import { TenantDashboardData } from "@/types/dashboard";
 import { format } from "date-fns";
-
+import { cookies, headers } from "next/headers";
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) redirect("/");
@@ -21,15 +22,45 @@ export default async function DashboardPage() {
   const params = new URLSearchParams();
   params.append("viewMode", defaultViewMode);
   params.append("selectedDate", defaultSelectedDate);
+  const cookieStore = await cookies();
   if (defaultSelectedProperty) params.append("propertyId", defaultSelectedProperty);
   if (session.user.role) params.append("userRole", session.user.role);
   if (session.user.id) params.append("userId", session.user.id.toString());
 
+  // If tenant, use the new endpoint
+  if (session.user.role === "TENANT") {
+    const res = await fetch(`${process.env.NEXTAUTH_URL || ""}/api/dashboard/tenant`, {
+      cache: "no-store",
+      headers: {
+        cookie: cookieStore
+          .getAll()
+          .map((c) => `${c.name}=${c.value}`)
+          .join("; "),
+      },
+    });
+
+    if (!res.ok) {
+      return (
+        <Layout>
+          <div className='text-red-600 p-4'>Failed to fetch tenant dashboard data.</div>
+        </Layout>
+      );
+    }
+    const tenantDashboardData: TenantDashboardData = await res.json();
+
+    return (
+      <Layout>
+        <TenantDashboard tenantDashboardData={tenantDashboardData} />
+      </Layout>
+    );
+  }
+
+  // Default: landlord/admin dashboard
   const res = await fetch(`${process.env.NEXTAUTH_URL || ""}/api/dashboard?${params.toString()}`, { cache: "no-store" });
   if (!res.ok) {
     return (
       <Layout>
-        <div className="text-red-600 p-4">Failed to fetch dashboard data.</div>
+        <div className='text-red-600 p-4'>Failed to fetch dashboard data.</div>
       </Layout>
     );
   }

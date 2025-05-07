@@ -9,52 +9,14 @@ import { FORMAT_DATE } from "@/constants";
 import { PaymentForm } from "./PaymentForm";
 import Modal from "@/components/ui/Modal";
 import { formatCurrencyMXN } from "@/utils/numberUtils";
-
-interface Lease {
-  id: number;
-  startDate: string;
-  endDate: string;
-  rentAmount: number;
-  paymentDay: number;
-  tenant: {
-    user: {
-      name: string;
-    };
-  };
-  unit: {
-    unitNumber: string;
-    property: {
-      name: string;
-    };
-  };
-}
-
-interface Payment {
-  id: number;
-  amount: number;
-  dueDate: string;
-  paidDate: string | null;
-  status: "PENDING" | "PAID" | "OVERDUE" | "CANCELLED";
-  paymentMethod: string | null;
-  transactionId: string | null;
-  lease?: Lease;
-}
+import { generatePaymentSchedule } from "@/utils/paymentsUtils";
+import { Payment, ScheduledPayment } from "@/types/payment";
+import { Lease } from "@/types/lease";
 
 interface PaymentScheduleProps {
   payments: Payment[];
   lease?: Lease; // Optional lease prop if provided directly
   onRecordPayment: (payment: ScheduledPayment) => void;
-}
-
-interface ScheduledPayment {
-  id?: number;
-  dueDate: Date;
-  amount: number;
-  status: "PENDING" | "PAID" | "OVERDUE" | "CANCELLED";
-  isExisting: boolean;
-  paymentMethod?: "CASH" | "BANK_TRANSFER" | "CREDIT_CARD" | "CHECK" | "OTHER";
-  transactionId?: string;
-  paidDate?: Date;
 }
 
 const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
@@ -63,77 +25,6 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
   onRecordPayment,
 }) => {
   console.log("payments", payments);
-  // [
-  //   {
-  //     id: 7,
-  //     leaseId: 22,
-  //     tenantId: 2,
-  //     amount: 1111,
-  //     dueDate: "2025-04-01T00:00:00.000Z",
-  //     paidDate: "2025-04-03T14:26:38.120Z",
-  //     status: "PAID",
-  //     paymentMethod: "CASH",
-  //     transactionId: null,
-  //     paymentNumber: 1,
-  //     createdAt: "2025-04-03T14:26:38.211Z",
-  //     updatedAt: "2025-04-03T14:26:38.211Z",
-  //     lease: {
-  //       id: 22,
-  //       unitId: 9,
-  //       tenantId: 2,
-  //       startDate: "2025-04-01T00:00:00.000Z",
-  //       endDate: "2026-03-31T00:00:00.000Z",
-  //       rentAmount: 1111,
-  //       depositAmount: 111,
-  //       paymentDay: 1,
-  //       status: "ACTIVE",
-  //       totalPayments: 12,
-  //       createdAt: "2025-04-03T14:23:29.376Z",
-  //       updatedAt: "2025-04-03T14:23:29.376Z",
-  //       unit: {
-  //         id: 9,
-  //         propertyId: 3,
-  //         unitNumber: "Lote 02",
-  //         bedrooms: 1,
-  //         bathrooms: 2,
-  //         squareFeet: 100,
-  //         createdAt: "2025-04-02T15:37:53.465Z",
-  //         updatedAt: "2025-04-02T15:37:53.465Z",
-  //         property: {
-  //           id: 3,
-  //           landlordId: 1,
-  //           name: "Casa Avenida la Luna",
-  //           address: "Av.La Luna 135, con calle 34 Pte",
-  //           type: "HOUSE",
-  //           createdAt: "2025-03-31T17:47:37.135Z",
-  //           updatedAt: "2025-04-02T15:37:53.465Z",
-  //         },
-  //       },
-  //       tenant: {
-  //         id: 2,
-  //         userId: 4,
-  //         phone: "555-0301",
-  //         emergencyContact: "555-0302",
-  //         createdAt: "2025-03-24T16:58:37.350Z",
-  //         updatedAt: "2025-03-24T16:58:37.350Z",
-  //         user: {
-  //           name: "Bob Wilson",
-  //           email: "bob.wilson@example.com",
-  //         },
-  //       },
-  //     },
-  //     voucher: {
-  //       id: 6,
-  //       paymentId: 7,
-  //       voucherNumber: "VCH-1743690398249-7",
-  //       generatedDate: "2025-04-03T14:26:38.250Z",
-  //       sentDate: null,
-  //       status: "VIEWED",
-  //       createdAt: "2025-04-03T14:26:38.250Z",
-  //       updatedAt: "2025-04-03T14:26:48.730Z",
-  //     },
-  //   },
-  // ];
   const [selectedPayment, setSelectedPayment] =
     useState<ScheduledPayment | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -150,10 +41,8 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
         new Date(b.paidDate!).getTime() - new Date(a.paidDate!).getTime()
     )[0]?.paidDate;
 
-  // Get lease information from the lease prop or from the first payment
-  const leaseInfo =
-    lease ||
-    (payments.length > 0 && payments[0].lease ? payments[0].lease : null);
+  // Get lease information from the lease prop only
+  const leaseInfo = lease;
 
   if (!leaseInfo) {
     return (
@@ -169,81 +58,7 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
     );
   }
 
-  // Generate all scheduled payments based on lease dates
-  const generatePaymentSchedule = (): ScheduledPayment[] => {
-    const startDate = new Date(
-      Date.UTC(
-        new Date(leaseInfo.startDate).getUTCFullYear(),
-        new Date(leaseInfo.startDate).getUTCMonth(),
-        new Date(leaseInfo.startDate).getUTCDate()
-      )
-    );
-    const endDate = new Date(
-      Date.UTC(
-        new Date(leaseInfo.endDate).getUTCFullYear(),
-        new Date(leaseInfo.endDate).getUTCMonth(),
-        new Date(leaseInfo.endDate).getUTCDate()
-      )
-    );
-    const paymentDay = leaseInfo.paymentDay;
-    const rentAmount = leaseInfo.rentAmount;
-
-    // Map existing payments by due date for quick lookup
-    const existingPaymentsByDate = new Map<string, Payment>();
-    payments.forEach((payment) => {
-      const dueDate = new Date(payment.dueDate);
-      const dateKey = `${dueDate.getUTCFullYear()}-${dueDate.getUTCMonth()}-${dueDate.getUTCDate()}`;
-      existingPaymentsByDate.set(dateKey, payment);
-    });
-
-    const scheduledPayments: ScheduledPayment[] = [];
-
-    // Start from the lease start date
-    const currentDate = new Date(startDate);
-
-    // If payment day is specified, set the day of the first month
-    if (paymentDay) {
-      currentDate.setUTCDate(paymentDay);
-
-      // If the payment day is before the start date, move to the next month
-      if (currentDate < startDate) {
-        currentDate.setUTCMonth(currentDate.getUTCMonth() + 1);
-      }
-    }
-
-    // Generate payments until the end date
-    while (currentDate <= endDate) {
-      const dateKey = `${currentDate.getUTCFullYear()}-${currentDate.getUTCMonth()}-${currentDate.getUTCDate()}`;
-      const existingPayment = existingPaymentsByDate.get(dateKey);
-
-      if (existingPayment) {
-        // Use existing payment data
-        scheduledPayments.push({
-          id: existingPayment.id,
-          dueDate: new Date(existingPayment.dueDate),
-          amount: Number(existingPayment.amount),
-          status: existingPayment.status,
-          isExisting: true,
-        });
-      } else {
-        // Create a new scheduled payment
-        const status = currentDate < today ? "OVERDUE" : "PENDING";
-        scheduledPayments.push({
-          dueDate: new Date(currentDate),
-          amount: Number(rentAmount),
-          status,
-          isExisting: false,
-        });
-      }
-
-      // Move to the next month
-      currentDate.setUTCMonth(currentDate.getUTCMonth() + 1);
-    }
-
-    return scheduledPayments;
-  };
-
-  const allScheduledPayments = generatePaymentSchedule();
+  const allScheduledPayments = generatePaymentSchedule(payments, leaseInfo, today);
   console.log("allScheduledPayments", allScheduledPayments);
   // Sort by due date
   const sortedScheduledPayments = [...allScheduledPayments].sort(
@@ -419,7 +234,7 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
               setSelectedPayment(null);
             }
           }}
-          leaseStartDate={leaseInfo.startDate}
+          leaseStartDate={typeof leaseInfo.startDate === 'string' ? leaseInfo.startDate : leaseInfo.startDate.toISOString()}
           lastPaymentDate={lastPaymentDate}
           initialData={{
             paymentMethod: "CASH",

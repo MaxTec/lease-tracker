@@ -25,6 +25,7 @@ export default function CreateTicketButton() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { data: session } = useSession();
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (session?.user?.role) {
@@ -36,10 +37,7 @@ export default function CreateTicketButton() {
   // Define the validation schema with translations
   const getTicketSchema = () =>
     z.object({
-      title: z
-        .string()
-        .min(1, t("common.errors.required"))
-        .max(100, t("tickets.form.titleTooLong")),
+      title: z.string().min(1, t("common.errors.required")).max(100, t("tickets.form.titleTooLong")),
       description: z.string().min(1, t("common.errors.required")),
       priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
     });
@@ -60,6 +58,7 @@ export default function CreateTicketButton() {
 
   const handleFormSubmit = async (data: TicketFormData) => {
     setLoading(true);
+    setFormError(null); // Clear previous errors
 
     try {
       const response = await fetch("/api/tickets", {
@@ -71,7 +70,8 @@ export default function CreateTicketButton() {
       });
 
       if (!response.ok) {
-        throw new Error(t("tickets.errors.createFailed"));
+        const errorData = await response.json();
+        throw new Error(errorData.error || t("tickets.errors.createFailed"));
       }
 
       setOpen(false);
@@ -79,6 +79,7 @@ export default function CreateTicketButton() {
       router.refresh();
     } catch (error) {
       console.error("Error creating ticket:", error);
+      setFormError(error instanceof Error ? error.message : t("tickets.errors.createFailed"));
     } finally {
       setLoading(false);
     }
@@ -87,32 +88,19 @@ export default function CreateTicketButton() {
   return (
     <div>
       {session?.user?.role !== "ADMIN" && (
-        <Button onClick={() => setOpen(true)} className="mb-4">
+        <Button onClick={() => setOpen(true)} className='mb-4'>
           {t("tickets.create")}
         </Button>
       )}
-      <Modal
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        title={t("tickets.create")}
-      >
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Input
-              label={t("tickets.form.title")}
-              id="title"
-              error={errors.title?.message}
-              {...register("title")}
-            />
+      <Modal isOpen={open} onClose={() => setOpen(false)} title={t("tickets.create")}>
+        <form onSubmit={handleSubmit(handleFormSubmit)} className='space-y-4'>
+          <div className='space-y-2'>
+            <Input label={t("tickets.form.title")} id='title' error={errors.title?.message} {...register("title")} />
           </div>
-          <div className="space-y-2">
-            <Textarea
-              label={t("tickets.form.description")}
-              error={errors.description?.message}
-              {...register("description")}
-            />
+          <div className='space-y-2'>
+            <Textarea label={t("tickets.form.description")} error={errors.description?.message} {...register("description")} />
           </div>
-          <div className="space-y-2">
+          <div className='space-y-2'>
             <Select
               label={t("tickets.form.priority")}
               error={errors.priority?.message}
@@ -125,8 +113,13 @@ export default function CreateTicketButton() {
               ]}
             />
           </div>
-          <div className="pt-4">
-            <Button type="submit" disabled={loading} className="w-full">
+          {formError && (
+            <div className='text-red-600 text-sm mb-2' role='alert'>
+              {formError}
+            </div>
+          )}
+          <div className='pt-4'>
+            <Button type='submit' disabled={loading} className='w-full'>
               {loading ? t("common.loading") : t("common.buttons.create")}
             </Button>
           </div>

@@ -2,7 +2,7 @@
 
 type BadgeStatus = 'success' | 'error' | 'warning' | 'info' | 'default';
 
-interface BadgeProps {
+export interface BadgeProps {
   status?: BadgeStatus;
   children: React.ReactNode;
   className?: string;
