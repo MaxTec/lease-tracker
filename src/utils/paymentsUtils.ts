@@ -3,83 +3,105 @@ import { Lease } from "@/types/lease";
 
 /**
  * Generates a payment schedule for a lease, merging existing payments and generating missing ones.
- * @param payments Array of existing payments
- * @param leaseInfo Lease information
- * @param today Date to use as the current date (should be set to midnight)
- * @returns Array of scheduled payments
  */
 export function generatePaymentSchedule(
-    payments: Payment[],
-    leaseInfo: Lease,
-    today: Date
+  payments: Payment[],
+  leaseInfo: Lease,
+  today: Date
 ): ScheduledPayment[] {
-    const startDate = new Date(
-        Date.UTC(
-            new Date(leaseInfo.startDate).getUTCFullYear(),
-            new Date(leaseInfo.startDate).getUTCMonth(),
-            new Date(leaseInfo.startDate).getUTCDate()
-        )
+  const startDate = new Date(
+    Date.UTC(
+      new Date(leaseInfo.startDate).getUTCFullYear(),
+      new Date(leaseInfo.startDate).getUTCMonth(),
+      new Date(leaseInfo.startDate).getUTCDate()
+    )
+  );
+  const endDate = new Date(
+    Date.UTC(
+      new Date(leaseInfo.endDate).getUTCFullYear(),
+      new Date(leaseInfo.endDate).getUTCMonth(),
+      new Date(leaseInfo.endDate).getUTCDate()
+    )
+  );
+  const paymentDay = leaseInfo.paymentDay;
+  const rentAmount = leaseInfo.rentAmount;
+
+  // Agrupa los pagos existentes por mes y año
+  const existingPaymentsByMonth = new Map<string, Payment>();
+  payments.forEach((payment) => {
+    const dueDate = new Date(payment.dueDate);
+    const key = `${dueDate.getUTCFullYear()}-${dueDate.getUTCMonth()}`;
+    existingPaymentsByMonth.set(key, payment); // último pago del mes sobrescribe
+  });
+
+  const scheduledPayments: ScheduledPayment[] = [];
+  const currentDate = new Date(startDate);
+
+  if (paymentDay) {
+    const startMonthLastDay = new Date(
+      Date.UTC(currentDate.getUTCFullYear(), currentDate.getUTCMonth() + 1, 0)
+    ).getUTCDate();
+    const startEffectiveDay =
+      paymentDay === 30
+        ? startMonthLastDay
+        : Math.min(paymentDay, startMonthLastDay);
+    const tentativeStart = new Date(
+      Date.UTC(
+        currentDate.getUTCFullYear(),
+        currentDate.getUTCMonth(),
+        startEffectiveDay
+      )
     );
-    const endDate = new Date(
-        Date.UTC(
-            new Date(leaseInfo.endDate).getUTCFullYear(),
-            new Date(leaseInfo.endDate).getUTCMonth(),
-            new Date(leaseInfo.endDate).getUTCDate()
-        )
+    if (tentativeStart < startDate) {
+      currentDate.setUTCMonth(currentDate.getUTCMonth() + 1);
+    }
+  }
+
+  while (currentDate <= endDate) {
+    const lastDayOfMonth = new Date(
+      Date.UTC(currentDate.getUTCFullYear(), currentDate.getUTCMonth() + 1, 0)
+    ).getUTCDate();
+    const effectiveDay =
+      paymentDay === 30
+        ? lastDayOfMonth
+        : Math.min(paymentDay || currentDate.getUTCDate(), lastDayOfMonth);
+
+    const currentMonthDate = new Date(
+      Date.UTC(
+        currentDate.getUTCFullYear(),
+        currentDate.getUTCMonth(),
+        effectiveDay
+      )
     );
-    const paymentDay = leaseInfo.paymentDay;
-    const rentAmount = leaseInfo.rentAmount;
 
-    // Map existing payments by due date for quick lookup
-    const existingPaymentsByDate = new Map<string, Payment>();
-    payments.forEach((payment) => {
-        const dueDate = new Date(payment.dueDate);
-        const dateKey = `${dueDate.getUTCFullYear()}-${dueDate.getUTCMonth()}-${dueDate.getUTCDate()}`;
-        existingPaymentsByDate.set(dateKey, payment);
-    });
+    const key = `${currentMonthDate.getUTCFullYear()}-${currentMonthDate.getUTCMonth()}`;
+    const existingPayment = existingPaymentsByMonth.get(key);
 
-    const scheduledPayments: ScheduledPayment[] = [];
-
-    // Start from the lease start date
-    const currentDate = new Date(startDate);
-
-    // If payment day is specified, set the day of the first month
-    if (paymentDay) {
-        currentDate.setUTCDate(paymentDay);
-        // If the payment day is before the start date, move to the next month
-        if (currentDate < startDate) {
-            currentDate.setUTCMonth(currentDate.getUTCMonth() + 1);
-        }
+    if (existingPayment) {
+      scheduledPayments.push({
+        id: existingPayment.id,
+        dueDate: new Date(existingPayment.dueDate),
+        amount: Number(existingPayment.amount),
+        status: existingPayment.status as ScheduledPayment["status"],
+        isExisting: true,
+        paymentMethod:
+          existingPayment.paymentMethod as ScheduledPayment["paymentMethod"],
+        paidDate: existingPayment.paidDate
+          ? new Date(existingPayment.paidDate)
+          : undefined,
+      });
+    } else {
+      const status = currentMonthDate < today ? "OVERDUE" : "PENDING";
+      scheduledPayments.push({
+        dueDate: currentMonthDate,
+        amount: Number(rentAmount),
+        status,
+        isExisting: false,
+      });
     }
 
-    // Generate payments until the end date
-    while (currentDate <= endDate) {
-        const dateKey = `${currentDate.getUTCFullYear()}-${currentDate.getUTCMonth()}-${currentDate.getUTCDate()}`;
-        const existingPayment = existingPaymentsByDate.get(dateKey);
+    currentDate.setUTCMonth(currentDate.getUTCMonth() + 1);
+  }
 
-        if (existingPayment) {
-            // Use existing payment data
-            scheduledPayments.push({
-                id: existingPayment.id,
-                dueDate: new Date(existingPayment.dueDate),
-                amount: Number(existingPayment.amount),
-                status: existingPayment.status as ScheduledPayment["status"],
-                isExisting: true,
-                paymentMethod: existingPayment.paymentMethod as ScheduledPayment["paymentMethod"],
-                paidDate: existingPayment.paidDate ? new Date(existingPayment.paidDate) : undefined,
-            });
-        } else {
-            // Create a new scheduled payment
-            const status = currentDate < today ? "OVERDUE" : "PENDING";
-            scheduledPayments.push({
-                dueDate: new Date(currentDate),
-                amount: Number(rentAmount),
-                status,
-                isExisting: false,
-            });
-        }
-        // Move to the next month
-        currentDate.setUTCMonth(currentDate.getUTCMonth() + 1);
-    }
-    return scheduledPayments;
-} 
+  return scheduledPayments;
+}

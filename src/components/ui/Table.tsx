@@ -12,6 +12,7 @@ interface Column<T> {
   sticky?: boolean;
   priority?: number; // 1 is highest priority, will show on mobile
   width?: string; // Optional width for the column
+  align?: "left" | "right" | "center"; // Optional alignment for the column
 }
 
 interface TableProps<T> {
@@ -20,6 +21,7 @@ interface TableProps<T> {
   searchable?: boolean;
   searchKeys?: string[];
   pageSize?: number;
+  align?: "left" | "right" | "center"; // Optional alignment for the table
 }
 
 type NestedObject = {
@@ -48,6 +50,7 @@ export default function Table<T extends { id: number | string }>({
   searchable = true,
   searchKeys = [],
   pageSize = 10,
+  align = "left",
 }: TableProps<T>) {
   const [sortConfig, setSortConfig] = useState<{
     key: string;
@@ -158,6 +161,14 @@ export default function Table<T extends { id: number | string }>({
     });
   }, [columns]);
 
+  // Helper to get alignment class
+  const getAlignClass = (columnAlign?: "left" | "right" | "center") => {
+    const finalAlign = columnAlign || align;
+    if (finalAlign === "right") return "text-right";
+    if (finalAlign === "center") return "text-center";
+    return "text-left";
+  };
+
   return (
     <div className="w-full">
       {searchable && (
@@ -210,8 +221,9 @@ export default function Table<T extends { id: number | string }>({
                       className={`
                         ${column.sticky ? 'sticky left-0 z-10 bg-gray-50' : ''}
                         ${column.priority ? '' : 'hidden md:table-cell'}
-                        px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider
+                        px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider
                         ${column.sortable ? 'cursor-pointer select-none' : ''}
+                        ${getAlignClass(column.align)}
                       `}
                       onClick={() => column.sortable && requestSort(column.key)}
                     >
@@ -233,6 +245,7 @@ export default function Table<T extends { id: number | string }>({
                           ${column.priority ? '' : 'hidden md:table-cell'}
                           px-6 py-4 text-sm text-gray-500
                           ${column.sticky && 'shadow-[8px_0_16px_-6px_rgba(0,0,0,0.1)]'}
+                          ${getAlignClass(column.align)}
                         `}
                       >
                         {column.render

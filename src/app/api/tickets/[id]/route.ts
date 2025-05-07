@@ -5,52 +5,109 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const ticket = await prisma.ticket.findUnique({
-      where: {
-        id: parseInt(params.id)
-      },
-      include: {
-        property: true,
-        unit: true,
-        tenant: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                email: true
-              }
-            }
-          }
+    // Type guard for session.user
+    const user = session.user as { id?: string | number; role?: string };
+    const userRole = user?.role;
+    const userId = typeof user?.id === 'string' ? parseInt(user.id) : user?.id;
+
+    if (userRole === 'TENANT') {
+      if (!userId || isNaN(Number(userId))) {
+        return NextResponse.json({ error: 'Invalid user id' }, { status: 400 });
+      }
+      // Find the tenant record for this user
+      const tenant = await prisma.tenant.findUnique({ where: { userId: Number(userId) } });
+      if (!tenant) {
+        return NextResponse.json({ error: 'Tenant record not found' }, { status: 403 });
+      }
+      const ticket = await prisma.ticket.findFirst({
+        where: {
+          id: parseInt(id),
+          tenantId: tenant.id
         },
-        comments: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                email: true
+        include: {
+          property: true,
+          unit: true,
+          tenant: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  email: true
+                }
               }
             }
           },
-          orderBy: {
-            createdAt: 'desc'
+          comments: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  email: true
+                }
+              }
+            },
+            orderBy: {
+              createdAt: 'desc'
+            }
           }
         }
+      });
+      if (!ticket) {
+        return NextResponse.json({ error: 'Ticket not found or access denied' }, { status: 404 });
       }
-    });
-
-    if (!ticket) {
-      return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
+      return NextResponse.json(ticket);
     }
 
-    return NextResponse.json(ticket);
+    if (userRole === 'ADMIN') {
+      const ticket = await prisma.ticket.findUnique({
+        where: {
+          id: parseInt(id)
+        },
+        include: {
+          property: true,
+          unit: true,
+          tenant: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  email: true
+                }
+              }
+            }
+          },
+          comments: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  email: true
+                }
+              }
+            },
+            orderBy: {
+              createdAt: 'desc'
+            }
+          }
+        }
+      });
+      if (!ticket) {
+        return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
+      }
+      return NextResponse.json(ticket);
+    }
+
+    // For other roles, deny access
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   } catch (error) {
     console.error('Error fetching ticket:', error);
     return NextResponse.json(

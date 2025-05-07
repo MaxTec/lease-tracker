@@ -120,7 +120,7 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
     const dueDate = new Date(payment.dueDate);
     const dayDiff = differenceInDays(today, dueDate);
     const humanReadableDate = dayDiff > 0 ? `(${dayDiff} days late)` : "";
-    console.log("dueDate", formatDate(dueDate, FORMAT_DATE, "UTC"));
+    // console.log("dueDate", formatDate(dueDate, FORMAT_DATE, "UTC"));
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
         {label && (

@@ -1,10 +1,8 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import TicketDetails from "@/components/tickets/TicketDetails";
-import { Metadata } from "next";
 import Layout from "@/components/layout/Layout";
 import { getTranslations } from "next-intl/server";
-
+import { cookies } from "next/headers";
 interface Props {
   params: {
     id: string;
@@ -12,64 +10,36 @@ interface Props {
   };
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const t = await getTranslations({locale: params.locale, namespace: "tickets"});
-  
-  const ticket = await prisma.ticket.findUnique({
-    where: { id: parseInt(params.id) },
-    select: { title: true },
-  });
-
-  if (!ticket) {
-    return {
-      title: `${t("details")} | ${t("title")}`,
-    };
-  }
-
-  return {
-    title: `${ticket.title} | ${t("details")}`,
-  };
-}
-
 export default async function TicketPage({ params }: Props) {
-  const t = await getTranslations({locale: params.locale, namespace: "tickets"});
-  
-  const ticket = await prisma.ticket.findUnique({
-    where: {
-      id: parseInt(params.id),
-    },
-    include: {
-      property: true,
-      unit: true,
-      tenant: {
-        include: {
-          user: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
-        },
-      },
-      comments: {
-        include: {
-          user: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      },
-    },
+  const { id, locale } = await params;
+  const t = await getTranslations({
+    locale: locale,
+    namespace: "tickets",
   });
+  const cookieStore = await cookies();
+  // Fetch ticket data from API
+  console.log("Fetching ticket data from API", id, locale);
+  console.log(
+    `${process.env.NEXT_PUBLIC_API_URL || ""}/api/tickets/${id}`
+  );
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL || ""}/api/tickets/${id}`,
+    {
+      cache: "no-store",
+      headers: {
+        cookie: cookieStore
+          .getAll()
+          .map((c) => `${c.name}=${c.value}`)
+          .join("; "),
+      },
+    }
+  );
 
-  if (!ticket) {
+  if (!res.ok) {
     notFound();
   }
+
+  const ticket = await res.json();
 
   return (
     <Layout>

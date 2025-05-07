@@ -570,5 +570,11 @@
     "transactionId": "ID de Transacción",
     "footer1": "Este es un comprobante de pago generado automáticamente.",
     "footer2": "Por favor, conserve este comprobante para sus registros."
+  },
+  "NotFoundPage": {
+    "title": "Página no encontrada",
+    "description": "Lo sentimos, la página que buscas no existe.",
+    "backToHome": "Volver al inicio",
+    "ariaLabel": "Página 404 no encontrada"
   }
 } 
