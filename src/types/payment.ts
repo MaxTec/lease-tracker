@@ -14,7 +14,9 @@ export interface Payment {
             user: {
                 name: string;
                 email: string;
-            }
+            };
+            phone: string;
+            emergencyContact?: string;
         };
         unit: {
             unitNumber: string;

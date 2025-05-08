@@ -1,7 +1,7 @@
-'use client';
+// 'use client';
 
 import { Header, Footer } from '@/components/layout';
-import { Toaster } from 'react-hot-toast';
+// import { Toaster } from 'react-hot-toast';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 
 interface LayoutProps {
@@ -12,11 +12,11 @@ interface LayoutProps {
 export default function Layout({ children, showBreadcrumbs = true }: LayoutProps) {
   return (
     <>
-      <Toaster position="top-right" />
+      {/* <Toaster position="top-right" /> */}
       <div className="min-h-screen flex flex-col">
         <Header />
         
-        <main className="flex-grow container mx-auto px-4 py-4">
+        <main className="flex-grow container mx-auto px-4 py-8">
           {showBreadcrumbs && <Breadcrumbs />}
           {children}
         </main>

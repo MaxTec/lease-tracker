@@ -576,5 +576,50 @@
     "description": "Sorry, the page you are looking for does not exist.",
     "backToHome": "Back to Home",
     "ariaLabel": "404 Not Found Page"
+  },
+  "tenantDashboard": {
+    "leaseDetails": {
+      "unit": "Unit",
+      "rentAmount": "Rent Amount",
+      "depositAmount": "Deposit Amount",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "status": "Status",
+      "paymentDay": "Payment Day",
+      "phone": "Phone",
+      "emergencyContact": "Emergency Contact"
+    },
+    "paidPayments": {
+      "title": "Paid Payments",
+      "emptyTitle": "No payments found",
+      "emptyDescription": "You have no paid payments yet.",
+      "amount": "Amount",
+      "dueDate": "Due Date",
+      "paidDate": "Paid Date"
+    },
+    "nextPayments": {
+      "title": "Next 5 Payments",
+      "emptyTitle": "No upcoming payments",
+      "emptyDescription": "You have no upcoming payments scheduled.",
+      "amount": "Amount",
+      "dueDate": "Due Date",
+      "payNextRent": "Pay Next Rent"
+    },
+    "tickets": {
+      "title": "Tickets",
+      "emptyTitle": "No tickets found",
+      "emptyDescription": "You have not created any tickets yet.",
+      "titleCol": "Title",
+      "status": "Status",
+      "created": "Created"
+    },
+    "documents": {
+      "title": "Relevant Documents",
+      "emptyTitle": "No documents found",
+      "emptyDescription": "You have no relevant documents uploaded.",
+      "view": "View Document",
+      "type": "Type",
+      "uploaded": "Uploaded"
+    }
   }
 } 

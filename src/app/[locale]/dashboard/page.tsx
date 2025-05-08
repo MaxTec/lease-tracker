@@ -49,7 +49,7 @@ export default async function DashboardPage() {
     const tenantDashboardData: TenantDashboardData = await res.json();
 
     return (
-      <Layout>
+      <Layout showBreadcrumbs={false}>
         <TenantDashboard tenantDashboardData={tenantDashboardData} />
       </Layout>
     );

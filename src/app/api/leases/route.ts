@@ -52,13 +52,13 @@ export async function GET(request: NextRequest) {
         },
         payments: includePayments
           ? {
-              where: {
-                status: "PAID",
-              },
-              orderBy: {
-                dueDate: "desc",
-              },
-            }
+            where: {
+              status: "PAID",
+            },
+            orderBy: {
+              dueDate: "desc",
+            },
+          }
           : false,
         _count: {
           select: {
@@ -137,6 +137,9 @@ export async function POST(request: NextRequest) {
     const {
       unitId,
       tenantId,
+      tenantName,
+      tenantEmail,
+      tenantPhone,
       startDate,
       endDate,
       rentAmount,
@@ -148,7 +151,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (
       !unitId ||
-      !tenantId ||
+      (!tenantId && (!tenantName || !tenantEmail || !tenantPhone)) ||
       !startDate ||
       !endDate ||
       !rentAmount ||
@@ -161,10 +164,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let finalTenantId = tenantId;
+    // If tenantId is not provided, create a new user and tenant
+    if (!tenantId) {
+      // Create user
+      const user = await prisma.user.create({
+        data: {
+          name: tenantName,
+          email: tenantEmail,
+          role: "TENANT",
+        },
+      });
+      // Create tenant
+      const tenant = await prisma.tenant.create({
+        data: {
+          userId: user.id,
+          phone: tenantPhone,
+        },
+      });
+      finalTenantId = tenant.id;
+    }
+
     // Check if tenant already has an active lease
     const existingTenantLease = await prisma.lease.findFirst({
       where: {
-        tenantId: parseInt(tenantId),
+        tenantId: parseInt(finalTenantId),
         status: "ACTIVE",
       },
     });
@@ -199,7 +223,7 @@ export async function POST(request: NextRequest) {
     const lease = await prisma.lease.create({
       data: {
         unitId: parseInt(unitId),
-        tenantId: parseInt(tenantId),
+        tenantId: parseInt(finalTenantId),
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         rentAmount: new Prisma.Decimal(rentAmount),

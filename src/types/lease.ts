@@ -3,6 +3,8 @@ import { Lease as PrismaLease, User, Property, Document } from "@prisma/client";
 export interface Lease extends PrismaLease {
     tenant: {
         user: Pick<User, "name" | "email">;
+        phone: string;
+        emergencyContact?: string;
     };
     unit: {
         unitNumber: string;

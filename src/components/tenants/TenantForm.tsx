@@ -109,6 +109,7 @@ export default function TenantForm({
           {...register("name")}
           label={t("tenants.form.name")}
           error={errors.name?.message}
+          disabled={!!tenantId}
         />
       </div>
 
@@ -118,6 +119,7 @@ export default function TenantForm({
           label={t("tenants.form.email")}
           type="email"
           error={errors.email?.message}
+          disabled={!!tenantId}
         />
       </div>
       <div>
@@ -143,15 +145,6 @@ export default function TenantForm({
           error={errors.emergencyPhone?.message}
         />
       </div>
-
-      <div>
-        <Input
-          {...register("employmentInfo")}
-          label={t("tenants.form.employmentInfo")}
-          error={errors.employmentInfo?.message}
-        />
-      </div>
-
       <div className="flex justify-end space-x-3">
         <Button type="button" variant="outline" onClick={onClose}>
           {t("common.buttons.cancel")}

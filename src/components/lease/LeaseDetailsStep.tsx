@@ -40,6 +40,9 @@ export default function LeaseDetailsStep() {
 
   const t = useTranslations("LeaseDetailsStep");
 
+  // Use react-hook-form for tenantMode
+  const tenantMode = watch('tenantMode') || 'new';
+
   useEffect(() => {
     if (startDate && !customEndDate) {
       const start = new Date(startDate);
@@ -98,6 +101,17 @@ export default function LeaseDetailsStep() {
       }
     }
   }, [startDate, paymentDay]);
+
+  // Clear fields when switching tenant mode
+  // useEffect(() => {
+  //   if (tenantMode === 'existing') {
+  //     setValue('tenantName', '');
+  //     setValue('tenantEmail', '');
+  //     setValue('tenantPhone', '');
+  //   } else {
+  //     setValue('tenantId', '');
+  //   }
+  // }, [tenantMode, setValue]);
 
   if (isLoadingTenants || isLoadingProperties) return <LoadingSpinner />;
 
@@ -178,16 +192,84 @@ export default function LeaseDetailsStep() {
         </div>
       )}
 
-      {shouldShowTenantField && (
-        <Select
-          {...register("tenantId")}
-          label="Select Tenant"
-          options={tenants.map((tenant) => ({
-            value: tenant.id.toString(),
-            label: tenant.user.name,
-          }))}
-          error={errors.tenantId?.message as string}
-        />
+      {/* Tenant mode selector */}
+      <Controller
+        name="tenantMode"
+        control={control}
+        defaultValue="new"
+        rules={{ required: "Please select tenant mode" }}
+        render={({ field }) => (
+          <div className="flex items-center space-x-6">
+            <label className="flex items-center">
+              <Input
+                type="radio"
+                name="tenantMode"
+                value="existing"
+                checked={field.value === 'existing'}
+                onChange={() => field.onChange('existing')}
+                label="Select Existing Tenant"
+                className="mr-2 w-4 h-4"
+                style={{ width: 16, height: 16 }}
+              />
+            </label>
+            <label className="flex items-center">
+              <Input
+                type="radio"
+                name="tenantMode"
+                value="new"
+                checked={field.value === 'new'}
+                onChange={() => field.onChange('new')}
+                label="Create New Tenant"
+                className="mr-2 w-4 h-4"
+                style={{ width: 16, height: 16 }}
+              />
+            </label>
+            {errors.tenantMode && (
+              <span className="text-red-500 text-sm ml-4">{errors.tenantMode.message as string}</span>
+            )}
+          </div>
+        )}
+      />
+
+      {tenantMode === 'existing' ? (
+        shouldShowTenantField && (
+          <Select
+            {...register("tenantId", {
+              required: tenantMode === 'existing' ? "Tenant is required" : false
+            })}
+            label="Select Tenant"
+            options={tenants.map((tenant) => ({
+              value: tenant.id.toString(),
+              label: tenant.user.name,
+            }))}
+            error={errors.tenantId?.message as string}
+          />
+        )
+      ) : (
+        <>
+          <Input
+            {...register("tenantName", {
+              validate: value => tenantMode === 'new' && !value ? "Tenant name is required" : true
+            })}
+            label="Tenant Name"
+            error={errors.tenantName?.message as string}
+          />
+          <Input
+            {...register("tenantEmail", {
+              validate: value => tenantMode === 'new' && !value ? "Tenant email is required" : true
+            })}
+            label="Tenant Email"
+            type="email"
+            error={errors.tenantEmail?.message as string}
+          />
+          <Input
+            {...register("tenantPhone", {
+              validate: value => tenantMode === 'new' && !value ? "Tenant phone is required" : true
+            })}
+            label="Tenant Phone"
+            error={errors.tenantPhone?.message as string}
+          />
+        </>
       )}
 
       <div className="grid grid-cols-2 gap-4">

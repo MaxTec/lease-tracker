@@ -576,5 +576,50 @@
     "description": "Lo sentimos, la página que buscas no existe.",
     "backToHome": "Volver al inicio",
     "ariaLabel": "Página 404 no encontrada"
+  },
+  "tenantDashboard": {
+    "leaseDetails": {
+      "unit": "Unidad",
+      "rentAmount": "Monto de Renta",
+      "depositAmount": "Monto de Depósito",
+      "startDate": "Fecha de Inicio",
+      "endDate": "Fecha de Fin",
+      "status": "Estado",
+      "paymentDay": "Día de Pago",
+      "phone": "Teléfono",
+      "emergencyContact": "Contacto de Emergencia"
+    },
+    "paidPayments": {
+      "title": "Pagos Realizados",
+      "emptyTitle": "No se encontraron pagos",
+      "emptyDescription": "Aún no tienes pagos realizados.",
+      "amount": "Monto",
+      "dueDate": "Fecha de Vencimiento",
+      "paidDate": "Fecha de Pago"
+    },
+    "nextPayments": {
+      "title": "Próximos 5 Pagos",
+      "emptyTitle": "No hay pagos próximos",
+      "emptyDescription": "No tienes pagos próximos programados.",
+      "amount": "Monto",
+      "dueDate": "Fecha de Vencimiento",
+      "payNextRent": "Pagar Próxima Renta"
+    },
+    "tickets": {
+      "title": "Tickets",
+      "emptyTitle": "No se encontraron tickets",
+      "emptyDescription": "Aún no has creado ningún ticket.",
+      "titleCol": "Título",
+      "status": "Estado",
+      "created": "Creado"
+    },
+    "documents": {
+      "title": "Documentos Relevantes",
+      "emptyTitle": "No se encontraron documentos",
+      "emptyDescription": "No tienes documentos relevantes cargados.",
+      "view": "Ver Documento",
+      "type": "Tipo",
+      "uploaded": "Cargado"
+    }
   }
 } 

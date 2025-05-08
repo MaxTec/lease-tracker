@@ -26,6 +26,8 @@ function serializePayment(payment: any): Payment {
                     name: payment.lease.tenant.user.name,
                     email: payment.lease.tenant.user.email,
                 },
+                phone: payment.lease.tenant.phone,
+                emergencyContact: payment.lease.tenant.emergencyContact,
             },
             unit: {
                 unitNumber: payment.lease.unit.unitNumber,
@@ -94,6 +96,8 @@ export async function GET() {
                     name: lease.tenant.user.name,
                     email: lease.tenant.user.email,
                 },
+                phone: lease.tenant.phone,
+                emergencyContact: lease.tenant.emergencyContact,
             },
             unit: {
                 unitNumber: lease.unit.unitNumber,
@@ -174,6 +178,8 @@ export async function GET() {
                                 name: lease.tenant.user.name,
                                 email: lease.tenant.user.email,
                             },
+                            phone: lease.tenant.phone,
+                            emergencyContact: lease.tenant.emergencyContact,
                         },
                         unit: {
                             unitNumber: lease.unit.unitNumber,
