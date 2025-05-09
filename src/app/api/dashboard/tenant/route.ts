@@ -63,6 +63,8 @@ function serializeTicket(ticket: any): Ticket {
 
 export async function GET() {
     try {
+        console.log("ENV CLOUDFLARE_BUCKET_NAME:", process.env.CLOUDFLARE_BUCKET_NAME);
+
         const session = await getServerSession(authOptions);
         if (!session || session.user.role !== "TENANT") {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -203,6 +205,7 @@ export async function GET() {
             include: {
                 property: true,
                 unit: { include: { property: true } },
+                images: true,
                 comments: {
                     include: {
                         user: { select: { name: true, email: true } },

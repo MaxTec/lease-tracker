@@ -66,7 +66,7 @@ export default function HeaderNav({ session }: HeaderNavProps) {
       <div className="hidden lg:flex items-center space-x-8">
         {/* <Weather session={session} /> */}
         <div className="space-x-6">
-          {session?.user?.role !== "TENANT" && (
+          {session && session?.user?.role !== "TENANT" && (
             <>
               <Link
                 href="/leases"

@@ -8,6 +8,7 @@ interface TextareaProps {
   required?: boolean;
   error?: string;
   label?: string;
+  value?: string;
 }
 
 const Textarea: React.FC<TextareaProps> = ({
@@ -16,6 +17,7 @@ const Textarea: React.FC<TextareaProps> = ({
   required,
   label,
   error,
+  value,
   ...props
 }) => {
   return (
@@ -32,6 +34,7 @@ const Textarea: React.FC<TextareaProps> = ({
         className={`w-full p-2 border rounded-md ${
           error ? "border-red-500" : "border-gray-300"
         }`}
+        value={value}
         {...props}
       />
       {error && <p className="text-red-500 text-sm">{error}</p>}

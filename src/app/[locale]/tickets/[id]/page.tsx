@@ -3,6 +3,8 @@ import TicketDetails from "@/components/tickets/TicketDetails";
 import Layout from "@/components/layout/Layout";
 import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
+import { getServerSession } from "next-auth";
+
 interface Props {
   params: {
     id: string;
@@ -41,11 +43,15 @@ export default async function TicketPage({ params }: Props) {
 
   const ticket = await res.json();
 
+  // Fetch user session and extract role
+  const session = await getServerSession(); // Replace with your session method if needed
+  const userRole = session?.user?.role || "TENANT";
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">{t("details")}</h1>
-        <TicketDetails ticket={ticket} />
+        <TicketDetails ticket={ticket} userRole={userRole} />
       </div>
     </Layout>
   );

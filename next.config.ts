@@ -14,6 +14,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  api: {
+    bodyParser: {
+      sizeLimit: '20mb', // Increase as needed
+    },
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '15mb', // ajusta según el uso esperado
+    },
+  },
 };
 
 export default withNextIntl(nextConfig);

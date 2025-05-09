@@ -1,0 +1,15 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Next-Intl Translation Standard Rule
+
+Siempre que se agregue una nueva clave de traducción en el proyecto usando next-intl, se debe:
+
+- Agregar la traducción correspondiente en español en [es.json](mdc:src/i18n/messages/es.json)
+- Agregar la traducción correspondiente en inglés en [en.json](mdc:src/i18n/messages/en.json)
+
+Ambos archivos se encuentran en el directorio [src/i18n/messages/](mdc:src/i18n/messages/).
+
+Esto asegura que todas las funcionalidades sean multilingües y que no existan claves faltantes en ningún idioma soportado por la aplicación.

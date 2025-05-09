@@ -23,6 +23,8 @@ model User {
   landlord      Landlord?
   tenant        Tenant?
   ticketComments TicketComment[]
+  registrationToken String? // For new tenant registration
+  registrationTokenExpires DateTime? // Expiry for registration token
 }
 
 enum UserRole {
@@ -228,6 +230,7 @@ model Ticket {
   priority    TicketPriority @default(MEDIUM)
   status      TicketStatus  @default(OPEN)
   comments    TicketComment[]
+  images      TicketImage[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
@@ -242,6 +245,16 @@ model TicketComment {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Images attached to a ticket for evidence
+model TicketImage {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  url       String
+  altText   String?
+  createdAt DateTime @default(now())
 }
 
 // Predefined lease clauses

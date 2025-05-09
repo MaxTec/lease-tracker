@@ -4,7 +4,7 @@ import createMiddleware from 'next-intl/middleware';
 import { locales, defaultLocale } from './i18n/settings';
 
 // Define public pages that don't require authentication
-const publicPages = ['/', '/login'];
+const publicPages = ['/', '/login', '/register/new-tenant', '/es/register/new-tenant', '/en/register/new-tenant'];
 
 // Create internationalization middleware
 const handleI18nRouting = createMiddleware({

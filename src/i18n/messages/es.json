@@ -15,7 +15,8 @@
       "add": "Agregar",
       "remove": "Eliminar",
       "back": "Atrás",
-      "actions": "Acciones"
+      "actions": "Acciones",
+      "addAttachment": "Agregar adjunto"
     },
     "navigation": {
       "dashboard": "Panel principal",
@@ -23,7 +24,7 @@
       "leases": "Arrendamientos",
       "tenants": "Inquilinos",
       "landlords": "Propietarios",
-      "tickets": "Tickets",
+      "tickets": "Reportes",
       "vouchers": "Comprobantes",
       "settings": "Configuración",
       "profile": "Perfil",
@@ -74,9 +75,17 @@
       "invalidDate": "Fecha inválida",
       "invalidAmount": "Cantidad inválida",
       "minimumLength": "Debe tener al menos {length} caracteres",
-      "passwordMismatch": "Las contraseñas no coinciden"
+      "passwordMismatch": "Las contraseñas no coinciden",
+      "invalidFileType": "Solo se permiten archivos de imagen.",
+      "invalidUrl": "Url no valida",
+      "maxImages": "Puedes subir hasta {max} imágenes.",
+      "maxFileSize": "Cada imagen debe ser menor a {max}."
     },
-    "loading": "Cargando..."
+    "loading": "Cargando...",
+    "dragDropOrClick": "Arrastra y suelta imágenes aquí, o haz clic para seleccionar archivos",
+    "dropHere": "Suelta los archivos aquí ...",
+    "uploading": "Subiendo...",
+    "optional": "opcional"
   },
   "home": {
     "description": "Simplifique la gestión de sus propiedades con nuestra solución integral de seguimiento de arrendamientos. Administre propiedades, realice seguimiento de pagos y genere comprobantes, todo en un solo lugar.",
@@ -121,13 +130,13 @@
       "activeLeases": "Contratos Activos",
       "totalPayments": "Pagos Totales",
       "occupancyRate": "Tasa de Ocupación",
-      "totalTickets": "Tickets Totales"
+      "totalTickets": "Reportes Totales"
     },
     "charts": {
       "rentCollection": "Recaudación de Alquiler",
       "leaseExpirations": "Vencimientos de Contratos",
       "occupancyRate": "Tasa de Ocupación",
-      "ticketsByStatus": "Distribución de Estado de Tickets",
+      "ticketsByStatus": "Distribución de Estado de Reportes",
       "paid": "Pagado",
       "pending": "Pendiente",
       "overdue": "Atrasado",
@@ -140,7 +149,7 @@
         "description": "Por favor seleccione una propiedad para ver los datos de ocupación"
       },
       "noTicketData": {
-        "title": "No se encontraron tickets para el período seleccionado",
+        "title": "No se encontraron reportes para el período seleccionado",
         "description": "Por favor seleccione un período diferente o vuelva más tarde"
       }
     },
@@ -376,20 +385,20 @@
   },
   "tickets": {
     "title": "Solicitudes de Soporte",
-    "create": "Nuevo Ticket",
-    "edit": "Editar Ticket",
-    "details": "Detalles del Ticket",
-    "list": "Lista de Tickets",
-    "confirmDelete": "¿Está seguro de que desea eliminar este ticket?",
+    "create": "Nuevo Reporte",
+    "edit": "Editar Reporte",
+    "details": "Detalles del Reporte",
+    "list": "Lista de Reportes",
+    "confirmDelete": "¿Está seguro de que desea eliminar este reporte?",
     "emptyState": {
-      "title": "No Se Encontraron Tickets",
-      "description": "No hay tickets en el sistema todavía. Haga clic en el botón de abajo para crear su primer ticket."
+      "title": "No Se Encontraron Reportes",
+      "description": "No hay reportes en el sistema todavía. Haga clic en el botón de abajo para crear su primer reporte."
     },
     "errors": {
       "fetchFailed": "Error al obtener solicitudes",
-      "createFailed": "Error al crear ticket",
-      "updateFailed": "Error al actualizar ticket",
-      "deleteFailed": "Error al eliminar ticket",
+      "createFailed": "Error al crear reporte",
+      "updateFailed": "Error al actualizar reporte",
+      "deleteFailed": "Error al eliminar reporte",
       "commentFailed": "Error al agregar comentario"
     },
     "filters": {
@@ -425,11 +434,19 @@
       "high": "Alta",
       "urgent": "Urgente"
     },
+    "images": {
+      "title": "Imágenes adjuntas ({count})",
+      "preview": "Previsualizar imagen"
+    },
     "comments": {
       "title": "Comentarios",
       "add": "Agregar Comentario",
       "placeholder": "Agregar un comentario...",
-      "addingComment": "Agregando Comentario..."
+      "addingComment": "Agregando Comentario...",
+      "empty": "Aún no hay comentarios.",
+      "commentBy": "Comentario de {name}",
+      "ticketDetails": "Detalles del Reporte",
+      "metaInfo": "Información del Reporte"
     }
   },
   "vouchers": {
@@ -603,12 +620,12 @@
       "emptyDescription": "No tienes pagos próximos programados.",
       "amount": "Monto",
       "dueDate": "Fecha de Vencimiento",
-      "payNextRent": "Pagar Próxima Renta"
+      "payNextRent": "Pagar Renta"
     },
     "tickets": {
-      "title": "Tickets",
-      "emptyTitle": "No se encontraron tickets",
-      "emptyDescription": "Aún no has creado ningún ticket.",
+      "title": "Reportes",
+      "emptyTitle": "No se encontraron reportes",
+      "emptyDescription": "Aún no has creado ningún reporte.",
       "titleCol": "Título",
       "status": "Estado",
       "created": "Creado"
@@ -621,5 +638,22 @@
       "type": "Tipo",
       "uploaded": "Cargado"
     }
+  },
+  "registration": {
+    "title": "Registro de nuevo inquilino",
+    "phone": "Teléfono",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "formAriaLabel": "Formulario de registro de nuevo inquilino",
+    "errorTitle": "Error",
+    "errorGeneric": "Ocurrió un error inesperado.",
+    "errorNetwork": "Error de red. Inténtalo de nuevo.",
+    "errorPhoneRequired": "Teléfono requerido",
+    "errorPasswordMin": "La contraseña debe tener al menos 8 caracteres",
+    "errorPasswordsDontMatch": "Las contraseñas no coinciden.",
+    "successTitle": "¡Registro exitoso!",
+    "successMessage": "Tu cuenta ha sido creada. Redirigiendo al inicio de sesión...",
+    "submitting": "Registrando...",
+    "submit": "Registrarse"
   }
-} 
+}

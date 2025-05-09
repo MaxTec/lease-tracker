@@ -3,7 +3,8 @@ import prisma from "@/utils/db";
 import { Prisma } from "@prisma/client";
 import { differenceInMonths, addMonths, isEqual, addDays } from "date-fns";
 import { uploadToR2 } from "@/utils/leaseUtils";
-// import { generateLeasePDF, sendLeaseEmail } from '@/utils/leaseUtils';
+import { sendLeaseEmail } from "@/utils/leaseUtils";
+import { randomBytes } from "crypto";
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,13 +53,13 @@ export async function GET(request: NextRequest) {
         },
         payments: includePayments
           ? {
-            where: {
-              status: "PAID",
-            },
-            orderBy: {
-              dueDate: "desc",
-            },
-          }
+              where: {
+                status: "PAID",
+              },
+              orderBy: {
+                dueDate: "desc",
+              },
+            }
           : false,
         _count: {
           select: {
@@ -165,20 +166,28 @@ export async function POST(request: NextRequest) {
     }
 
     let finalTenantId = tenantId;
+    let registrationToken: string | null = null;
+    let registrationTokenExpires: Date | null = null;
+    let newUser = null;
     // If tenantId is not provided, create a new user and tenant
     if (!tenantId) {
+      // Generate registration token and expiry (48 hours)
+      registrationToken = randomBytes(32).toString("hex");
+      registrationTokenExpires = new Date(Date.now() + 48 * 60 * 60 * 1000);
       // Create user
-      const user = await prisma.user.create({
+      newUser = await prisma.user.create({
         data: {
           name: tenantName,
           email: tenantEmail,
           role: "TENANT",
+          registrationToken,
+          registrationTokenExpires,
         },
       });
       // Create tenant
       const tenant = await prisma.tenant.create({
         data: {
-          userId: user.id,
+          userId: newUser.id,
           phone: tenantPhone,
         },
       });
@@ -303,6 +312,20 @@ export async function POST(request: NextRequest) {
           data: leaseClauses,
         });
       }
+    }
+
+    // Send registration email if new user
+    if (newUser && registrationToken) {
+      const registrationUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/register/new-tenant?token=${registrationToken}`;
+      const leaseUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/leases/${lease.id}`;
+      const loginUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/login`;
+      await sendLeaseEmail(
+        tenantEmail,
+        tenantName,
+        leaseUrl,
+        loginUrl,
+        registrationUrl
+      );
     }
 
     return NextResponse.json(lease);

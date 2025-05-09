@@ -1,5 +1,10 @@
 import { Ticket as PrismaTicket, User, Property } from "@prisma/client";
 
+export interface TicketImage {
+    url: string;
+    altText?: string;
+}
+
 export interface Ticket extends PrismaTicket {
     tenant: {
         user: Pick<User, "name" | "email">;
@@ -8,13 +13,12 @@ export interface Ticket extends PrismaTicket {
         unitNumber: string;
         property: Pick<Property, "name">;
     };
+    images: TicketImage[];
 }
 
 export interface TicketFormData {
     title: string;
     description: string;
-    priority: string;
-    status: string;
-    unitId: number;
-    category: string;
+    priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+    images: TicketImage[];
 } 

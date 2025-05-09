@@ -46,6 +46,7 @@ export async function GET(request: Request) {
               },
             },
           },
+          images: true,
         },
         orderBy: {
           createdAt: "desc",
@@ -70,6 +71,7 @@ export async function GET(request: Request) {
               },
             },
           },
+          images: true,
         },
         orderBy: {
           createdAt: "desc",
@@ -79,6 +81,9 @@ export async function GET(request: Request) {
     }
 
     // TENANT: return only tickets for the tenant (current logic)
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const user = await prisma.user.findUnique({
       where: { email: session.user?.email || "" },
       include: { tenant: true },
@@ -105,6 +110,7 @@ export async function GET(request: Request) {
             },
           },
         },
+        images: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -163,8 +169,24 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check for active tickets (OPEN or IN_PROGRESS)
+    const activeTicketsCount = await prisma.ticket.count({
+      where: {
+        tenantId: user.tenant.id,
+        status: {
+          in: ["OPEN", "IN_PROGRESS"],
+        },
+      },
+    });
+    if (activeTicketsCount >= 2) {
+      return NextResponse.json(
+        { error: "You can only have 2 active tickets at a time." },
+        { status: 403 }
+      );
+    }
+
     const json = await request.json();
-    const { title, description, priority } = json;
+    const { title, description, priority, images } = json;
     console.log('activeLease', activeLease);
     // if (unitId !== activeLease.unitId) {
     //   return NextResponse.json(
@@ -186,8 +208,34 @@ export async function POST(request: Request) {
       include: {
         property: true,
         unit: true,
+        images: true,
       },
     });
+
+    // If images are provided, create TicketImage records
+    if (Array.isArray(images) && images.length > 0) {
+      await Promise.all(
+        images.map((img: { url: string; altText?: string }) =>
+          prisma.ticketImage.create({
+            data: {
+              ticketId: ticket.id,
+              url: img.url,
+              altText: img.altText || null,
+            },
+          })
+        )
+      );
+      // Re-fetch ticket with images
+      const ticketWithImages = await prisma.ticket.findUnique({
+        where: { id: ticket.id },
+        include: {
+          property: true,
+          unit: true,
+          images: true,
+        },
+      });
+      return NextResponse.json(ticketWithImages);
+    }
 
     return NextResponse.json(ticket);
   } catch (error) {

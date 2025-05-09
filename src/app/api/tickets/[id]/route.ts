@@ -58,7 +58,8 @@ export async function GET(
             orderBy: {
               createdAt: 'desc'
             }
-          }
+          },
+          images: true,
         }
       });
       if (!ticket) {
@@ -97,7 +98,8 @@ export async function GET(
             orderBy: {
               createdAt: 'desc'
             }
-          }
+          },
+          images: true,
         }
       });
       if (!ticket) {

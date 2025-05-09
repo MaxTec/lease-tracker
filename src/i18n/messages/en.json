@@ -15,7 +15,8 @@
       "add": "Add",
       "remove": "Remove",
       "back": "Back",
-      "actions": "Actions"
+      "actions": "Actions",
+      "addAttachment": "Add Attachment"
     },
     "navigation": {
       "dashboard": "Dashboard",
@@ -74,9 +75,17 @@
       "invalidDate": "Invalid date",
       "invalidAmount": "Invalid amount",
       "minimumLength": "Must be at least {length} characters",
-      "passwordMismatch": "Passwords do not match"
+      "passwordMismatch": "Passwords do not match",
+      "invalidFileType": "Only image files are allowed",
+      "invalidUrl": "Invalid Url",
+      "maxImages": "You can upload up to {max} images.",
+      "maxFileSize": "Each image must be less than {max}."
     },
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "dragDropOrClick": "Drag and drop images here, or click to select files",
+    "dropHere": "Drop the files here ...",
+    "uploading": "Uploading...",
+    "optional": "optional"
   },
   "home": {
     "description": "Simplify your property management with our comprehensive lease tracking solution. Manage properties, track payments, and generate vouchers all in one place.",
@@ -425,12 +434,20 @@
       "high": "High",
       "urgent": "Urgent"
     },
+    "images": {
+      "title": "Attached images ({count})",
+      "preview": "Preview image"
+    },
     "comments": {
       "title": "Comments",
       "add": "Add Comment",
       "placeholder": "Add a comment...",
-      "addingComment": "Adding Comment..."
-    }
+      "addingComment": "Adding Comment...",
+      "empty": "No comments yet.",
+      "commentBy": "Comment by {name}"
+    },
+    "ticketDetails": "Ticket Details",
+    "metaInfo": "Ticket Meta Information"
   },
   "vouchers": {
     "title": "Vouchers",
@@ -603,7 +620,7 @@
       "emptyDescription": "You have no upcoming payments scheduled.",
       "amount": "Amount",
       "dueDate": "Due Date",
-      "payNextRent": "Pay Next Rent"
+      "payNextRent": "Pay Rent"
     },
     "tickets": {
       "title": "Tickets",
@@ -621,5 +638,22 @@
       "type": "Type",
       "uploaded": "Uploaded"
     }
+  },
+  "registration": {
+    "title": "New Tenant Registration",
+    "phone": "Phone",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "formAriaLabel": "New tenant registration form",
+    "errorTitle": "Error",
+    "errorGeneric": "An unexpected error occurred.",
+    "errorNetwork": "Network error. Please try again.",
+    "errorPhoneRequired": "Phone is required",
+    "errorPasswordMin": "Password must be at least 8 characters",
+    "errorPasswordsDontMatch": "Passwords do not match.",
+    "successTitle": "Registration Successful!",
+    "successMessage": "Your account has been created. Redirecting to login...",
+    "submitting": "Registering...",
+    "submit": "Register"
   }
-} 
+}
