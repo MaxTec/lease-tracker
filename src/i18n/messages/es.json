@@ -419,7 +419,8 @@
       "status": "Estado",
       "category": "Categoría",
       "assignedTo": "Asignado a",
-      "attachments": "Adjuntos"
+      "attachments": "Adjuntos",
+      "created": "Fecha de creación"
     },
     "status": {
       "open": "Abierto",

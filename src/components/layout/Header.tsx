@@ -9,8 +9,8 @@ export default async function Header() {
 
   return (
     <header className="bg-white shadow-md">
-      <div className="container mx-auto px-4 py-4">
-        <nav className="flex items-center justify-between">
+      <div className="container mx-auto md:px-4 md:py-4">
+        <nav className="flex items-center justify-between relative px-4 py-2">
           <Link href="/" className="text-xl font-bold text-gray-800">
             <Logo size={170} color="black" />
           </Link>

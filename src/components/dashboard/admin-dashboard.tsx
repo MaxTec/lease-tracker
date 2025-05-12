@@ -21,8 +21,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ data }) => {
   }));
 
   return (
-    <div className='space-y-6 p-6'>
-      <div className='grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-5'>
+    <div className="space-y-4 p-4 md:space-y-6 md:p-6">
+      <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
         <MetricCard title={t("dashboard.summary.properties")} value={data.metrics.totalProperties} icon={<span className='text-xl'>🏢</span>} />
         <MetricCard title={t("dashboard.summary.activeLeases")} value={data.metrics.activeLeases} icon={<span className='text-xl'>📄</span>} />
         <MetricCard title={t("dashboard.summary.totalPayments")} value={`$${data.metrics.totalPayments.toLocaleString()}`} icon={<span className='text-xl'>💰</span>} />

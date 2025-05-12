@@ -10,11 +10,24 @@ import Button from "@/components/ui/Button";
 import { toast } from "react-hot-toast";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
+import { FaInfoCircle, FaListUl, FaFileSignature } from "react-icons/fa";
 
-const LeaseDetailsStep = dynamic(() => import("@/components/lease/LeaseDetailsStep"), { ssr: false });
-const LeaseRulesStep = dynamic(() => import("@/components/lease/LeaseRulesStep"), { ssr: false });
-const LeasePreviewStep = dynamic(() => import("@/components/lease/LeasePreviewStep"), { ssr: false });
-const LeaseUploadStep = dynamic(() => import("@/components/lease/LeaseUploadStep"), { ssr: false });
+const LeaseDetailsStep = dynamic(
+  () => import("@/components/lease/LeaseDetailsStep"),
+  { ssr: false }
+);
+const LeaseRulesStep = dynamic(
+  () => import("@/components/lease/LeaseRulesStep"),
+  { ssr: false }
+);
+const LeasePreviewStep = dynamic(
+  () => import("@/components/lease/LeasePreviewStep"),
+  { ssr: false }
+);
+const LeaseUploadStep = dynamic(
+  () => import("@/components/lease/LeaseUploadStep"),
+  { ssr: false }
+);
 
 const leaseSchema = z
   .object({
@@ -142,7 +155,15 @@ const defaultFormValues = {
   agreementVerified: false,
 };
 
-const NewLeaseClient = () => {
+interface NewLeaseClientProps {
+  userId?: string;
+  userRole?: string;
+}
+
+const NewLeaseClient = ({
+  userId: _userId,
+  userRole: _userRole,
+}: NewLeaseClientProps) => {
   const t = useTranslations();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
@@ -154,14 +175,17 @@ const NewLeaseClient = () => {
     {
       title: t("leases.new.steps.details.title"),
       description: t("leases.new.steps.details.description"),
+      icon: FaInfoCircle,
     },
     {
       title: t("leases.new.steps.rules.title"),
       description: t("leases.new.steps.rules.description"),
+      icon: FaListUl,
     },
     {
       title: t("leases.new.steps.preview.title"),
       description: t("leases.new.steps.preview.description"),
+      icon: FaFileSignature,
     },
   ];
 
@@ -272,7 +296,10 @@ const NewLeaseClient = () => {
       toast.success(t("leases.notifications.createSuccess"));
       router.push(`/leases/${result.id}`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : t("leases.errors.createFailed");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : t("leases.errors.createFailed");
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -282,38 +309,55 @@ const NewLeaseClient = () => {
   const renderStep = () => {
     switch (currentStep) {
       case 0:
-        return <LeaseDetailsStep />;
+        return <LeaseDetailsStep userId={_userId} userRole={_userRole} />;
       case 1:
         return <LeaseRulesStep />;
       case 2:
-        return watch("hasExistingLease") ? <LeaseUploadStep /> : <LeasePreviewStep />;
+        return watch("hasExistingLease") ? (
+          <LeaseUploadStep />
+        ) : (
+          <LeasePreviewStep />
+        );
       default:
         return null;
     }
   };
 
   return (
-    <div className='container mx-auto px-4 py-8'>
-      <div className='bg-white rounded-lg shadow'>
-        <div className='p-6 border-b border-gray-200'>
-          <h2 className='text-2xl font-semibold text-gray-800 mb-6'>{t("leases.new.title")}</h2>
-          <StepIndicator steps={steps} currentStep={currentStep} className='mb-8' />
+    <div className="container mx-auto px-4 py-8">
+      <div className="bg-white rounded-lg shadow">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+            {t("leases.new.title")}
+          </h2>
+          <StepIndicator
+            steps={steps}
+            currentStep={currentStep}
+            className="mb-8"
+          />
           <FormProvider {...methods}>
-            <form onSubmit={handleSubmit(onSubmit)} className='space-y-6 mt-8'>
-              <div className="px-12">
-                {renderStep()}
-              </div>
-              {error && <div className='p-4 bg-red-50 text-red-600 rounded-md'>{error}</div>}
-              <div className='flex justify-between pt-4 mt-8 border-t border-gray-200'>
-                <Button variant='outline' type='button' onClick={previousStep} disabled={currentStep === 0}>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mt-8">
+              <div className="md:px-12">{renderStep()}</div>
+              {error && (
+                <div className="p-4 bg-red-50 text-red-600 rounded-md">
+                  {error}
+                </div>
+              )}
+              <div className="flex justify-between pt-4 mt-8 border-t border-gray-200">
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={previousStep}
+                  disabled={currentStep === 0}
+                >
                   {t("common.buttons.back")}
                 </Button>
                 {currentStep < steps.length - 1 ? (
-                  <Button type='button' onClick={nextStep}>
+                  <Button type="button" onClick={nextStep}>
                     Next
                   </Button>
                 ) : (
-                  <Button type='submit' isLoading={isSubmitting}>
+                  <Button type="submit" isLoading={isSubmitting}>
                     Submit
                   </Button>
                 )}

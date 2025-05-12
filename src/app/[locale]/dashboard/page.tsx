@@ -29,7 +29,7 @@ export default async function DashboardPage() {
 
   // If tenant, use the new endpoint
   if (session.user.role === "TENANT") {
-    const res = await fetch(`${process.env.NEXTAUTH_URL || ""}/api/dashboard/tenant`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/dashboard/tenant`, {
       cache: "no-store",
       headers: {
         cookie: cookieStore
@@ -56,7 +56,7 @@ export default async function DashboardPage() {
   }
 
   // Default: landlord/admin dashboard
-  const res = await fetch(`${process.env.NEXTAUTH_URL || ""}/api/dashboard?${params.toString()}`, { cache: "no-store" });
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/dashboard?${params.toString()}`, { cache: "no-store" });
   if (!res.ok) {
     return (
       <Layout>

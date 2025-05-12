@@ -53,12 +53,14 @@ const List = ({ leases: initialLeases }: ListProps) => {
       {
         key: "property",
         label: t("leases.list.property"),
+        priority: 1,
         render: (lease: Lease) =>
           `${lease.unit.property.name} - ${t("leases.list.unit")} ${lease.unit.unitNumber}`,
       },
       {
         key: "tenant",
         label: t("leases.list.tenant"),
+        priority: 2,
         render: (lease: Lease) => lease.tenant.user.name,
       },
       {
@@ -118,6 +120,7 @@ const List = ({ leases: initialLeases }: ListProps) => {
       {
         key: "actions",
         label: t("leases.list.actions"),
+        priority: 4,
         render: (lease: Lease) => (
           <div className="flex space-x-2">
             <Button

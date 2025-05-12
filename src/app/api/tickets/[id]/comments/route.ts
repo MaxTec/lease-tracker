@@ -21,7 +21,8 @@ export async function POST(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Check if the user is an Admin
+    console.log('user', user);
+
     if (user.role === 'ADMIN') {
       const tickets = await prisma.ticket.findMany(); // Fetch all tickets
       return NextResponse.json(tickets); // Return all tickets
@@ -29,8 +30,10 @@ export async function POST(
 
     const json = await request.json();
     const { content } = json;
-    const id = request.nextUrl.pathname.split('/').pop() || ''; // ← Extract ID manually
-
+    console.log('request', request.nextUrl.pathname);
+    const id = request.nextUrl.pathname.split('/')[3] || ''; // Get the ID from the 4th segment (index 3)
+    console.log('id', id);
+    console.log('content', content);
     const comment = await prisma.ticketComment.create({
       data: {
         content,

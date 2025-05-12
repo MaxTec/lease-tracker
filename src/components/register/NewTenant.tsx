@@ -10,12 +10,17 @@ import FormGroup from "@/components/ui/FormGroup";
 import Notification from "@/components/ui/Notification";
 import { useTranslations } from "next-intl";
 import confetti from "canvas-confetti";
+import { notFound } from "next/navigation";
 
 const NewTenant: React.FC = () => {
   const t = useTranslations("registration");
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
+
+  if (!token) {
+    notFound();
+  }
 
   const [serverError, setServerError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -32,7 +37,9 @@ const NewTenant: React.FC = () => {
         path: ["confirmPassword"],
       });
 
-  type RegistrationFormValues = z.infer<ReturnType<typeof getRegistrationSchema>>;
+  type RegistrationFormValues = z.infer<
+    ReturnType<typeof getRegistrationSchema>
+  >;
 
   const {
     register,
@@ -72,7 +79,7 @@ const NewTenant: React.FC = () => {
       } else {
         setSuccess(true);
         reset();
-        setTimeout(() => router.push("/login"), 3000);
+        setTimeout(() => router.push("/"), 4000);
       }
     } catch {
       setServerError(t("error.network"));
@@ -99,7 +106,10 @@ const NewTenant: React.FC = () => {
         />
       )}
       {!success && (
-        <form onSubmit={handleSubmit(handleFormSubmit)} aria-label={t("formAriaLabel")}> 
+        <form
+          onSubmit={handleSubmit(handleFormSubmit)}
+          aria-label={t("formAriaLabel")}
+        >
           <FormGroup>
             <Input
               label={t("phone")}
@@ -144,4 +154,4 @@ const NewTenant: React.FC = () => {
   );
 };
 
-export default NewTenant; 
+export default NewTenant;

@@ -12,7 +12,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
   const leaseId = id;
 
   // Fetch lease data
-  const leaseRes = await fetch(`${process.env.NEXTAUTH_URL || ""}/api/leases/${leaseId}`, { cache: "no-store" });
+  const leaseRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/leases/${leaseId}`, { cache: "no-store" });
   if (!leaseRes.ok) {
     return (
       <Layout>
@@ -23,7 +23,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
   const lease = await leaseRes.json();
 
   // Fetch payments data
-  const paymentsRes = await fetch(`${process.env.NEXTAUTH_URL || ""}/api/payments?leaseId=${leaseId}`, { cache: "no-store" });
+  const paymentsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/payments?leaseId=${leaseId}`, { cache: "no-store" });
   if (!paymentsRes.ok) {
     return (
       <Layout>

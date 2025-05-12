@@ -38,7 +38,7 @@ export default function LoginForm({
       });
 
       if (result?.error) {
-        throw new Error("Invalid email or password");
+        throw new Error(result?.error || "Invalid email or password");
       }
 
       // Redirect to dashboard

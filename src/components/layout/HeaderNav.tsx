@@ -15,8 +15,15 @@ export default function HeaderNav({ session }: HeaderNavProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const t = useTranslations();
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+  const handleToggleMobileMenu = () => {
+    setIsMobileMenuOpen((prev) => !prev);
+  };
+
+  const handleHamburgerKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleToggleMobileMenu();
+    }
   };
 
   return (
@@ -25,14 +32,17 @@ export default function HeaderNav({ session }: HeaderNavProps) {
       <button
         type="button"
         className="lg:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
-        onClick={toggleMobileMenu}
-        aria-expanded={isMobileMenuOpen}
+        onClick={handleToggleMobileMenu}
         aria-controls="mobile-menu"
+        aria-expanded={isMobileMenuOpen}
+        tabIndex={0}
+        aria-label="Open main menu"
+        onKeyDown={handleHamburgerKeyDown}
       >
         <span className="sr-only">Open main menu</span>
         {/* Icon when menu is closed */}
         <svg
-          className={`${isMobileMenuOpen ? "hidden" : "block"} h-6 w-6`}
+          className={isMobileMenuOpen ? "hidden h-6 w-6" : "block h-6 w-6"}
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth="2"
@@ -47,7 +57,7 @@ export default function HeaderNav({ session }: HeaderNavProps) {
         </svg>
         {/* Icon when menu is open */}
         <svg
-          className={`${isMobileMenuOpen ? "block" : "hidden"} h-6 w-6`}
+          className={isMobileMenuOpen ? "block h-6 w-6" : "hidden h-6 w-6"}
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth="2"
@@ -135,7 +145,7 @@ export default function HeaderNav({ session }: HeaderNavProps) {
 
       {/* Mobile Navigation */}
       <div
-        className={`$${isMobileMenuOpen ? "block" : "hidden"} lg:hidden mt-4 pb-3 border-t border-gray-200`}
+        className={`${isMobileMenuOpen ? "block" : "hidden"} absolute left-0 top-full w-full z-50 bg-white shadow-lg lg:hidden md:mt-4 pb-3 border-t border-gray-200`}
         id="mobile-menu"
       >
         <div className="space-y-3 pt-3">

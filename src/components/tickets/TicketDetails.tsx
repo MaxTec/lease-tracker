@@ -76,6 +76,9 @@ const TicketDetails = ({ ticket, userRole }: Props) => {
   const [selectedImage, setSelectedImage] = useState<TicketImage | null>(null);
 
   const canEdit = userRole === "ADMIN" || userRole === "LANDLORD";
+  console.log("userRole", userRole);
+
+  const isFormDisabled = status === "RESOLVED" || status === "CLOSED";
 
   const handleStatusChange = async (newStatus: string) => {
     try {
@@ -212,53 +215,58 @@ const TicketDetails = ({ ticket, userRole }: Props) => {
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
           {/* Status Badge */}
-          <span
-            className={`flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-semibold ${getStatusColor(
-              status
-            )}`}
-            tabIndex={0}
-          >
-            <span aria-hidden="true">{statusIcons[status]}</span>
-            {canEdit ? (
-              <Select
-                label={t("tickets.form.status")}
-                value={status}
-                options={statusOptions}
-                onChange={(e) => handleStatusChange(e.target.value)}
-                className="bg-transparent border-none p-0 text-xs font-semibold focus:ring-0 focus:outline-none"
-              />
-            ) : (
+          {canEdit ? (
+            <Select
+              label={t("tickets.form.status")}
+              value={status}
+              options={statusOptions}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              disabled={isFormDisabled}
+              aria-disabled={isFormDisabled}
+              tabIndex={isFormDisabled ? -1 : 0}
+              className={isFormDisabled ? "opacity-50 cursor-not-allowed" : ""}
+            />
+          ) : (
+            <span
+              className={`flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-semibold ${getStatusColor(
+                status
+              )}`}
+              tabIndex={0}
+            >
+              <span aria-hidden="true">{statusIcons[status]}</span>
               <span>{t(`tickets.status.${status.toLowerCase()}`)}</span>
-            )}
-          </span>
+            </span>
+          )}
           {/* Priority Badge */}
-          <span
-            className={`flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-semibold ${getPriorityColor(
-              priority
-            )}`}
-            aria-label={t("tickets.form.priority")}
-            tabIndex={0}
-          >
-            <span aria-hidden="true">{priorityIcons[priority]}</span>
-            {canEdit ? (
-              <Select
-                label={t("tickets.form.priority")}
-                value={priority}
-                options={priorityOptions}
-                onChange={(e) => handlePriorityChange(e.target.value)}
-                className="bg-transparent border-none p-0 text-xs font-semibold focus:ring-0 focus:outline-none"
-              />
-            ) : (
+
+          {canEdit ? (
+            <Select
+              label={t("tickets.form.priority")}
+              value={priority}
+              options={priorityOptions}
+              onChange={(e) => handlePriorityChange(e.target.value)}
+              disabled={isFormDisabled}
+              aria-disabled={isFormDisabled}
+              tabIndex={isFormDisabled ? -1 : 0}
+              className={isFormDisabled ? "opacity-50 cursor-not-allowed" : ""}
+            />
+          ) : (
+            <span
+              className={`flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-semibold ${getPriorityColor(
+                priority
+              )}`}
+              aria-label={t("tickets.form.priority")}
+              tabIndex={0}
+            >
+              <span aria-hidden="true">{priorityIcons[priority]}</span>
               <span>{t(`tickets.priority.${priority.toLowerCase()}`)}</span>
-            )}
-          </span>
+            </span>
+          )}
         </div>
       </header>
 
       {/* Meta Info */}
-      <section
-        className="px-6 py-4 bg-gray-50 border-b border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-4"
-      >
+      <section className="px-6 py-4 bg-gray-50 border-b border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
           <span className="text-xs text-gray-500">
             {t("tickets.form.property")}
@@ -308,9 +316,7 @@ const TicketDetails = ({ ticket, userRole }: Props) => {
 
       {/* Images Preview Section */}
       {ticket.images && ticket.images.length > 0 && (
-        <section
-          className="px-6 py-5 border-b border-gray-100"
-        >
+        <section className="px-6 py-5 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">
             {t("tickets.images.title", { count: ticket.images.length })}
           </h2>
@@ -324,7 +330,8 @@ const TicketDetails = ({ ticket, userRole }: Props) => {
                 aria-label={image.altText || t("tickets.images.preview")}
                 onClick={() => handleOpenLightbox(image)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") handleOpenLightbox(image);
+                  if (e.key === "Enter" || e.key === " ")
+                    handleOpenLightbox(image);
                 }}
               >
                 <img
@@ -386,11 +393,17 @@ const TicketDetails = ({ ticket, userRole }: Props) => {
             placeholder={t("tickets.comments.placeholder")}
             required
             aria-label={t("tickets.comments.placeholder")}
+            disabled={isFormDisabled}
+            aria-disabled={isFormDisabled}
+            // className={isFormDisabled ? "opacity-50 cursor-not-allowed" : ""}
           />
           <Button
             type="submit"
-            disabled={loading}
+            disabled={loading || isFormDisabled}
             aria-label={t("tickets.comments.add")}
+            aria-disabled={isFormDisabled}
+            tabIndex={isFormDisabled ? -1 : 0}
+            className={isFormDisabled ? "opacity-50 cursor-not-allowed" : ""}
           >
             {loading ? t("common.loading") : t("tickets.comments.add")}
           </Button>

@@ -41,7 +41,7 @@ const authMiddleware = withAuth(
             }
         },
         pages: {
-            signIn: '/login'
+            signIn: '/'
         }
     }
 );

@@ -14,7 +14,7 @@ export default async function TicketsPage() {
   if (session.user.role) params.append("userRole", session.user.role);
   if (session.user.id) params.append("userId", session.user.id.toString());
 
-  const res = await fetch(`${process.env.NEXTAUTH_URL || ""}/api/tickets?${params.toString()}`, { cache: "no-store" });
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/tickets?${params.toString()}`, { cache: "no-store" });
   console.log('res', res);
   if (!res.ok) {
     return (

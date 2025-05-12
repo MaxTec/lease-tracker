@@ -196,7 +196,7 @@ const Dashboard = ({
   );
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="md:space-y-6 md:p-6">
       {Filters}
       {session.user.role === "LANDLORD" && <LandlordDashboard data={data} />}
       {session.user.role === "ADMIN" && (

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/utils/db";
-import { uploadToR2 } from "@/utils/leaseUtils";
+import { sendLeaseEmail, uploadToR2 } from "@/utils/leaseUtils";
 
 // GET /api/leases/[id] - Get a specific lease by ID
 export async function GET(
@@ -64,75 +64,6 @@ export async function GET(
     );
   }
 }
-
-// PATCH /api/leases/[id] - Update a lease
-// export async function PATCH(
-//     request: NextRequest,
-//     { params }: { params: { id: string } }
-// ) {
-//     try {
-//         const session = await getServerSession(authOptions);
-
-//         // Check if user is authenticated
-//         if (!session) {
-//             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-//         }
-
-//         // Check if user is admin
-//         if (session.user.role !== 'ADMIN') {
-//             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-//         }
-
-//         const leaseId = parseInt(params.id);
-
-//         if (isNaN(leaseId)) {
-//             return NextResponse.json({ error: 'Invalid lease ID' }, { status: 400 });
-//         }
-
-//         // Check if lease exists
-//         const existingLease = await prisma.lease.findUnique({
-//             where: { id: leaseId },
-//         });
-
-//         if (!existingLease) {
-//             return NextResponse.json({ error: 'Lease not found' }, { status: 404 });
-//         }
-
-//         // Get update data from request body
-//         const data = await request.json();
-
-//         // Update the lease
-//         const updatedLease = await prisma.lease.update({
-//             where: { id: leaseId },
-//             data,
-//             include: {
-//                 unit: {
-//                     include: {
-//                         property: true,
-//                     },
-//                 },
-//                 tenant: {
-//                     include: {
-//                         user: {
-//                             select: {
-//                                 name: true,
-//                                 email: true,
-//                             },
-//                         },
-//                     },
-//                 },
-//             },
-//         });
-
-//         return NextResponse.json(updatedLease);
-//     } catch (error) {
-//         console.error('Error updating lease:', error);
-//         return NextResponse.json(
-//             { error: 'Failed to update lease' },
-//             { status: 500 }
-//         );
-//     }
-// }
 
 // DELETE /api/leases/[id] - Terminate a lease
 export async function DELETE(
@@ -257,12 +188,25 @@ export async function PUT(
               select: {
                 name: true,
                 email: true,
+                registrationToken: true,
               },
             },
           },
         },
       },
     });
+    if (updatedLease.status === "ACTIVE") {
+      const registrationUrl = `${process.env.NEXT_PUBLIC_API_URL}/register/new-tenant?token=${updatedLease.tenant.user.registrationToken}`;
+      const leaseUrl = `${process.env.NEXT_PUBLIC_API_URL}/leases/${updatedLease.id}`;
+      const loginUrl = `${process.env.NEXT_PUBLIC_API_URL}/login`;
+      await sendLeaseEmail(
+        updatedLease.tenant.user.email,
+        updatedLease.tenant.user.name,
+        leaseUrl,
+        loginUrl,
+        registrationUrl
+      );
+    }
 
     return NextResponse.json(updatedLease);
   } catch (error) {

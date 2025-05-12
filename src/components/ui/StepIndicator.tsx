@@ -1,10 +1,12 @@
 "use client";
 
 import { FaCheck } from "react-icons/fa";
+import { ElementType } from "react";
 
 interface Step {
   title: string;
   description: string;
+  icon: ElementType;
 }
 
 interface StepIndicatorProps {
@@ -13,13 +15,18 @@ interface StepIndicatorProps {
   className?: string;
 }
 
-export default function StepIndicator({ steps, currentStep, className = "" }: StepIndicatorProps) {
+export default function StepIndicator({
+  steps,
+  currentStep,
+  className = "",
+}: StepIndicatorProps) {
   return (
     <nav aria-label="Progress" className={className}>
       <ol role="list" className="space-y-4 md:flex md:space-y-0 md:space-x-8">
         {steps.map((step, index) => {
           const isCurrentStep = currentStep === index;
           const isCompleted = currentStep > index;
+          const Icon = step.icon;
 
           return (
             <li key={step.title} className="md:flex-1">
@@ -47,22 +54,22 @@ export default function StepIndicator({ steps, currentStep, className = "" }: St
                   <span className="flex items-center">
                     <span className="flex h-6 w-6 items-center justify-center rounded-full mr-2">
                       {isCompleted ? (
-                        <FaCheck className="h-4 w-4 text-indigo-600" aria-hidden="true" />
+                        <FaCheck
+                          className="h-4 w-4 text-indigo-600"
+                          aria-hidden="true"
+                        />
                       ) : (
-                        <span
-                          className={`text-sm ${
-                            isCurrentStep ? "text-indigo-600" : "text-gray-500"
-                          }`}
-                        >
-                          {index + 1}
-                        </span>
+                        <Icon
+                          className={`h-5 w-5 ${isCurrentStep ? "text-indigo-600" : "text-gray-500"}`}
+                          aria-hidden="true"
+                        />
                       )}
                     </span>
                     {step.title}
                   </span>
                 </span>
                 <span
-                  className={`text-sm
+                  className={`text-sm hidden md:block
                     ${
                       isCompleted || isCurrentStep
                         ? "text-gray-600"
@@ -78,4 +85,4 @@ export default function StepIndicator({ steps, currentStep, className = "" }: St
       </ol>
     </nav>
   );
-} 
+}

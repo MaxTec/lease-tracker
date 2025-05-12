@@ -88,11 +88,13 @@ const List = ({ landlords: initialLandlords }: ListProps) => {
         key: "user.name",
         label: t("landlords.form.name"),
         render: (landlord: Landlord) => landlord.user.name,
+        priority: 1,
       },
       {
         key: "user.email",
         label: t("landlords.form.email"),
         render: (landlord: Landlord) => landlord.user.email,
+        priority: 2,
       },
       {
         key: "phone",
@@ -112,6 +114,7 @@ const List = ({ landlords: initialLandlords }: ListProps) => {
       {
         key: "actions",
         label: t("common.buttons.actions"),
+        priority: 3,
         render: (landlord: Landlord) => (
           <div className="flex space-x-2">
             <Button

@@ -3,7 +3,8 @@ import TicketDetails from "@/components/tickets/TicketDetails";
 import Layout from "@/components/layout/Layout";
 import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 interface Props {
   params: Promise<{ id: string; locale: string }>;
@@ -18,9 +19,7 @@ export default async function TicketPage({ params }: Props) {
   const cookieStore = await cookies();
   // Fetch ticket data from API
   console.log("Fetching ticket data from API", id, locale);
-  console.log(
-    `${process.env.NEXT_PUBLIC_API_URL || ""}/api/tickets/${id}`
-  );
+  console.log(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/tickets/${id}`);
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL || ""}/api/tickets/${id}`,
     {
@@ -41,9 +40,8 @@ export default async function TicketPage({ params }: Props) {
   const ticket = await res.json();
 
   // Fetch user session and extract role
-  const session = await getServerSession(); // Replace with your session method if needed
+  const session = await getServerSession(authOptions); // Replace with your session method if needed
   const userRole = session?.user?.role || "TENANT";
-
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">

@@ -35,6 +35,10 @@ export const authOptions: NextAuthOptions = {
                     },
                 });
 
+                if (user?.registrationToken && !user?.isActive) {
+                    throw new Error('Termina tu registro para continuar');
+                }
+
                 if (!user || !user.password) {
                     throw new Error('Invalid credentials');
                 }

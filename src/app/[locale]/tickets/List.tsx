@@ -9,6 +9,9 @@ import { Ticket } from "@/types/ticket";
 import { useTranslations } from "next-intl";
 import { Session } from "next-auth";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Badge from "@/components/ui/Badge";
+import Link from "next/link";
+import { FiPaperclip } from "react-icons/fi";
 
 interface ListProps {
   tickets: Ticket[];
@@ -24,39 +27,64 @@ const List = ({ tickets: initialTickets }: ListProps) => {
   // Example: handle ticket deletion (if needed)
   // const handleDeleteTicket = useCallback(async (ticketId: number) => { ... }, []);
 
+  const getTicketBadgeStatus = (status: string) => {
+    switch (status) {
+      case "OPEN":
+        return "warning";
+      case "IN_PROGRESS":
+        return "info";
+      case "PENDING_REVIEW":
+        return "info";
+      case "RESOLVED":
+        return "success";
+      case "CLOSED":
+        return "success";
+      default:
+        return "default";
+    }
+  };
+
   const columns = useMemo(
     () => [
       {
         key: "title",
         label: t("tickets.form.title"),
-        render: (ticket: Ticket) => ticket.title,
+        render: (ticket: Ticket) => (
+          <Link
+            href={`/tickets/${ticket.id}`}
+            className="text-blue-600 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-1 flex items-center gap-1"
+            tabIndex={0}
+            aria-label={`${t("tickets.form.title")}: ${ticket.title}`}
+          >
+            {ticket.title}
+            {Array.isArray(ticket.images) && ticket.images.length > 0 && (
+              <FiPaperclip
+                className="inline-block text-gray-400 ml-1"
+                size={16}
+                aria-label="Has attachments"
+                title="Has attachments"
+              />
+            )}
+          </Link>
+        ),
       },
       {
         key: "status",
         label: t("tickets.form.status"),
-        render: (ticket: Ticket) => ticket.status,
+        render: (ticket: Ticket) => (
+          <Badge status={getTicketBadgeStatus(ticket.status)}>
+            {ticket.status}
+          </Badge>
+        ),
       },
       {
-        key: "priority",
-        label: t("tickets.form.priority"),
-        render: (ticket: Ticket) => ticket.priority,
+        key: "createdAt",
+        label: t("tickets.form.created"),
+        render: (ticket: Ticket) =>
+          ticket.createdAt
+            ? new Date(ticket.createdAt).toLocaleDateString()
+            : "-",
       },
-      {
-        key: "unit",
-        label: t("tickets.form.unit"),
-        render: (ticket: Ticket) => ticket.unit?.unitNumber || "-",
-      },
-      {
-        key: "property",
-        label: t("tickets.form.property"),
-        render: (ticket: Ticket) => ticket.unit?.property?.name || "-",
-      },
-      {
-        key: "tenant",
-        label: t("tickets.form.tenant"),
-        render: (ticket: Ticket) => ticket.tenant?.user?.name || "-",
-      },
-      // Add more columns as needed
     ],
     [t]
   );
@@ -71,7 +99,9 @@ const List = ({ tickets: initialTickets }: ListProps) => {
 
   if (error) {
     return (
-      <div className="bg-red-50 text-red-600 p-4 rounded-md" role="alert">{error}</div>
+      <div className="bg-red-50 text-red-600 p-4 rounded-md" role="alert">
+        {error}
+      </div>
     );
   }
 
@@ -80,24 +110,27 @@ const List = ({ tickets: initialTickets }: ListProps) => {
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b border-gray-200">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold" tabIndex={0} aria-label={t("tickets.title")}>{t("tickets.title")}</h2>
+            <h2
+              className="text-3xl font-bold"
+              tabIndex={0}
+              aria-label={t("tickets.title")}
+            >
+              {t("tickets.title")}
+            </h2>
             <CreateTicketButton />
           </div>
           {tickets.length > 0 ? (
             <Table
               data={tickets}
               columns={columns}
-              searchable={true}
-              searchKeys={["title", "status", "priority", "unit.unitNumber", "tenant.user.name"]}
-              pageSize={10}
+              searchable={false}
+              pageSize={5}
             />
           ) : (
             <EmptyState
               icon={<FaTicketAlt className="w-12 h-12" />}
               title={t("tickets.emptyState.title")}
               description={t("tickets.emptyState.description")}
-              actionLabel={t("tickets.create")}
-              onAction={() => {}}
             />
           )}
         </div>
@@ -106,4 +139,4 @@ const List = ({ tickets: initialTickets }: ListProps) => {
   );
 };
 
-export default List; 
+export default List;

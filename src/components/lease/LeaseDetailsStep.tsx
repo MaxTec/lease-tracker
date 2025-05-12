@@ -14,7 +14,15 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
-export default function LeaseDetailsStep() {
+interface LeaseDetailsStepProps {
+  userId?: string;
+  userRole?: string;
+}
+
+export default function LeaseDetailsStep({
+  userId,
+  userRole,
+}: LeaseDetailsStepProps) {
   const {
     register,
     control,
@@ -29,7 +37,7 @@ export default function LeaseDetailsStep() {
     handlePropertyChange,
     isLoadingUnits,
     isLoadingProperties,
-  } = useProperties();
+  } = useProperties({ userId, userRole });
   const { tenants, isLoadingTenants } = useTenants();
 
   const startDate = watch("startDate");
@@ -41,7 +49,7 @@ export default function LeaseDetailsStep() {
   const t = useTranslations("LeaseDetailsStep");
 
   // Use react-hook-form for tenantMode
-  const tenantMode = watch('tenantMode') || 'new';
+  const tenantMode = watch("tenantMode") || "new";
 
   useEffect(() => {
     if (startDate && !customEndDate) {
@@ -102,22 +110,9 @@ export default function LeaseDetailsStep() {
     }
   }, [startDate, paymentDay]);
 
-  // Clear fields when switching tenant mode
-  // useEffect(() => {
-  //   if (tenantMode === 'existing') {
-  //     setValue('tenantName', '');
-  //     setValue('tenantEmail', '');
-  //     setValue('tenantPhone', '');
-  //   } else {
-  //     setValue('tenantId', '');
-  //   }
-  // }, [tenantMode, setValue]);
-
   if (isLoadingTenants || isLoadingProperties) return <LoadingSpinner />;
 
   const shouldShowPropertyFields = properties.length > 0;
-  const shouldShowTenantField = tenants.length > 0;
-
   return (
     <div className="space-y-6">
       {!shouldShowPropertyFields && (
@@ -172,26 +167,6 @@ export default function LeaseDetailsStep() {
         </>
       )}
 
-      {!shouldShowTenantField && (
-        <div
-          className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded-md"
-          role="alert"
-          aria-live="assertive"
-          tabIndex={0}
-        >
-          <div>
-            {t("tenantDisclaimer")}{" "}
-            <Link
-              href="/tenants"
-              aria-label={t("addTenant")}
-              className="inline-block mt-2 text-blue-700 underline hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-            >
-              {t("addTenant")}
-            </Link>
-          </div>
-        </div>
-      )}
-
       {/* Tenant mode selector */}
       <Controller
         name="tenantMode"
@@ -199,64 +174,72 @@ export default function LeaseDetailsStep() {
         defaultValue="new"
         rules={{ required: "Please select tenant mode" }}
         render={({ field }) => (
-          <div className="flex items-center space-x-6">
-            <label className="flex items-center">
+          <div className="flex flex-col justify-start md:flex-row md:items-center md:space-x-6 space-y-3 md:space-y-0">
+            <label className="flex md:items-center">
               <Input
                 type="radio"
                 name="tenantMode"
                 value="existing"
-                checked={field.value === 'existing'}
-                onChange={() => field.onChange('existing')}
+                checked={field.value === "existing"}
+                onChange={() => field.onChange("existing")}
+                disabled={tenants.length === 0}
                 label="Select Existing Tenant"
                 className="mr-2 w-4 h-4"
                 style={{ width: 16, height: 16 }}
               />
             </label>
-            <label className="flex items-center">
+            <label className="flex md:items-center">
               <Input
                 type="radio"
                 name="tenantMode"
                 value="new"
-                checked={field.value === 'new'}
-                onChange={() => field.onChange('new')}
+                checked={field.value === "new"}
+                onChange={() => field.onChange("new")}
+                disabled={tenants.length === 0}
                 label="Create New Tenant"
                 className="mr-2 w-4 h-4"
                 style={{ width: 16, height: 16 }}
               />
             </label>
             {errors.tenantMode && (
-              <span className="text-red-500 text-sm ml-4">{errors.tenantMode.message as string}</span>
+              <span className="text-red-500 text-sm ml-4">
+                {errors.tenantMode.message as string}
+              </span>
             )}
           </div>
         )}
       />
 
-      {tenantMode === 'existing' ? (
-        shouldShowTenantField && (
-          <Select
-            {...register("tenantId", {
-              required: tenantMode === 'existing' ? "Tenant is required" : false
-            })}
-            label="Select Tenant"
-            options={tenants.map((tenant) => ({
-              value: tenant.id.toString(),
-              label: tenant.user.name,
-            }))}
-            error={errors.tenantId?.message as string}
-          />
-        )
+      {tenantMode === "existing" ? (
+        <Select
+          {...register("tenantId", {
+            required: tenantMode === "existing" ? "Tenant is required" : false,
+          })}
+          label="Select Tenant"
+          options={tenants.map((tenant) => ({
+            value: tenant.id.toString(),
+            label: tenant.user.name,
+          }))}
+          error={errors.tenantId?.message as string}
+        />
       ) : (
         <>
           <Input
             {...register("tenantName", {
-              validate: value => tenantMode === 'new' && !value ? "Tenant name is required" : true
+              validate: (value) =>
+                tenantMode === "new" && !value
+                  ? "Tenant name is required"
+                  : true,
             })}
             label="Tenant Name"
             error={errors.tenantName?.message as string}
           />
           <Input
             {...register("tenantEmail", {
-              validate: value => tenantMode === 'new' && !value ? "Tenant email is required" : true
+              validate: (value) =>
+                tenantMode === "new" && !value
+                  ? "Tenant email is required"
+                  : true,
             })}
             label="Tenant Email"
             type="email"
@@ -264,7 +247,10 @@ export default function LeaseDetailsStep() {
           />
           <Input
             {...register("tenantPhone", {
-              validate: value => tenantMode === 'new' && !value ? "Tenant phone is required" : true
+              validate: (value) =>
+                tenantMode === "new" && !value
+                  ? "Tenant phone is required"
+                  : true,
             })}
             label="Tenant Phone"
             error={errors.tenantPhone?.message as string}
@@ -306,7 +292,7 @@ export default function LeaseDetailsStep() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols- md:grid-cols-3 gap-4">
         <Input
           {...register("rentAmount", { min: 0 })}
           label="Rent Amount"

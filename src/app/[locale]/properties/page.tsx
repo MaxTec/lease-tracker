@@ -13,7 +13,7 @@ export default async function PropertiesPage() {
   const params = new URLSearchParams();
   if (session.user.role) params.append("userRole", session.user.role);
   if (session.user.id) params.append("userId", session.user.id.toString());
-  const res = await fetch(`${process.env.NEXTAUTH_URL || ""}/api/properties?${params.toString()}`, { cache: "no-store" });
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/properties?${params.toString()}`, { cache: "no-store" });
   if (!res.ok) {
     // Optionally handle error, for now just pass empty array
     return (

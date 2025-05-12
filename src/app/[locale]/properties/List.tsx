@@ -81,6 +81,7 @@ const List = ({ properties: initialProperties }: ListProps) => {
         key: "name",
         label: t("properties.form.name"),
         render: (property: Property) => property.name,
+        priority: 1,
       },
       {
         key: "address",
@@ -100,6 +101,7 @@ const List = ({ properties: initialProperties }: ListProps) => {
       {
         key: "actions",
         label: t("common.buttons.actions"),
+        priority: 3,
         render: (property: Property) => (
           <div className="flex space-x-2">
             <Button

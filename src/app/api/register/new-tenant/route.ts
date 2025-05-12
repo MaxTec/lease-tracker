@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
     const { token, password, phone } = parsed.data;
-
+    console.log("token", token);
     // Find user by registration token
     const user = await prisma.user.findFirst({
       where: {
@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
       },
       include: { tenant: true },
     });
+    console.log("user", user);
     if (!user) {
       return NextResponse.json({ error: "Token inválido o expirado." }, { status: 400 });
     }

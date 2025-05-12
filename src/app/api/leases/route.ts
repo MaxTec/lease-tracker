@@ -316,10 +316,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Send registration email if new user
-    if (newUser && registrationToken) {
-      const registrationUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/register/new-tenant?token=${registrationToken}`;
-      const leaseUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/leases/${lease.id}`;
-      const loginUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/login`;
+    if (newUser && registrationToken && lease.status === "ACTIVE") {
+      const registrationUrl = `${process.env.NEXT_PUBLIC_API_URL}/register/new-tenant?token=${registrationToken}`;
+      const leaseUrl = `${process.env.NEXT_PUBLIC_API_URL}/leases/${lease.id}`;
+      const loginUrl = `${process.env.NEXT_PUBLIC_API_URL}/login`;
       await sendLeaseEmail(
         tenantEmail,
         tenantName,
