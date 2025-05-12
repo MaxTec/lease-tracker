@@ -2,27 +2,66 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { generateAmortizationTable } from "@/utils/agreementUtils";
 
+// Type for preview tenant (union of DB and mock)
+type TenantPreview = {
+  user: {
+    name: string;
+    email: string;
+  };
+  phone: string;
+  emergencyContact?: string;
+};
+
 export async function POST(req: Request) {
   try {
     const formData = await req.json();
-    console.log(formData);
-    const selectedClauses = await prisma.leaseClause.findMany({
-      where: {
-        id: {
-          in: formData.selectedClauses?.map(Number) ?? [],
-        },
-      },
-    });
+    const { tenantMode, tenantId, tenantName, tenantEmail, tenantPhone, tenantEmergencyContact } = formData;
 
-    const selectedRules = await prisma.leaseRule.findMany({
-      where: {
-        id: {
-          in: formData.selectedRules?.map(Number) ?? [],
+    // Validate tenantMode
+    if (!tenantMode || (tenantMode !== 'existing' && tenantMode !== 'new')) {
+      return NextResponse.json({ error: 'Invalid or missing tenantMode' }, { status: 400 });
+    }
+
+    let tenant: TenantPreview | null = null;
+
+    if (tenantMode === 'existing') {
+      if (!tenantId) {
+        return NextResponse.json({ error: 'tenantId is required for existing tenant mode' }, { status: 400 });
+      }
+      const dbTenant = await prisma.tenant.findUnique({
+        where: { id: Number(tenantId) },
+        include: { user: true },
+      });
+      if (!dbTenant) {
+        return NextResponse.json({ error: 'Tenant not found' }, { status: 404 });
+      }
+      tenant = {
+        user: {
+          name: dbTenant.user.name,
+          email: dbTenant.user.email,
         },
-      },
-    });
-    console.log(selectedClauses);
-    console.log(selectedRules);
+        phone: dbTenant.phone,
+        emergencyContact: dbTenant.emergencyContact ?? '',
+      };
+    } else if (tenantMode === 'new') {
+      if (!tenantName || !tenantEmail || !tenantPhone) {
+        return NextResponse.json({ error: 'tenantName, tenantEmail, and tenantPhone are required for new tenant mode' }, { status: 400 });
+      }
+      // Check if user with this email already exists
+      const existingUser = await prisma.user.findUnique({ where: { email: tenantEmail } });
+      if (existingUser) {
+        return NextResponse.json({ error: 'A user with this email already exists. Please use existing tenant mode.' }, { status: 400 });
+      }
+      // Mock tenant and user for preview (do not persist)
+      tenant = {
+        user: {
+          name: tenantName,
+          email: tenantEmail,
+        },
+        phone: tenantPhone,
+        emergencyContact: tenantEmergencyContact || '',
+      };
+    }
 
     // Get unit data with related property and landlord information
     const unit = await prisma.unit.findUnique({
@@ -40,17 +79,9 @@ export async function POST(req: Request) {
       },
     });
 
-    // Get tenant data with user information
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: Number(formData.tenantId) },
-      include: {
-        user: true,
-      },
-    });
-
-    if (!unit || !tenant) {
+    if (!unit) {
       return NextResponse.json(
-        { error: "Unit or tenant not found" },
+        { error: 'Unit not found' },
         { status: 404 }
       );
     }
@@ -63,7 +94,10 @@ export async function POST(req: Request) {
       parseFloat(formData.rentAmount) || 0
     );
 
-    // Format the data for the PDF
+    if (!tenant) {
+      return NextResponse.json({ error: 'Tenant data missing' }, { status: 500 });
+    }
+
     const pdfData = {
       // Landlord information
       landlordName: unit.property.landlord.user.name,
@@ -91,14 +125,26 @@ export async function POST(req: Request) {
       paymentDay: formData.paymentDay,
 
       // Selected clauses and rules
-      clauses: selectedClauses.map((clause) => ({
+      clauses: (await prisma.leaseClause.findMany({
+        where: {
+          id: {
+            in: formData.selectedClauses?.map(Number) ?? [],
+          },
+        },
+      })).map((clause) => ({
         id: clause.id,
         title: clause.title,
         content: clause.content,
         type: clause.type,
       })),
 
-      rules: selectedRules.map((rule) => ({
+      rules: (await prisma.leaseRule.findMany({
+        where: {
+          id: {
+            in: formData.selectedRules?.map(Number) ?? [],
+          },
+        },
+      })).map((rule) => ({
         id: rule.id,
         title: rule.title,
         description: rule.description,
@@ -109,9 +155,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json(pdfData);
   } catch (error) {
-    console.error("Error processing preview data:", error);
+    console.error('Error processing preview data:', error);
     return NextResponse.json(
-      { error: "Failed to process preview data" },
+      { error: 'Failed to process preview data' },
       { status: 500 }
     );
   }
