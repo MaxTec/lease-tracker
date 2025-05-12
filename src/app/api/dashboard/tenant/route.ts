@@ -6,6 +6,7 @@ import { TenantDashboardData } from "@/types/dashboard";
 import { Payment } from "@/types/payment";
 import { Ticket } from "@/types/ticket";
 import { generatePaymentSchedule } from "@/utils/paymentsUtils";
+import { Prisma, DocumentType } from "@prisma/client";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function serializePayment(payment: any): Payment {
@@ -61,6 +62,42 @@ function serializeTicket(ticket: any): Ticket {
     };
 }
 
+// Serialize Lease to ensure all Decimal fields are converted to number
+type LeaseWithRelations = Prisma.LeaseGetPayload<{
+    include: {
+        tenant: { include: { user: { select: { name: true; email: true } } } };
+        unit: { include: { property: true } };
+        documents: { select: { id: true; type: true; fileUrl: true } };
+    };
+}>;
+
+const serializeLease = (lease: LeaseWithRelations) => {
+    return {
+        ...lease,
+        rentAmount: typeof lease.rentAmount === 'object' && lease.rentAmount !== null && 'toNumber' in lease.rentAmount ? lease.rentAmount.toNumber() : Number(lease.rentAmount),
+        depositAmount: typeof lease.depositAmount === 'object' && lease.depositAmount !== null && 'toNumber' in lease.depositAmount ? lease.depositAmount.toNumber() : Number(lease.depositAmount),
+        tenant: {
+            user: {
+                name: lease.tenant.user.name,
+                email: lease.tenant.user.email,
+            },
+            phone: lease.tenant.phone,
+            emergencyContact: lease.tenant.emergencyContact,
+        },
+        unit: {
+            unitNumber: lease.unit.unitNumber,
+            property: {
+                name: lease.unit.property.name,
+            },
+        },
+        documents: lease.documents.map((doc: { id: number; type: DocumentType; fileUrl: string }) => ({
+            id: doc.id,
+            type: doc.type as DocumentType,
+            fileUrl: doc.fileUrl,
+        })),
+    };
+};
+
 export async function GET() {
     try {
         console.log("ENV CLOUDFLARE_BUCKET_NAME:", process.env.CLOUDFLARE_BUCKET_NAME);
@@ -91,28 +128,7 @@ export async function GET() {
                 documents: { select: { id: true, type: true, fileUrl: true } },
             },
         });
-        const leaseDetails = leases.map(lease => ({
-            ...lease,
-            tenant: {
-                user: {
-                    name: lease.tenant.user.name,
-                    email: lease.tenant.user.email,
-                },
-                phone: lease.tenant.phone,
-                emergencyContact: lease.tenant.emergencyContact,
-            },
-            unit: {
-                unitNumber: lease.unit.unitNumber,
-                property: {
-                    name: lease.unit.property.name,
-                },
-            },
-            documents: lease.documents.map(doc => ({
-                id: doc.id,
-                type: doc.type,
-                fileUrl: doc.fileUrl,
-            })),
-        }));
+        const leaseDetails = leases.map(serializeLease);
         const leaseIds = leases.map(l => l.id);
         if (leaseIds.length === 0) {
             return NextResponse.json({ error: "No active leases found" }, { status: 404 });
@@ -154,7 +170,8 @@ export async function GET() {
             });
             const leasePayments: Payment[] = leasePaymentsRaw.map(serializePayment);
             // Generate full schedule
-            const schedule = generatePaymentSchedule(leasePayments, lease, today);
+            const serializedLease = serializeLease(lease);
+            const schedule = generatePaymentSchedule(leasePayments, serializedLease, today);
             console.log("schedule", schedule);
             // Filter for next 5 upcoming (PENDING or OVERDUE, dueDate >= today)
             const next = schedule
