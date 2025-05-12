@@ -5,44 +5,13 @@ import { FaCheckCircle } from "react-icons/fa";
 import { FORMAT_DATE } from "@/constants";
 import { formatDate } from "@/utils/dateUtils";
 import Link from "next/link";
-import { formatCurrencyMXN } from "@/utils/numberUtils";  
-interface Lease {
-  id: number;
-  startDate: string;
-  endDate: string;
-  rentAmount: number;
-  paymentDay: number;
-  tenant: {
-    user: {
-      name: string;
-    };
-  };
-  unit: {
-    unitNumber: string;
-    property: {
-      name: string;
-    };
-  };
-}
-
-interface Payment {
-  id: number;
-  amount: number;
-  dueDate: string;
-  paidDate: string | null;
-  status: "PENDING" | "PAID" | "OVERDUE" | "CANCELLED";
-  paymentMethod: string | null;
-  transactionId: string | null;
-  lease?: Lease;
-  voucher?: {
-    voucherNumber: string;
-    status: string;
-  } | null;
-}
+import { formatCurrencyMXN } from "@/utils/numberUtils";
+import { Payment } from '@/types/payment';
+import { Lease } from '@/types/lease';
 
 interface CompletedPaymentsProps {
   payments: Payment[];
-  lease?: Lease; // Optional lease prop if provided directly
+  lease?: Lease;
 }
 
 const CompletedPayments: React.FC<CompletedPaymentsProps> = ({ payments }) => {
@@ -85,11 +54,6 @@ const CompletedPayments: React.FC<CompletedPaymentsProps> = ({ payments }) => {
       render: (payment: Payment) =>
         payment.paymentMethod ? payment.paymentMethod.replace("_", " ") : "-",
     },
-    // {
-    //   key: "transactionId",
-    //   label: "Transaction ID",
-    //   render: (payment: Payment) => payment.transactionId || "-",
-    // },
     {
       key: "voucher",
       label: "Voucher",
@@ -134,7 +98,6 @@ const CompletedPayments: React.FC<CompletedPaymentsProps> = ({ payments }) => {
           "id",
           "amount",
           "paymentMethod",
-          "transactionId",
           "voucher.voucherNumber",
         ]}
         pageSize={10}

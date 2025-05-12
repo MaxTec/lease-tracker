@@ -18,62 +18,8 @@ import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
 import LeaseActivationForm from "@/components/lease/LeaseActivationForm";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-
-interface Lease {
-  id: number;
-  startDate: string;
-  endDate: string;
-  rentAmount: number;
-  paymentDay: number;
-  depositAmount: number;
-  status: string;
-  tenant: {
-    id: number;
-    user: {
-      name: string;
-      email: string;
-    };
-    phone: string;
-  };
-  unit: {
-    id: number;
-    unitNumber: string;
-    bedrooms: number;
-    bathrooms: number;
-    squareFeet: number;
-    property: {
-      id: number;
-      name: string;
-      address: string;
-    };
-  };
-}
-
-interface Payment {
-  id: number;
-  amount: number;
-  dueDate: string;
-  paidDate: string | null;
-  status: "PENDING" | "PAID" | "OVERDUE" | "CANCELLED";
-  paymentMethod: string | null;
-  transactionId: string | null;
-  lease: Lease;
-  voucher?: {
-    voucherNumber: string;
-    status: string;
-  } | null;
-}
-
-interface ScheduledPayment {
-  id?: number;
-  dueDate: Date;
-  amount: number;
-  status: "PENDING" | "PAID" | "OVERDUE" | "CANCELLED";
-  isExisting: boolean;
-  paymentMethod?: "CASH" | "BANK_TRANSFER" | "CREDIT_CARD" | "CHECK" | "OTHER";
-  transactionId?: string;
-  paidDate?: Date;
-}
+import { Lease } from "@/types/lease";
+import { Payment, ScheduledPayment } from "@/types/payment";
 
 interface SuccessNotification {
   show: boolean;
@@ -82,12 +28,12 @@ interface SuccessNotification {
   message?: string;
 }
 
-interface ListProps {
+type LeaseItemProps = {
   lease: Lease;
   payments: Payment[];
-}
+};
 
-const LeaseItem = ({ lease, payments: initialPayments }: ListProps) => {
+const LeaseItem = ({ lease, payments: initialPayments }: LeaseItemProps) => {
   const router = useRouter();
   const [payments, setPayments] = useState<Payment[]>(initialPayments);
   const [loading, setLoading] = useState(false);
@@ -103,13 +49,12 @@ const LeaseItem = ({ lease, payments: initialPayments }: ListProps) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           leaseId: lease.id,
-          tenantId: lease.tenant.id,
+          tenantId: lease.tenantId,
           amount: payment.amount,
           dueDate: payment.dueDate.toISOString(),
           paidDate: payment.paidDate?.toISOString() || null,
           status: "PAID",
           paymentMethod: payment.paymentMethod || "CASH",
-          transactionId: payment.transactionId,
         }),
       });
       if (!response.ok) throw new Error("Failed to record payment");
@@ -233,7 +178,7 @@ const LeaseItem = ({ lease, payments: initialPayments }: ListProps) => {
               },
               {
                 label: "Period",
-                children: `${formatDate(lease?.startDate || "", FORMAT_DATE)} to ${formatDate(lease?.endDate || "", FORMAT_DATE)}`,
+                children: `${formatDate(lease?.startDate instanceof Date ? lease?.startDate.toISOString() : lease?.startDate || "", FORMAT_DATE)} to ${formatDate(lease?.endDate instanceof Date ? lease?.endDate.toISOString() : lease?.endDate || "", FORMAT_DATE)}`,
               },
               {
                 label: "Monthly Rent",
