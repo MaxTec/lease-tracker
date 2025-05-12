@@ -6,10 +6,7 @@ import { cookies } from "next/headers";
 import { getServerSession } from "next-auth";
 
 interface Props {
-  params: {
-    id: string;
-    locale: string;
-  };
+  params: Promise<{ id: string; locale: string }>;
 }
 
 export default async function TicketPage({ params }: Props) {

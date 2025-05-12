@@ -4,11 +4,12 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import LeaseItem from "./LeaseItem";
 import Layout from "@/components/layout/Layout";
 
-export default async function LeaseDetailsPage({ params }: { params: { id: string } }) {
+export default async function LeaseDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session || !session.user || session.user.role === "TENANT") redirect("/");
 
-  const leaseId = params.id;
+  const leaseId = id;
 
   // Fetch lease data
   const leaseRes = await fetch(`${process.env.NEXTAUTH_URL || ""}/api/leases/${leaseId}`, { cache: "no-store" });

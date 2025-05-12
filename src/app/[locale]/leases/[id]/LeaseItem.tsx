@@ -91,7 +91,6 @@ const LeaseItem = ({ lease, payments: initialPayments }: ListProps) => {
   const router = useRouter();
   const [payments, setPayments] = useState<Payment[]>(initialPayments);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [notification, setNotification] = useState<SuccessNotification>({ show: false });
   const [isActivationModalOpen, setIsActivationModalOpen] = useState(false);
 
@@ -121,6 +120,7 @@ const LeaseItem = ({ lease, payments: initialPayments }: ListProps) => {
         router.push(`/vouchers/${newPayment.voucher?.voucherNumber}`);
       }, 2000);
     } catch (error) {
+      console.error(error);
       setNotification({ show: true, message: "Failed to record payment. Please try again.", type: "error" });
     } finally {
       setLoading(false);
@@ -138,6 +138,7 @@ const LeaseItem = ({ lease, payments: initialPayments }: ListProps) => {
         router.push("/leases");
       }, 2000);
     } catch (error) {
+      console.error(error);
       setNotification({ show: true, message: "Failed to terminate lease. Please try again.", type: "error" });
     } finally {
       setLoading(false);
@@ -145,46 +146,45 @@ const LeaseItem = ({ lease, payments: initialPayments }: ListProps) => {
   };
 
   const handleActivateLease = () => setIsActivationModalOpen(true);
-  const handleActivationSuccess = () => { setIsActivationModalOpen(false); window.location.reload(); };
+  const handleActivationSuccess = () => {
+    setIsActivationModalOpen(false);
+    window.location.reload();
+  };
   const handleActivationCancel = () => setIsActivationModalOpen(false);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[550px]">
+      <div className='flex items-center justify-center min-h-[550px]'>
         <LoadingSpinner />
       </div>
     );
   }
-  if (error) {
-    return (
-      <div className="bg-red-50 text-red-600 p-4 rounded-md">{error}</div>
-    );
-  }
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className='container mx-auto px-4 py-8'>
       {/* Lease Details Card */}
       <Card
         showShadow={false}
-        title=""
+        title=''
         actions={[
-          <div className="flex space-x-2" key={lease?.status}>
+          <div className='flex space-x-2' key={lease?.status}>
             {lease?.status !== "ACTIVE" && (
-              <Button key="activate-lease" variant="success" onClick={handleActivateLease}>
+              <Button key='activate-lease' variant='success' onClick={handleActivateLease}>
                 Activate Lease
               </Button>
             )}
             {lease?.status === "ACTIVE" && (
-              <Button key="terminate-lease" variant="danger" onClick={handleTerminateLease}>
+              <Button key='terminate-lease' variant='danger' onClick={handleTerminateLease}>
                 Terminate Lease
               </Button>
             )}
           </div>,
         ]}
       >
-        <div className="grid grid-cols-1 gap-2">
+        <div className='grid grid-cols-1 gap-2'>
           {/* Property Information */}
           <Descriptions
-            title="Property"
+            title='Property'
             column={5}
             items={[
               { label: "Name", children: lease?.unit.property.name },
@@ -197,43 +197,42 @@ const LeaseItem = ({ lease, payments: initialPayments }: ListProps) => {
           <Descriptions
             column={5}
             icon={<FaUser />}
-            title="Tenant"
+            title='Tenant'
             items={[
               { icon: <FaUser />, label: "Name", children: lease?.tenant.user.name },
               {
                 label: "Email",
-                icon: <FaEnvelope />, children: (
-                  <a href={`mailto:${lease?.tenant.user.email || ""}`} className="text-blue-600 hover:text-blue-800 hover:underline" aria-label={`Email ${lease?.tenant.user.name}`}>{lease?.tenant.user.email}</a>
+                icon: <FaEnvelope />,
+                children: (
+                  <a
+                    href={`mailto:${lease?.tenant.user.email || ""}`}
+                    className='text-blue-600 hover:text-blue-800 hover:underline'
+                    aria-label={`Email ${lease?.tenant.user.name}`}
+                  >
+                    {lease?.tenant.user.email}
+                  </a>
                 ),
               },
               {
                 label: "Phone",
-                icon: <FaPhone />, children: (
-                  <a href={`tel:${lease?.tenant.phone || ""}`} className="text-blue-600 hover:text-blue-800 hover:underline" aria-label={`Call ${lease?.tenant.user.name}`}>{formatPhoneNumber(lease?.tenant.phone || "")}</a>
+                icon: <FaPhone />,
+                children: (
+                  <a href={`tel:${lease?.tenant.phone || ""}`} className='text-blue-600 hover:text-blue-800 hover:underline' aria-label={`Call ${lease?.tenant.user.name}`}>
+                    {formatPhoneNumber(lease?.tenant.phone || "")}
+                  </a>
                 ),
               },
             ]}
           />
           {/* Lease Terms */}
           <Descriptions
-            title="Lease Terms"
+            title='Lease Terms'
             column={5}
             items={[
               {
                 label: "Status",
-                icon: <FaCheckCircle />, children: (
-                  <Badge
-                    status={
-                      lease?.status === "ACTIVE"
-                        ? "success"
-                        : lease?.status === "EXPIRED"
-                        ? "warning"
-                        : "error"
-                    }
-                  >
-                    {lease?.status}
-                  </Badge>
-                ),
+                icon: <FaCheckCircle />,
+                children: <Badge status={lease?.status === "ACTIVE" ? "success" : lease?.status === "EXPIRED" ? "warning" : "error"}>{lease?.status}</Badge>,
               },
               {
                 label: "Period",
@@ -257,11 +256,11 @@ const LeaseItem = ({ lease, payments: initialPayments }: ListProps) => {
       </Card>
       {/* Payments Section */}
       {lease?.status === "ACTIVE" ? (
-        <div className="bg-white rounded-lg shadow mt-4">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-gray-800 flex items-center">
-                <FaDollarSign className="mr-2 text-indigo-600" /> Payment Management
+        <div className='bg-white rounded-lg shadow mt-4'>
+          <div className='p-6 border-b border-gray-200'>
+            <div className='flex justify-between items-center mb-4'>
+              <h3 className='text-xl font-semibold text-gray-800 flex items-center'>
+                <FaDollarSign className='mr-2 text-indigo-600' /> Payment Management
               </h3>
             </div>
             <Tabs
@@ -269,49 +268,28 @@ const LeaseItem = ({ lease, payments: initialPayments }: ListProps) => {
                 {
                   id: "upcoming",
                   label: "Upcoming Payments",
-                  content: (
-                    <PaymentSchedule
-                      payments={payments}
-                      lease={lease || undefined}
-                      onRecordPayment={handleRecordPayment}
-                    />
-                  ),
+                  // @ts-expect-error - PaymentSchedule is not typed
+                  content: <PaymentSchedule payments={payments} lease={lease || undefined} onRecordPayment={handleRecordPayment} />,
                 },
                 {
                   id: "completed",
                   label: "Completed Payments",
-                  content: (
-                    <CompletedPayments
-                      payments={payments}
-                      lease={lease || undefined}
-                    />
-                  ),
+                  content: <CompletedPayments payments={payments} lease={lease || undefined} />,
                 },
               ]}
-              defaultTabId="upcoming"
-              className="mt-4"
+              defaultTabId='upcoming'
+              className='mt-4'
             />
           </div>
         </div>
       ) : (
-        <div className="bg-gray-50 p-4 rounded-lg mt-4">
-          <EmptyState
-            title="Payment Management is not available for leases that are not active."
-            description="Please activate the lease to manage payments."
-          />
+        <div className='bg-gray-50 p-4 rounded-lg mt-4'>
+          <EmptyState title='Payment Management is not available for leases that are not active.' description='Please activate the lease to manage payments.' />
         </div>
       )}
       {/* Activation Modal */}
-      <Modal
-        isOpen={isActivationModalOpen}
-        onClose={handleActivationCancel}
-        title="Activate Lease"
-      >
-        <LeaseActivationForm
-          leaseId={lease.id}
-          onSuccess={handleActivationSuccess}
-          onCancel={handleActivationCancel}
-        />
+      <Modal isOpen={isActivationModalOpen} onClose={handleActivationCancel} title='Activate Lease'>
+        <LeaseActivationForm leaseId={lease.id} onSuccess={handleActivationSuccess} onCancel={handleActivationCancel} />
       </Modal>
       {notification.show && (
         <Notification
@@ -325,4 +303,4 @@ const LeaseItem = ({ lease, payments: initialPayments }: ListProps) => {
   );
 };
 
-export default LeaseItem; 
+export default LeaseItem;

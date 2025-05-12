@@ -1,7 +1,7 @@
-import { InputHTMLAttributes, forwardRef } from "react";
+import { InputHTMLAttributes, forwardRef, ReactNode } from "react";
 
 interface CheckboxProps extends InputHTMLAttributes<HTMLInputElement> {
-  label: string;
+  label: string | ReactNode;
   error?: string;
 }
 

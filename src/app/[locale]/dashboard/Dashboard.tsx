@@ -55,7 +55,7 @@ const Dashboard = ({
           ...options,
         ]);
       } catch (error) {
-        // eslint-disable-next-line no-console
+         
         console.error("Error fetching property options:", error);
       }
     };
@@ -87,7 +87,7 @@ const Dashboard = ({
         const result = await response.json();
         setData(result);
       } catch (error) {
-        // eslint-disable-next-line no-console
+         
         console.error("Error fetching dashboard data:", error);
         setError(t("dashboard.noData"));
       } finally {

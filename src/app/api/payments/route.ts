@@ -107,23 +107,23 @@ export async function GET(request: NextRequest) {
       payments.length === 0
         ? []
         : payments.map((payment) => ({
-            ...payment,
-            amount:
-              payment.amount instanceof Prisma.Decimal
-                ? parseFloat(payment.amount.toString())
-                : payment.amount,
-            lease: {
-              ...payment.lease,
-              rentAmount:
-                payment.lease.rentAmount instanceof Prisma.Decimal
-                  ? parseFloat(payment.lease.rentAmount.toString())
-                  : payment.lease.rentAmount,
-              depositAmount:
-                payment.lease.depositAmount instanceof Prisma.Decimal
-                  ? parseFloat(payment.lease.depositAmount.toString())
-                  : payment.lease.depositAmount,
-            },
-          }));
+          ...payment,
+          amount:
+            payment.amount instanceof Prisma.Decimal
+              ? parseFloat(payment.amount.toString())
+              : payment.amount,
+          lease: {
+            ...payment.lease,
+            rentAmount:
+              payment.lease.rentAmount instanceof Prisma.Decimal
+                ? parseFloat(payment.lease.rentAmount.toString())
+                : payment.lease.rentAmount,
+            depositAmount:
+              payment.lease.depositAmount instanceof Prisma.Decimal
+                ? parseFloat(payment.lease.depositAmount.toString())
+                : payment.lease.depositAmount,
+          },
+        }));
 
     return NextResponse.json(serializedPayments);
   } catch (error) {
@@ -229,8 +229,7 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-export const getNextPaymentNumber = async (leaseId: number) => {
+const getNextPaymentNumber = async (leaseId: number) => {
   const lastPayment = await prisma.payment.findFirst({
     where: {
       leaseId,
@@ -246,3 +245,4 @@ export const getNextPaymentNumber = async (leaseId: number) => {
 
   return (lastPayment?.paymentNumber ?? 0) + 1;
 };
+

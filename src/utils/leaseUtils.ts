@@ -1,5 +1,6 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import sgMail from "@sendgrid/mail";
+import { differenceInMonths, addMonths, isEqual, addDays } from "date-fns";
 
 const s3Client = new S3Client({
   region: "auto",
@@ -62,3 +63,10 @@ export async function sendLeaseEmail(
 
   await sgMail.send(msg);
 }
+
+export const getAccurateLeaseMonths = (start: Date, end: Date): number => {
+  const cleanEnd = addMonths(start, differenceInMonths(end, start));
+  const isExactEnd = isEqual(end, cleanEnd);
+  if (isExactEnd) return differenceInMonths(end, start);
+  return differenceInMonths(addDays(end, 1), start);
+};

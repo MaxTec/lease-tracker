@@ -7,7 +7,7 @@ import Layout from "@/components/layout/Layout";
 import { DashboardData } from "@/types/dashboard";
 import { TenantDashboardData } from "@/types/dashboard";
 import { format } from "date-fns";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) redirect("/");

@@ -181,7 +181,7 @@ export async function GET() {
                                 email: lease.tenant.user.email,
                             },
                             phone: lease.tenant.phone,
-                            emergencyContact: lease.tenant.emergencyContact,
+                            emergencyContact: lease.tenant.emergencyContact ?? undefined,
                         },
                         unit: {
                             unitNumber: lease.unit.unitNumber,

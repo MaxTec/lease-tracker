@@ -1,14 +1,24 @@
-import { Lease as PrismaLease, User, Property, Document } from "@prisma/client";
+import { Lease as PrismaLease, User, Document } from "@prisma/client";
 
-export interface Lease extends PrismaLease {
+export interface Lease extends Omit<PrismaLease, 'rentAmount' | 'depositAmount' | 'startDate' | 'endDate'> {
+    rentAmount: number;
+    depositAmount: number;
+    startDate: Date;
+    endDate: Date;
     tenant: {
         user: Pick<User, "name" | "email">;
         phone: string;
-        emergencyContact?: string;
+        emergencyContact?: string | null;
     };
     unit: {
         unitNumber: string;
-        property: Pick<Property, "name">;
+        bedrooms?: number;
+        bathrooms?: number;
+        squareFeet?: number;
+        property: {
+            name: string;
+            address?: string;
+        };
     };
     documents: Pick<Document, "id" | "type" | "fileUrl">[];
 }

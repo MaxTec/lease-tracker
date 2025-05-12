@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,37 +11,22 @@ import Select from "@/components/ui/Select";
 import Fieldset from "@/components/ui/Fieldset";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import { useTranslations } from "next-intl";
-import { Property, PropertyUnit } from "@/types/property";
+import { Property } from "@/types/property";
 
 // Form data structure
-interface PropertyFormData {
+type PropertyFormData = {
   id?: number;
   name: string;
   address: string;
   type: string;
-  landlordId?: string;
-  units: PropertyUnit[];
-}
-
-// Define the Zod schema for Property
-// const propertySchema = z.object({
-//   name: z.string().min(1, "Property name is required"),
-//   address: z.string().min(1, "Address is required"),
-//   type: z.string().min(1, "Property type is required"),
-//   landlordId: z.string().optional(),
-//   units: z
-//     .array(
-//       z.object({
-//         unitNumber: z.string().min(1, "required"),
-//         bedrooms: z.string(),
-//         bathrooms: z.string(),
-//         squareFeet: z.string(),
-//       })
-//     )
-//     .min(1, "At least one unit is required"),
-// });
-
-// type PropertyFormData = z.infer<typeof propertySchema>;
+  landlordId?: string; // string for form, number for API
+  units: Array<{
+    unitNumber: string;
+    bedrooms: string;
+    bathrooms: string;
+    squareFeet: string;
+  }>;
+};
 
 interface Landlord {
   id: number;
@@ -304,7 +291,6 @@ export default function PropertyForm({
               className="mt-4"
               onClick={() =>
                 append({
-                  id: 0,
                   unitNumber: "",
                   bedrooms: "1",
                   bathrooms: "1",

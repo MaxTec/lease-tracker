@@ -42,7 +42,7 @@ export default function CreateTicketButton() {
 
   useEffect(() => {
     if (session?.user?.role) {
-      // eslint-disable-next-line no-console
+       
       console.log("User role:", session.user.role);
     }
   }, [session?.user?.role]);

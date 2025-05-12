@@ -12,7 +12,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "types": ["numero-a-letras"],
+    // "types": ["numero-a-letras"],
     "typeRoots": ["./types", "./node_modules/@types"],
     "incremental": true,
     "plugins": [

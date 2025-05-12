@@ -68,7 +68,7 @@ export default function middleware(req: NextRequest) {
     } else {
         // For protected routes, apply auth middleware with type assertion
         // This is necessary because the withAuth typing expects 2 arguments
-        return (authMiddleware as any)(req);
+        return (authMiddleware as (req: NextRequest) => Promise<NextResponse>)(req);
     }
 }
 

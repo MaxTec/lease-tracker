@@ -74,7 +74,7 @@ export async function PUT(request: Request) {
     // Update rules in sequence
     for (const rule of validatedData.rules) {
       await prisma.leaseRule.update({
-        where: { id: rule.id },
+        where: { id: Number(rule.id) },
         data: { updatedAt: new Date() },
       });
     }

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { Prisma } from "@prisma/client";
-import { differenceInMonths, addMonths, isEqual, addDays } from "date-fns";
+import { differenceInMonths } from "date-fns";
 import { uploadToR2 } from "@/utils/leaseUtils";
 import { sendLeaseEmail } from "@/utils/leaseUtils";
 import { randomBytes } from "crypto";
+import { getAccurateLeaseMonths } from "@/utils/leaseUtils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -53,13 +54,13 @@ export async function GET(request: NextRequest) {
         },
         payments: includePayments
           ? {
-              where: {
-                status: "PAID",
-              },
-              orderBy: {
-                dueDate: "desc",
-              },
-            }
+            where: {
+              status: "PAID",
+            },
+            orderBy: {
+              dueDate: "desc",
+            },
+          }
           : false,
         _count: {
           select: {
@@ -337,15 +338,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-export const getAccurateLeaseMonths = (start: Date, end: Date): number => {
-  const cleanEnd = addMonths(start, differenceInMonths(end, start));
-
-  const isExactEnd = isEqual(end, cleanEnd);
-
-  // Case: user set exact monthly period (e.g. Apr 1 → Oct 1)
-  if (isExactEnd) return differenceInMonths(end, start);
-
-  // Case: ends 1 day before full month (e.g. Mar 31 vs Apr 1)
-  return differenceInMonths(addDays(end, 1), start);
-};

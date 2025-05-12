@@ -35,6 +35,7 @@ export default function ClauseForm({ onSubmit, onCancel }: ClauseFormProps) {
       reset(); // Reset form after successful submission
       onCancel();
     } catch (error) {
+      console.error(error);
       // Error handling is done in the parent component
     }
   };

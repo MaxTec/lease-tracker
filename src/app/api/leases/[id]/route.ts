@@ -137,7 +137,7 @@ export async function GET(
 // DELETE /api/leases/[id] - Terminate a lease
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -152,7 +152,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const leaseId = parseInt(params.id);
+    const { id } = await params;
+    const leaseId = parseInt(id);
 
     if (isNaN(leaseId)) {
       return NextResponse.json({ error: "Invalid lease ID" }, { status: 400 });
@@ -186,7 +187,7 @@ export async function DELETE(
 // PUT /api/leases/[id] - Update a lease
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);

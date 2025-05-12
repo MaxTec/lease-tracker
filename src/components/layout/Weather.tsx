@@ -153,7 +153,7 @@ export default function Weather({ session }: WeatherProps) {
         <>
           <span>{getWeatherIcon(weather.weather[0].main)}</span>
           <span>{Math.round(weather.main.temp)}°C</span>
-          <span className="hidden sm:inline">Cancun</span>
+          {/* <span className="hidden sm:inline">Cancun</span> */}
         </>
       )}
     </div>

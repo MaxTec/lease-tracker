@@ -36,6 +36,7 @@ export default function RuleForm({ onSubmit, onCancel }: RuleFormProps) {
       reset(); // Reset form after successful submission
       onCancel();
     } catch (error) {
+      console.error(error);
       // Error handling is done in the parent component
     }
   };

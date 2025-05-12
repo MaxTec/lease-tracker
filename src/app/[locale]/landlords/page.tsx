@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-// @ts-expect-error: List will be created next
 import List from "./List";
 import Layout from "@/components/layout/Layout";
 import { Landlord } from "@/types/landlord";

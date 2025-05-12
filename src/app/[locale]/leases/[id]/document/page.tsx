@@ -3,13 +3,12 @@ import { prisma } from "@/lib/prisma";
 import Layout from "@/components/layout/Layout";
 
 interface PageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
-
+// params: Promise<{ locale: string }>;
 export default async function LeaseDocumentPage({ params }: PageProps) {
-  const leaseId = parseInt(params.id);
+  const { id } = await params;
+  const leaseId = parseInt(id);
   
   if (isNaN(leaseId)) {
     return notFound();
