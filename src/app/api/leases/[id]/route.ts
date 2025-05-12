@@ -129,8 +129,11 @@ export async function PUT(
     }
 
     // Check if user is admin
-    if (session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (session.user.role !== "ADMIN" && session.user.role !== "LANDLORD") {
+      return NextResponse.json(
+        { error: "Forbidden - Only admins and landlords can update leases" },
+        { status: 403 }
+      );
     }
     const { id } = await params;
     const leaseId = parseInt(id);
