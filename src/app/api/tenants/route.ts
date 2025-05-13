@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { hash } from "bcryptjs";
-import { UserRole } from "@prisma/client";
+import { UserRole, Prisma, LeaseStatus } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userRole = searchParams.get("userRole");
     const userId = searchParams.get("userId");
+    const excludeActiveLease = searchParams.get("excludeActiveLease") === "true";
 
-    let whereClause = {};
+    let whereClause: Prisma.TenantWhereInput = {};
+    let landlordLeaseFilter: Prisma.TenantWhereInput | undefined;
     if (userRole === "LANDLORD" && userId) {
-      // Find landlordId by userId
       const landlord = await prisma.landlord.findUnique({
         where: { userId: parseInt(userId) },
         select: { id: true },
@@ -19,8 +20,7 @@ export async function GET(request: NextRequest) {
       if (!landlord) {
         return NextResponse.json([]);
       }
-      // Only tenants with a lease for a unit in a property owned by this landlord
-      whereClause = {
+      landlordLeaseFilter = {
         leases: {
           some: {
             unit: {
@@ -31,6 +31,17 @@ export async function GET(request: NextRequest) {
           },
         },
       };
+    }
+    const excludeActiveLeaseFilter: Prisma.TenantWhereInput | undefined = excludeActiveLease
+      ? { leases: { none: { status: { in: [LeaseStatus.ACTIVE, LeaseStatus.PENDING] } } } }
+      : undefined;
+
+    if (landlordLeaseFilter && excludeActiveLeaseFilter) {
+      whereClause = { AND: [landlordLeaseFilter, excludeActiveLeaseFilter] };
+    } else if (landlordLeaseFilter) {
+      whereClause = landlordLeaseFilter;
+    } else if (excludeActiveLeaseFilter) {
+      whereClause = excludeActiveLeaseFilter;
     }
 
     const tenants = await prisma.tenant.findMany({
@@ -44,6 +55,8 @@ export async function GET(request: NextRequest) {
         },
       },
     });
+
+    console.log("Tenants:", tenants);
 
     return NextResponse.json(tenants);
   } catch (error) {

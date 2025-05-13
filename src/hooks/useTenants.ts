@@ -9,7 +9,11 @@ interface Tenant {
   };
 }
 
-export function useTenants() {
+interface UseTenantsOptions {
+  excludeActiveLease?: boolean;
+}
+
+export function useTenants(options: UseTenantsOptions = {}) {
   const [tenants, setTenants] = useState<Tenant[]>([]); // Renamed state to avoid conflicts
   const [isLoadingTenants, setIsLoadingTenants] = useState<boolean>(true); // Renamed loading state
 
@@ -17,7 +21,15 @@ export function useTenants() {
     const fetchTenants = async () => {
       setIsLoadingTenants(true); // Set loading to true before fetching
       try {
-        const response = await fetch("/api/tenants");
+        let url = "/api/tenants";
+        const params = [];
+        if (options.excludeActiveLease) {
+          params.push("excludeActiveLease=true");
+        }
+        if (params.length > 0) {
+          url += `?${params.join("&")}`;
+        }
+        const response = await fetch(url);
         if (!response.ok) throw new Error("Failed to fetch tenants");
         const data = await response.json();
         setTenants(data);
@@ -29,7 +41,7 @@ export function useTenants() {
     };
 
     fetchTenants();
-  }, []);
+  }, [options.excludeActiveLease]);
 
   return { tenants, setTenants, isLoadingTenants }; // Return renamed state and loading
 }

@@ -19,7 +19,10 @@ interface LeaseDetailsStepProps {
   userRole?: string;
 }
 
-export default function LeaseDetailsStep({ userId, userRole }: LeaseDetailsStepProps) {
+export default function LeaseDetailsStep({
+  userId,
+  userRole,
+}: LeaseDetailsStepProps) {
   const {
     register,
     control,
@@ -28,8 +31,17 @@ export default function LeaseDetailsStep({ userId, userRole }: LeaseDetailsStepP
     formState: { errors },
   } = useFormContext();
 
-  const { properties, units, handlePropertyChange, isLoadingUnits, isLoadingProperties } = useProperties({ userId, userRole });
-  const { tenants, isLoadingTenants } = useTenants();
+  const {
+    properties,
+    units,
+    handlePropertyChange,
+    isLoadingUnits,
+    isLoadingProperties,
+  } = useProperties({ userId, userRole });
+  const { tenants, isLoadingTenants } = useTenants({
+    excludeActiveLease: true,
+  });
+  console.log("Tenants:", tenants);
 
   const startDate = watch("startDate");
   const customEndDate = watch("customEndDate");
@@ -89,7 +101,12 @@ export default function LeaseDetailsStep({ userId, userRole }: LeaseDetailsStepP
 
       if (!isValid) {
         if (!errors.startDate) {
-          toast.error(`Start date must be on or before the ${requiredDay}${requiredDay === 1 ? "st" : "th"} of the month for the selected payment day`, { id: "startDateError" });
+          toast.error(
+            `Start date must be on or before the ${requiredDay}${
+              requiredDay === 1 ? "st" : "th"
+            } of the month for the selected payment day`,
+            { id: "startDateError" }
+          );
         }
         setValue("startDate", "");
       }
@@ -100,15 +117,20 @@ export default function LeaseDetailsStep({ userId, userRole }: LeaseDetailsStepP
 
   const shouldShowPropertyFields = properties.length > 0;
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {!shouldShowPropertyFields && (
-        <div className='bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded-md' role='alert' aria-live='assertive' tabIndex={0}>
+        <div
+          className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded-md"
+          role="alert"
+          aria-live="assertive"
+          tabIndex={0}
+        >
           <div>
             {t("propertyDisclaimer")}{" "}
             <Link
-              href='/properties'
+              href="/properties"
               aria-label={t("addProperty")}
-              className='inline-block mt-2 text-blue-700 underline hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded'
+              className="inline-block mt-2 text-blue-700 underline hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
             >
               {t("addProperty")}
             </Link>
@@ -127,7 +149,7 @@ export default function LeaseDetailsStep({ userId, userRole }: LeaseDetailsStepP
               });
               handlePropertyChange(selectedPropertyId);
             }}
-            label='Property'
+            label="Property"
             options={properties.map((property) => ({
               value: property.id.toString(),
               label: property.name,
@@ -137,7 +159,7 @@ export default function LeaseDetailsStep({ userId, userRole }: LeaseDetailsStepP
 
           <Select
             {...register("unitId")}
-            label='Unit'
+            label="Unit"
             options={units.map((unit) => ({
               value: unit.id.toString(),
               label: unit.unitNumber,
@@ -149,41 +171,45 @@ export default function LeaseDetailsStep({ userId, userRole }: LeaseDetailsStepP
       )}
 
       {/* Tenant mode selector */}
-      {tenantMode !== "new" && (
+      {tenants.length > 0 && (
         <Controller
-          name='tenantMode'
+          name="tenantMode"
           control={control}
-          defaultValue='new'
+          defaultValue="new"
           rules={{ required: "Please select tenant mode" }}
           render={({ field }) => (
-            <div className='flex flex-col justify-start md:flex-row md:items-center md:space-x-6 space-y-3 md:space-y-0'>
-              <label className='flex md:items-center'>
+            <div className="flex flex-col justify-start md:flex-row md:items-center md:space-x-6 space-y-3 md:space-y-0">
+              <label className="flex md:items-center">
                 <Input
-                  type='radio'
-                  name='tenantMode'
-                  value='existing'
+                  type="radio"
+                  name="tenantMode"
+                  value="existing"
                   checked={field.value === "existing"}
                   onChange={() => field.onChange("existing")}
                   disabled={tenants.length === 0}
-                  label='Select Existing Tenant'
-                  className='mr-2 w-4 h-4'
+                  label="Select Existing Tenant"
+                  className="mr-2 w-4 h-4"
                   style={{ width: 16, height: 16 }}
                 />
               </label>
-              <label className='flex md:items-center'>
+              <label className="flex md:items-center">
                 <Input
-                  type='radio'
-                  name='tenantMode'
-                  value='new'
+                  type="radio"
+                  name="tenantMode"
+                  value="new"
                   checked={field.value === "new"}
                   onChange={() => field.onChange("new")}
                   disabled={tenants.length === 0}
-                  label='Create New Tenant'
-                  className='mr-2 w-4 h-4'
+                  label="Create New Tenant"
+                  className="mr-2 w-4 h-4"
                   style={{ width: 16, height: 16 }}
                 />
               </label>
-              {errors.tenantMode && <span className='text-red-500 text-sm ml-4'>{errors.tenantMode.message as string}</span>}
+              {errors.tenantMode && (
+                <span className="text-red-500 text-sm ml-4">
+                  {errors.tenantMode.message as string}
+                </span>
+              )}
             </div>
           )}
         />
@@ -194,7 +220,7 @@ export default function LeaseDetailsStep({ userId, userRole }: LeaseDetailsStepP
           {...register("tenantId", {
             required: tenantMode === "existing" ? "Tenant is required" : false,
           })}
-          label='Select Tenant'
+          label="Select Tenant"
           options={tenants.map((tenant) => ({
             value: tenant.id.toString(),
             label: tenant.user.name,
@@ -205,53 +231,92 @@ export default function LeaseDetailsStep({ userId, userRole }: LeaseDetailsStepP
         <>
           <Input
             {...register("tenantName", {
-              validate: (value) => (tenantMode === "new" && !value ? "Tenant name is required" : true),
+              validate: (value) =>
+                tenantMode === "new" && !value
+                  ? "Tenant name is required"
+                  : true,
             })}
-            label='Tenant Name'
+            label="Tenant Name"
             error={errors.tenantName?.message as string}
           />
           <Input
             {...register("tenantEmail", {
-              validate: (value) => (tenantMode === "new" && !value ? "Tenant email is required" : true),
+              validate: (value) =>
+                tenantMode === "new" && !value
+                  ? "Tenant email is required"
+                  : true,
             })}
-            label='Tenant Email'
-            type='email'
+            label="Tenant Email"
+            type="email"
             error={errors.tenantEmail?.message as string}
           />
           <Input
             {...register("tenantPhone", {
-              validate: (value) => (tenantMode === "new" && !value ? "Tenant phone is required" : true),
+              validate: (value) =>
+                tenantMode === "new" && !value
+                  ? "Tenant phone is required"
+                  : true,
             })}
-            label='Tenant Phone'
+            label="Tenant Phone"
             error={errors.tenantPhone?.message as string}
           />
         </>
       )}
 
-      <div className='grid grid-cols-2 gap-4'>
+      <div className="grid grid-cols-2 gap-4">
         <Controller
-          name='startDate'
+          name="startDate"
           control={control}
-          render={({ field }) => <DateInput label='Start Date' value={field.value} onChange={field.onChange} error={errors.startDate?.message as string} />}
+          render={({ field }) => (
+            <DateInput
+              label="Start Date"
+              value={field.value}
+              onChange={field.onChange}
+              error={errors.startDate?.message as string}
+            />
+          )}
         />
-        <div className='space-y-2'>
+        <div className="space-y-2">
           <Controller
-            name='endDate'
+            name="endDate"
             control={control}
-            render={({ field }) => <DateInput label='End Date' value={field.value} onChange={field.onChange} error={errors.endDate?.message as string} disabled={!customEndDate} />}
+            render={({ field }) => (
+              <DateInput
+                label="End Date"
+                value={field.value}
+                onChange={field.onChange}
+                error={errors.endDate?.message as string}
+                disabled={!customEndDate}
+              />
+            )}
           />
-          <Checkbox {...register("customEndDate")} label='Set custom end date' />
+          <Checkbox
+            {...register("customEndDate")}
+            label="Set custom end date"
+          />
         </div>
       </div>
 
-      <div className='grid grid-cols- md:grid-cols-3 gap-4'>
-        <Input {...register("rentAmount", { min: 0 })} label='Rent Amount' type='number' error={errors.rentAmount?.message as string} min='0' />
+      <div className="grid grid-cols- md:grid-cols-3 gap-4">
+        <Input
+          {...register("rentAmount", { min: 0 })}
+          label="Rent Amount"
+          type="number"
+          error={errors.rentAmount?.message as string}
+          min="0"
+        />
 
-        <Input {...register("depositAmount", { min: 0 })} label='Deposit Amount' type='number' error={errors.depositAmount?.message as string} min='0' />
+        <Input
+          {...register("depositAmount", { min: 0 })}
+          label="Deposit Amount"
+          type="number"
+          error={errors.depositAmount?.message as string}
+          min="0"
+        />
 
         <Select
           {...register("paymentDay")}
-          label='Payment Day'
+          label="Payment Day"
           error={errors.paymentDay?.message as string}
           options={[
             { value: "1", label: "1st of the month" },
