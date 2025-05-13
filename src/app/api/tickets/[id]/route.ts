@@ -68,7 +68,7 @@ export async function GET(
       return NextResponse.json(ticket);
     }
 
-    if (userRole === 'ADMIN') {
+    if (userRole === 'ADMIN' || userRole === 'LANDLORD') {
       const ticket = await prisma.ticket.findUnique({
         where: {
           id: parseInt(id)
@@ -124,10 +124,10 @@ export async function PATCH(
 ) {
   try {
     const session = await getServerSession(authOptions);
+    console.log('session:tickets', session);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
     const json = await request.json();
     const { status, priority } = json;
     const id = request.nextUrl.pathname.split('/').pop() || ''; // ← Extract ID manually

@@ -100,15 +100,10 @@ const serializeLease = (lease: LeaseWithRelations) => {
 
 export async function GET() {
     try {
-        console.log("ENV CLOUDFLARE_BUCKET_NAME:", process.env.CLOUDFLARE_BUCKET_NAME);
-
         const session = await getServerSession(authOptions);
         if (!session || session.user.role !== "TENANT") {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-
-        console.log('session:2', session);
-
         // Find the tenant by user email
         const user = await prisma.user.findUnique({
             where: { email: session.user.email },
@@ -131,6 +126,7 @@ export async function GET() {
         const leaseDetails = leases.map(serializeLease);
         const leaseIds = leases.map(l => l.id);
         if (leaseIds.length === 0) {
+            console.log("No active leases found");
             return NextResponse.json({ error: "No active leases found" }, { status: 404 });
         }
 

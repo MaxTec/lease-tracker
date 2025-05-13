@@ -8,9 +8,11 @@ import { DashboardData } from "@/types/dashboard";
 import { TenantDashboardData } from "@/types/dashboard";
 import { format } from "date-fns";
 import { cookies } from "next/headers";
+
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) redirect("/");
+  console.log("session", session);
 
   // Default filters
   const now = new Date();
@@ -40,6 +42,7 @@ export default async function DashboardPage() {
     });
 
     if (!res.ok) {
+      // signOut();
       return (
         <Layout>
           <div className='text-red-600 p-4'>Failed to fetch tenant dashboard data.</div>

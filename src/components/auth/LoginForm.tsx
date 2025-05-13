@@ -8,12 +8,14 @@ import { useRouter } from "next/navigation";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import { LoginInput, loginSchema } from "@/lib/validations/auth";
+import { useTranslations } from 'next-intl';
 
 export default function LoginForm({
   onToggleForm,
 }: {
   onToggleForm: () => void;
 }) {
+  const t = useTranslations();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -38,13 +40,13 @@ export default function LoginForm({
       });
 
       if (result?.error) {
-        throw new Error(result?.error || "Invalid email or password");
+        throw new Error(t('common.errors.invalidCredentials'));
       }
 
       // Redirect to dashboard
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t('common.errors.serverError'));
     } finally {
       setIsLoading(false);
     }
@@ -53,7 +55,7 @@ export default function LoginForm({
   return (
     <div className="max-w-md w-full mx-auto">
       <h2 className="text-2xl font-semibold text-gray-800 mb-8 text-center">
-        Welcome back
+        {t('auth.login.title')}
       </h2>
 
       <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
@@ -66,8 +68,8 @@ export default function LoginForm({
         <Input
           id="email"
           type="email"
-          label="E-mail Address"
-          placeholder="Enter your email"
+          label={t('auth.login.email')}
+          placeholder={t('auth.login.email')}
           error={errors.email?.message}
           {...register("email")}
         />
@@ -75,14 +77,14 @@ export default function LoginForm({
         <Input
           id="password"
           type="password"
-          label="Password"
-          placeholder="Enter your password"
+          label={t('auth.login.password')}
+          placeholder={t('auth.login.password')}
           error={errors.password?.message}
           {...register("password")}
         />
         <div className="flex flex-col sm:flex-row gap-4">
           <Button type="submit" fullwidth disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign In"}
+            {isLoading ? t('common.loading') : t('auth.login.loginButton')}
           </Button>
         </div>
         <div className="flex justify-center items-center">
@@ -93,7 +95,7 @@ export default function LoginForm({
               /* Add forgot password handler */
             }}
           >
-            Forgot password?
+            {t('auth.login.forgotPassword')}
           </button>
           <span className="mx-2">|</span>
           <button
@@ -101,7 +103,7 @@ export default function LoginForm({
             className="text-sm text-blue-600 hover:underline"
             onClick={onToggleForm}
           >
-            Don&apos;t you have an account?
+            {t('auth.login.noAccount')} {t('auth.login.createAccount')}
           </button>
         </div>
       </form>

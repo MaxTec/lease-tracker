@@ -186,7 +186,7 @@ export default function PropertyForm({
       const responseData = await response.json();
       console.log("responseData", responseData);
       onUpdate(responseData);
-      // onClose();
+      onClose();
     } catch (err) {
       setFormError(
         err instanceof Error ? err.message : "Failed to save property"

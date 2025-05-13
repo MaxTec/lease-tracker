@@ -79,7 +79,7 @@ export async function DELETE(
     }
 
     // Check if user is admin
-    if (session.user.role !== "ADMIN") {
+    if (session.user.role !== "ADMIN" && session.user.role !== "LANDLORD") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
