@@ -9,31 +9,37 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Tenant } from "@/types/tenant";
 import { TenantFormData } from "@/types/tenant";
 import { useTranslations } from "next-intl";
+import { Session } from "next-auth";
 
 interface TenantFormProps {
   tenantId?: number;
   onClose: () => void;
   onSuccess: (tenant: Tenant) => void;
+  session?: Session;
 }
 
 export default function TenantForm({
   tenantId,
   onClose,
   onSuccess,
+  session,
 }: TenantFormProps) {
   const t = useTranslations();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const isAdmin = session?.user?.role === "ADMIN";
+
   // Define the Zod schema for validation with translations
-  const getTenantSchema = () => z.object({
-    name: z.string().min(1, t("common.errors.required")),
-    email: z.string().email(t("common.errors.invalidEmail")),
-    phone: z.string().min(1, t("common.errors.required")),
-    emergencyContact: z.string().optional(),
-    emergencyPhone: z.string().optional(),
-    employmentInfo: z.string().optional(),
-  });
+  const getTenantSchema = () =>
+    z.object({
+      name: z.string().min(1, t("common.errors.required")),
+      email: z.string().email(t("common.errors.invalidEmail")),
+      phone: z.string().min(1, t("common.errors.required")),
+      emergencyContact: z.string().optional(),
+      emergencyPhone: z.string().optional(),
+      employmentInfo: z.string().optional(),
+    });
 
   const {
     register,
@@ -61,7 +67,9 @@ export default function TenantForm({
         setValue("employmentInfo", data.employmentInfo || "");
       } catch (err) {
         console.error("Error fetching tenant:", err);
-        setError(err instanceof Error ? err.message : t("tenants.errors.fetchFailed"));
+        setError(
+          err instanceof Error ? err.message : t("tenants.errors.fetchFailed")
+        );
       } finally {
         setLoading(false);
       }
@@ -92,7 +100,9 @@ export default function TenantForm({
       onClose();
     } catch (err) {
       console.error("Error saving tenant:", err);
-      setError(err instanceof Error ? err.message : t("tenants.errors.saveFailed"));
+      setError(
+        err instanceof Error ? err.message : t("tenants.errors.saveFailed")
+      );
     } finally {
       setLoading(false);
     }
@@ -109,7 +119,8 @@ export default function TenantForm({
           {...register("name")}
           label={t("tenants.form.name")}
           error={errors.name?.message}
-          disabled={!!tenantId}
+          disabled={!!tenantId && !isAdmin}
+          required
         />
       </div>
 
@@ -119,7 +130,8 @@ export default function TenantForm({
           label={t("tenants.form.email")}
           type="email"
           error={errors.email?.message}
-          disabled={!!tenantId}
+          disabled={!!tenantId && !isAdmin}
+          required
         />
       </div>
       <div>
@@ -127,6 +139,7 @@ export default function TenantForm({
           {...register("phone")}
           label={t("tenants.form.phone")}
           error={errors.phone?.message}
+          required
         />
       </div>
 
@@ -135,14 +148,6 @@ export default function TenantForm({
           {...register("emergencyContact")}
           label={t("tenants.form.emergencyContact")}
           error={errors.emergencyContact?.message}
-        />
-      </div>
-
-      <div>
-        <Input
-          {...register("emergencyPhone")}
-          label={t("tenants.form.emergencyPhone")}
-          error={errors.emergencyPhone?.message}
         />
       </div>
       <div className="flex justify-end space-x-3">

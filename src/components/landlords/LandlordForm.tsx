@@ -121,6 +121,7 @@ export default function LandlordForm({ landlordId, onClose, onSuccess }: Landlor
         type="text"
         defaultValue={formData.name}
         error={errors.name}
+        required
       />
       <Input
         label={t("landlords.form.email")}
@@ -128,6 +129,7 @@ export default function LandlordForm({ landlordId, onClose, onSuccess }: Landlor
         type="email"
         defaultValue={formData.email}
         error={errors.email}
+        required
       />
       {!landlordId && (
         <Input
@@ -135,6 +137,7 @@ export default function LandlordForm({ landlordId, onClose, onSuccess }: Landlor
           name="password"
           type="password"
           error={errors.password}
+          required
         />
       )}
       <Input
@@ -143,6 +146,7 @@ export default function LandlordForm({ landlordId, onClose, onSuccess }: Landlor
         type="tel"
         defaultValue={formData.phone}
         error={errors.phone}
+        required
       />
       <Input
         label={t("landlords.form.address")}
@@ -150,6 +154,7 @@ export default function LandlordForm({ landlordId, onClose, onSuccess }: Landlor
         type="text"
         defaultValue={formData.address}
         error={errors.address}
+        required
       />
       <Input
         label={t("landlords.form.companyName")}

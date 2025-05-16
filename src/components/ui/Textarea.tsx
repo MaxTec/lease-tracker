@@ -27,12 +27,13 @@ const Textarea: React.FC<TextareaProps> = ({
       {label && (
         <label className="block text-sm font-medium text-gray-700">
           {label}
+          {required && <span className="text-red-500">*</span>}
         </label>
       )}
       <textarea
         onChange={onChange}
         placeholder={placeholder}
-        required={required}
+        // required={required}
         className={`w-full p-2 border rounded-md ${
           error ? "border-red-500" : "border-gray-300"
         }`}

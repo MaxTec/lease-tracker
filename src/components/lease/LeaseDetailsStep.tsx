@@ -155,9 +155,11 @@ export default function LeaseDetailsStep({
               label: property.name,
             }))}
             error={errors.propertyId?.message as string}
+            required
           />
 
           <Select
+            required
             {...register("unitId")}
             label="Unit"
             options={units.map((unit) => ({
@@ -238,6 +240,7 @@ export default function LeaseDetailsStep({
             })}
             label="Tenant Name"
             error={errors.tenantName?.message as string}
+            required
           />
           <Input
             {...register("tenantEmail", {
@@ -249,6 +252,7 @@ export default function LeaseDetailsStep({
             label="Tenant Email"
             type="email"
             error={errors.tenantEmail?.message as string}
+            required
           />
           <Input
             {...register("tenantPhone", {
@@ -259,6 +263,7 @@ export default function LeaseDetailsStep({
             })}
             label="Tenant Phone"
             error={errors.tenantPhone?.message as string}
+            required
           />
         </>
       )}
@@ -270,6 +275,7 @@ export default function LeaseDetailsStep({
           render={({ field }) => (
             <DateInput
               label="Start Date"
+              required
               value={field.value}
               onChange={field.onChange}
               error={errors.startDate?.message as string}
@@ -283,6 +289,7 @@ export default function LeaseDetailsStep({
             render={({ field }) => (
               <DateInput
                 label="End Date"
+                required
                 value={field.value}
                 onChange={field.onChange}
                 error={errors.endDate?.message as string}
@@ -302,6 +309,7 @@ export default function LeaseDetailsStep({
           {...register("rentAmount", { min: 0 })}
           label="Rent Amount"
           type="number"
+          required
           error={errors.rentAmount?.message as string}
           min="0"
         />
@@ -310,6 +318,7 @@ export default function LeaseDetailsStep({
           {...register("depositAmount", { min: 0 })}
           label="Deposit Amount"
           type="number"
+          required
           error={errors.depositAmount?.message as string}
           min="0"
         />
@@ -317,6 +326,7 @@ export default function LeaseDetailsStep({
         <Select
           {...register("paymentDay")}
           label="Payment Day"
+          required
           error={errors.paymentDay?.message as string}
           options={[
             { value: "1", label: "1st of the month" },

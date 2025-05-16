@@ -30,7 +30,8 @@ import RuleForm from "./RuleForm";
 import ClauseForm from "./ClauseForm";
 import type { RuleFormData, ClauseFormData } from "@/lib/validations/lease";
 import { getOrdinal } from "@/utils/numberUtils";
-
+import { useTranslations } from "next-intl";
+import { FaFileContract } from "react-icons/fa";
 interface Rule {
   id: number;
   title: string;
@@ -53,7 +54,7 @@ export default function LeaseRulesStep() {
     isLoading: clausesLoading,
     error: clausesError,
   } = useClauses();
-  const hasExistingLease = watch('hasExistingLease');
+  const hasExistingLease = watch("hasExistingLease");
 
   const [localRules, setLocalRules] = useState<Rule[]>([]);
   const [localClauses, setLocalClauses] = useState<Clause[]>([]);
@@ -69,6 +70,8 @@ export default function LeaseRulesStep() {
 
   const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
   const [isClauseModalOpen, setIsClauseModalOpen] = useState(false);
+
+  const t = useTranslations("LeaseRulesStep");
 
   useEffect(() => {
     if (rules) {
@@ -212,98 +215,48 @@ export default function LeaseRulesStep() {
   };
 
   if (rulesLoading || clausesLoading) {
-    return <div className="text-center">Loading...</div>;
+    return <div className="text-center">{t("loading")}</div>;
   }
 
   if (rulesError || clausesError) {
-    return <div className="text-red-500">Error loading data</div>;
+    return <div className="text-red-500">{t("errorLoadingData")}</div>;
   }
   // console.log("localRules", localRules);
   // console.log("localClauses", localClauses);
   // TODO: After adding a new rule or clause, it must be added as checked in the form
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
+    <div className="space-y-6 lg:space-y-0">
+      <div className="space-y-4 lg:space-y-0 mb-4 lg:mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
         <div className="flex items-center space-x-3">
           <input
             type="checkbox"
             id="hasExistingLease"
-            {...register('hasExistingLease')}
+            {...register("hasExistingLease")}
             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
-          <label htmlFor="hasExistingLease" className="text-sm font-medium text-gray-700">
-            I already have an existing lease agreement
+          <label
+            htmlFor="hasExistingLease"
+            className="text-sm font-medium text-gray-700 flex items-center gap-2"
+          >
+            <FaFileContract className="text-blue-500" />
+            {t("hasExistingLease")}
           </label>
         </div>
         {hasExistingLease && (
-          <p className="text-sm text-gray-500">
-            You can skip selecting rules and clauses and proceed to upload your existing lease agreement.
-          </p>
+          <p className="text-sm text-gray-500">{t("skipMessage")}</p>
         )}
       </div>
 
       {!hasExistingLease && (
         <>
-          <div className="space-y-8">
+          <div className="space-y-8 lg:grid lg:grid-cols-2 lg:gap-8 lg:space-y-0">
             <Divider
-              title="Lease Rules"
-              lineStyle="solid"
-              actions={
-                <div className="flex items-center space-x-2">
-                  <Button onClick={handleToggleAllRules} variant="outline" size="sm">
-                    {areRulesSelected ? "Unselect All" : "Select All"}
-                  </Button>
-                  <Button onClick={() => setIsRuleModalOpen(true)} square>
-                    <div className="flex items-center space-x-2">
-                      <FaPlus />
-                    </div>
-                  </Button>
-                </div>
-              }
-            >
-              <div className="w-full space-y-4">
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={(event) => handleDragEnd(event, "rules")}
-                >
-                  {localRules.map((rule) => {
-                    return (
-                      <SortableItem key={rule.id} id={rule.id}>
-                        <div className="flex flex-col items-start space-x-3 p-2.5 bg-white rounded-lg shadow-sm border border-gray-200">
-                          <Checkbox
-                            key={rule.id}
-                            {...register("selectedRules", {
-                              onChange: (e) => {
-                                handleRuleChange(Number(rule.id), e.target.checked);
-                              },
-                            })}
-                            value={rule.id}
-                            checked={(watch("selectedRules") || [])
-                              .map(Number)
-                              .includes(rule.id)}
-                            label={rule.title}
-                          />
-                          <p className="text-sm text-gray-500">{rule.description}</p>
-                        </div>
-                      </SortableItem>
-                    );
-                  })}
-                </DndContext>
-              </div>
-            </Divider>
-
-            <Divider
-              title="Lease Clauses"
+              title={t("leaseClauses")}
               lineStyle="dashed"
               actions={
                 <div className="flex items-center space-x-2">
-                  <Button
-                    onClick={handleToggleAllClauses}
-                    variant="outline"
-                    size="sm"
-                  >
-                    {areClausesSelected ? "Unselect All" : "Select All"}
+                  <Button onClick={handleToggleAllClauses} variant="outline">
+                    {areClausesSelected ? t("unselectAll") : t("selectAll")}
                   </Button>
                   <Button onClick={() => setIsClauseModalOpen(true)} square>
                     <div className="flex items-center space-x-2">
@@ -313,7 +266,7 @@ export default function LeaseRulesStep() {
                 </div>
               }
             >
-              <div className="w-full space-y-4">
+              <div className="w-full space-y-4 lg:space-y-3">
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCenter}
@@ -343,11 +296,65 @@ export default function LeaseRulesStep() {
                               language: "es",
                             }).toUpperCase()}`}
                           />
-                          <p className="text-sm text-gray-500">{clause.content}</p>
+                          <p className="text-sm text-gray-500">
+                            {clause.content}
+                          </p>
                         </div>
                       </SortableItem>
                     ))}
                   </SortableContext>
+                </DndContext>
+              </div>
+            </Divider>
+            <Divider
+              title={t("leaseRules")}
+              lineStyle="solid"
+              actions={
+                <div className="flex items-center space-x-2">
+                  <Button onClick={handleToggleAllRules} variant="outline">
+                    {areRulesSelected ? t("unselectAll") : t("selectAll")}
+                  </Button>
+                  <Button onClick={() => setIsRuleModalOpen(true)} square>
+                    <div className="flex items-center space-x-2">
+                      <FaPlus />
+                    </div>
+                  </Button>
+                </div>
+              }
+            >
+              <div className="w-full space-y-4 lg:space-y-3">
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event) => handleDragEnd(event, "rules")}
+                >
+                  {localRules.map((rule) => {
+                    return (
+                      <SortableItem key={rule.id} id={rule.id}>
+                        <div className="flex flex-col items-start space-x-3 p-2.5 bg-white rounded-lg shadow-sm border border-gray-200">
+                          <Checkbox
+                            key={rule.id}
+                            {...register("selectedRules", {
+                              onChange: (e) => {
+                                handleRuleChange(
+                                  Number(rule.id),
+                                  e.target.checked
+                                );
+                              },
+                            })}
+                            value={rule.id}
+                            checked={(watch("selectedRules") || [])
+                              .map(Number)
+                              .includes(rule.id)}
+                            label={rule.title}
+                          />
+                          <p className="text-sm text-gray-500">
+                            {rule.description}
+                          </p>
+                        </div>
+                      </SortableItem>
+                    );
+                  })}
                 </DndContext>
               </div>
             </Divider>
@@ -356,7 +363,7 @@ export default function LeaseRulesStep() {
           <Modal
             isOpen={isRuleModalOpen}
             onClose={() => setIsRuleModalOpen(false)}
-            title="Add New Rule"
+            title={t("addNewRule")}
           >
             <RuleForm
               onSubmit={handleAddRule}
@@ -367,7 +374,7 @@ export default function LeaseRulesStep() {
           <Modal
             isOpen={isClauseModalOpen}
             onClose={() => setIsClauseModalOpen(false)}
-            title="Add New Clause"
+            title={t("addNewClause")}
           >
             <ClauseForm
               onSubmit={handleAddClause}

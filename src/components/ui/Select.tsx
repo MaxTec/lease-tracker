@@ -14,11 +14,12 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, options, error, className = '', ...props }, ref) => {
+  ({ label, options, error, className = '', required, ...props }, ref) => {
     return (
       <div className="w-full">
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {label}
+          {required && <span className="text-red-500">*</span>}
         </label>
         <select
           ref={ref}

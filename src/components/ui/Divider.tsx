@@ -25,7 +25,7 @@ export default function Divider({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-4">
+      <div className="space-y-4 lg:space-y-0">
         <div className="flex items-center justify-between flex-shrink-0">
           <h3 className="text-lg font-medium text-gray-900 whitespace-nowrap">{title}</h3>
           <div className={`flex-grow border-b ${lineStyles[lineStyle]} my-2 mx-3`} />

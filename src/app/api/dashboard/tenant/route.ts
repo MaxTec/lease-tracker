@@ -251,7 +251,7 @@ export async function GET() {
 
         const data: TenantDashboardData = {
             paidPayments,
-            nextPayments,
+            nextPayments: leaseDetails[0].status !== "ACTIVE" ? [] : nextPayments, // If the tenant has no active lease, don't show next payments (for the moment a tenant can't have more than one lease)
             tickets,
             documents,
             leases: leaseDetails,

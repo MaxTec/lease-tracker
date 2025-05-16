@@ -18,18 +18,22 @@ import { formatCurrencyMXN } from "@/utils/numberUtils";
 interface ListProps {
   leases: Lease[];
   session: Session;
+  isMobile: boolean;
 }
 
-const List = ({ leases: initialLeases }: ListProps) => {
+const List = ({ leases: initialLeases, isMobile }: ListProps) => {
   const t = useTranslations();
   const router = useRouter();
   const [leases] = useState<Lease[]>(initialLeases);
   const [loading] = useState(false);
   const [error] = useState<string | null>(null);
 
-  const handleViewLease = useCallback((leaseId: number) => {
-    router.push(`/leases/${leaseId}`);
-  }, [router]);
+  const handleViewLease = useCallback(
+    (leaseId: number) => {
+      router.push(`/leases/${leaseId}`);
+    },
+    [router]
+  );
 
   const handleAddNewLease = useCallback(() => {
     router.push("/leases/new");
@@ -53,20 +57,23 @@ const List = ({ leases: initialLeases }: ListProps) => {
       {
         key: "property",
         label: t("leases.list.property"),
-        priority: 1,
+        priority: isMobile ? 1 : undefined,
         render: (lease: Lease) =>
-          `${lease.unit.property.name} - ${t("leases.list.unit")} ${lease.unit.unitNumber}`,
+          `${lease.unit.property.name} - ${t("leases.list.unit")} ${
+            lease.unit.unitNumber
+          }`,
       },
       {
         key: "tenant",
         label: t("leases.list.tenant"),
-        priority: 2,
+        priority: isMobile ? 2 : undefined,
         render: (lease: Lease) => lease.tenant.user.name,
       },
       {
         key: "rentAmount",
         label: t("leases.list.monthlyRent"),
-        render: (lease: Lease) => formatCurrencyMXN(lease.rentAmount.toString()),
+        render: (lease: Lease) =>
+          formatCurrencyMXN(lease.rentAmount.toString()),
       },
       {
         key: "period",
@@ -105,7 +112,8 @@ const List = ({ leases: initialLeases }: ListProps) => {
               aria-label={t("leases.list.leaseAgreement")}
               tabIndex={0}
               onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") router.push(`/leases/${lease.id}/document`);
+                if (e.key === "Enter" || e.key === " ")
+                  router.push(`/leases/${lease.id}/document`);
               }}
             >
               <FaFilePdf />
@@ -120,17 +128,18 @@ const List = ({ leases: initialLeases }: ListProps) => {
       {
         key: "actions",
         label: t("leases.list.actions"),
-        priority: 4,
+        priority: isMobile ? 4 : undefined,
         render: (lease: Lease) => (
           <div className="flex space-x-2">
             <Button
               square
               size="md"
               onClick={() => handleViewLease(lease.id)}
-            //   aria-label={t("leases.list.view")}
+              //   aria-label={t("leases.list.view")}
               tabIndex={0}
               onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") handleViewLease(lease.id);
+                if (e.key === "Enter" || e.key === " ")
+                  handleViewLease(lease.id);
               }}
             >
               <FaEye />
@@ -152,7 +161,9 @@ const List = ({ leases: initialLeases }: ListProps) => {
 
   if (error) {
     return (
-      <div className="bg-red-50 text-red-600 p-4 rounded-md" role="alert">{error}</div>
+      <div className="bg-red-50 text-red-600 p-4 rounded-md" role="alert">
+        {error}
+      </div>
     );
   }
 
@@ -162,7 +173,13 @@ const List = ({ leases: initialLeases }: ListProps) => {
         <div className="p-6 border-b border-gray-200">
           {leases.length > 0 && (
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-gray-800" tabIndex={0} aria-label={t("leases.title")}>{t("leases.title")}</h2>
+              <h2
+                className="text-2xl font-semibold text-gray-800"
+                tabIndex={0}
+                aria-label={t("leases.title")}
+              >
+                {t("leases.title")}
+              </h2>
               <Button
                 onClick={handleAddNewLease}
                 aria-label={t("leases.create")}
@@ -205,4 +222,4 @@ const List = ({ leases: initialLeases }: ListProps) => {
   );
 };
 
-export default List; 
+export default List;

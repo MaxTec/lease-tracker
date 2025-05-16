@@ -49,24 +49,25 @@ export default function PropertyForm({
   onUpdate,
 }: PropertyFormProps) {
   const t = useTranslations();
-  
+
   // Define the Zod schema for Property with translated error messages
-  const getPropertySchema = () => z.object({
-    name: z.string().min(1, t("common.errors.required")),
-    address: z.string().min(1, t("common.errors.required")),
-    type: z.string().min(1, t("common.errors.required")),
-    landlordId: z.string().optional(),
-    units: z
-      .array(
-        z.object({
-          unitNumber: z.string().min(1, t("common.errors.required")),
-          bedrooms: z.string(),
-          bathrooms: z.string(),
-          squareFeet: z.string(),
-        })
-      )
-      .min(1, t("properties.errors.atLeastOneUnit")),
-  });
+  const getPropertySchema = () =>
+    z.object({
+      name: z.string().min(1, t("common.errors.required")),
+      address: z.string().min(1, t("common.errors.required")),
+      type: z.string().min(1, t("common.errors.required")),
+      landlordId: z.string().optional(),
+      units: z
+        .array(
+          z.object({
+            unitNumber: z.string().min(1, t("common.errors.required")),
+            bedrooms: z.string(),
+            bathrooms: z.string(),
+            squareFeet: z.string(),
+          })
+        )
+        .min(1, t("properties.errors.atLeastOneUnit")),
+    });
 
   const {
     register,
@@ -100,14 +101,16 @@ export default function PropertyForm({
         // Fetch landlords
         setLoading(true);
         const landlordsRes = await fetch("/api/landlords");
-        if (!landlordsRes.ok) throw new Error(t("landlords.errors.fetchFailed"));
+        if (!landlordsRes.ok)
+          throw new Error(t("landlords.errors.fetchFailed"));
         const landlordsData = await landlordsRes.json();
         setLandlords(landlordsData);
 
         // If editing, fetch property data
         if (propertyId) {
           const propertyRes = await fetch(`/api/properties/${propertyId}`);
-          if (!propertyRes.ok) throw new Error(t("properties.errors.fetchFailed"));
+          if (!propertyRes.ok)
+            throw new Error(t("properties.errors.fetchFailed"));
           const propertyData = await propertyRes.json();
 
           // Convert numbers to strings for form data
@@ -181,7 +184,11 @@ export default function PropertyForm({
       });
 
       if (!response.ok) {
-        throw new Error(propertyId ? t("properties.errors.updateFailed") : t("properties.errors.createFailed"));
+        throw new Error(
+          propertyId
+            ? t("properties.errors.updateFailed")
+            : t("properties.errors.createFailed")
+        );
       }
       const responseData = await response.json();
       console.log("responseData", responseData);
@@ -209,27 +216,33 @@ export default function PropertyForm({
               {formError}
             </div>
           )}
-          
+
           <Input
             {...register("name")}
             label={t("properties.form.propertyName")}
             error={errors.name?.message}
+            required
           />
 
           <Input
             {...register("address")}
             label={t("properties.form.address")}
             error={errors.address?.message}
+            required
           />
 
           <div className="grid grid-cols-2 gap-4">
             <Select
+              required
               {...register("type")}
               label={t("properties.form.propertyType")}
               options={[
                 { value: "APARTMENT", label: t("properties.types.apartment") },
                 { value: "HOUSE", label: t("properties.types.house") },
-                { value: "COMMERCIAL", label: t("properties.types.commercial") },
+                {
+                  value: "COMMERCIAL",
+                  label: t("properties.types.commercial"),
+                },
                 { value: "OTHER", label: t("properties.types.other") },
               ]}
               error={errors.type?.message}
@@ -238,6 +251,7 @@ export default function PropertyForm({
             <Select
               {...register("landlordId")}
               label={t("properties.form.landlord")}
+              disabled={landlords.length === 0 || propertyId !== undefined}
               options={landlords.map((landlord) => ({
                 value: String(landlord.id),
                 label: landlord.user.name,
@@ -250,6 +264,7 @@ export default function PropertyForm({
             {fields.map((unit, index) => (
               <div key={unit.id} className="flex space-x-4 mb-4 relative pr-20">
                 <Input
+                  required
                   {...register(`units.${index}.unitNumber`)}
                   label={t("properties.form.unitNumber")}
                   error={errors.units?.[index]?.unitNumber?.message}
@@ -277,7 +292,7 @@ export default function PropertyForm({
                 />
                 <Button
                   disabled={fields.length === 1}
-                  className="absolute right-0 top-[23px]"
+                  className="absolute right-0 top-[23px] max-w-"
                   size="lg"
                   variant="danger"
                   onClick={() => remove(index)}

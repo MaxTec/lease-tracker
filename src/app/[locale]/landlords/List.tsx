@@ -16,9 +16,10 @@ import { Session } from "next-auth";
 interface ListProps {
   landlords: Landlord[];
   session: Session;
+  isMobile: boolean;
 }
 
-const List = ({ landlords: initialLandlords }: ListProps) => {
+const List = ({ landlords: initialLandlords, isMobile }: ListProps) => {
   const t = useTranslations();
   const [landlords, setLandlords] = useState<Landlord[]>(initialLandlords);
   const [loading, setLoading] = useState(false);
@@ -88,13 +89,13 @@ const List = ({ landlords: initialLandlords }: ListProps) => {
         key: "user.name",
         label: t("landlords.form.name"),
         render: (landlord: Landlord) => landlord.user.name,
-        priority: 1,
+        priority: isMobile ? 1 : undefined,
       },
       {
         key: "user.email",
         label: t("landlords.form.email"),
         render: (landlord: Landlord) => landlord.user.email,
-        priority: 2,
+        priority: isMobile ? 2 : undefined,
       },
       {
         key: "phone",
@@ -114,7 +115,7 @@ const List = ({ landlords: initialLandlords }: ListProps) => {
       {
         key: "actions",
         label: t("common.buttons.actions"),
-        priority: 3,
+        priority: isMobile ? 3 : undefined,
         render: (landlord: Landlord) => (
           <div className="flex space-x-2">
             <Button
@@ -124,7 +125,8 @@ const List = ({ landlords: initialLandlords }: ListProps) => {
               aria-label={t("common.buttons.edit")}
               tabIndex={0}
               onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") handleEditLandlord(landlord);
+                if (e.key === "Enter" || e.key === " ")
+                  handleEditLandlord(landlord);
               }}
             >
               {t("common.buttons.edit")}
@@ -136,7 +138,8 @@ const List = ({ landlords: initialLandlords }: ListProps) => {
               aria-label={t("common.buttons.delete")}
               tabIndex={0}
               onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") handleDeleteClick(landlord.id);
+                if (e.key === "Enter" || e.key === " ")
+                  handleDeleteClick(landlord.id);
               }}
             >
               {t("common.buttons.delete")}
@@ -158,7 +161,9 @@ const List = ({ landlords: initialLandlords }: ListProps) => {
 
   if (error) {
     return (
-      <div className="bg-red-50 text-red-600 p-4 rounded-md" role="alert">{error}</div>
+      <div className="bg-red-50 text-red-600 p-4 rounded-md" role="alert">
+        {error}
+      </div>
     );
   }
 
@@ -167,7 +172,13 @@ const List = ({ landlords: initialLandlords }: ListProps) => {
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b border-gray-200">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800" tabIndex={0} aria-label={t("landlords.title")}>{t("landlords.title")}</h2>
+            <h2
+              className="text-2xl font-semibold text-gray-800"
+              tabIndex={0}
+              aria-label={t("landlords.title")}
+            >
+              {t("landlords.title")}
+            </h2>
             {landlords.length > 0 && (
               <Button
                 onClick={handleAddLandlord}
@@ -227,4 +238,4 @@ const List = ({ landlords: initialLandlords }: ListProps) => {
   );
 };
 
-export default List; 
+export default List;

@@ -296,7 +296,7 @@ const TenantDashboard: React.FC<TenantDashboardProps> = ({
       <Card
         title={tTickets("title")}
         icon={<FcHighPriority size={32} />}
-        actions={[<CreateTicketButton key="create" />]}
+        actions={tenantDashboardData.leases[0].status === "ACTIVE" ? [<CreateTicketButton key="create" />] : []}
       >
         {tenantDashboardData.tickets.length === 0 ? (
           <EmptyState

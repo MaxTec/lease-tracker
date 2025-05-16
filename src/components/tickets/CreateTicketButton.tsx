@@ -165,7 +165,7 @@ export default function CreateTicketButton() {
 
   return (
     <div>
-      {session?.user?.role !== "ADMIN" && (
+      {session?.user?.role === "TENANT" && (
         <Button onClick={() => setOpen(true)} className="mb-4">
           {t("tickets.create")}
         </Button>
@@ -182,6 +182,7 @@ export default function CreateTicketButton() {
               id="title"
               error={errors.title?.message}
               {...register("title")}
+              required
             />
           </div>
           <div className="space-y-2">
@@ -189,6 +190,7 @@ export default function CreateTicketButton() {
               label={t("tickets.form.description")}
               error={errors.description?.message}
               {...register("description")}
+              required
             />
           </div>
           <div className="space-y-2">
@@ -196,6 +198,7 @@ export default function CreateTicketButton() {
               label={t("tickets.form.priority")}
               error={errors.priority?.message}
               {...register("priority")}
+              required
               options={[
                 { value: "LOW", label: t("tickets.priority.low") },
                 { value: "MEDIUM", label: t("tickets.priority.medium") },

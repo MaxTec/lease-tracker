@@ -4,6 +4,7 @@ import { useFormContext } from "react-hook-form";
 import { useState, useEffect } from "react";
 import LeasePDF from "@/components/lease/LeasePDF";
 import { LeaseData } from "./LeasePDF";
+import { useTranslations } from "next-intl";
 
 export default function LeasePreviewStep() {
   const {
@@ -15,6 +16,7 @@ export default function LeasePreviewStep() {
   const [pdfData, setPdfData] = useState<LeaseData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const t = useTranslations("LeasePreviewStep");
 
   useEffect(() => {
     const fetchPreviewData = async () => {
@@ -36,7 +38,7 @@ export default function LeasePreviewStep() {
         setPdfData(data);
       } catch (error) {
         console.error("Error fetching preview data:", error);
-        setError("Failed to load preview");
+        setError(t("failedToLoadPreview"));
       } finally {
         setIsLoading(false);
       }
@@ -63,7 +65,7 @@ export default function LeasePreviewStep() {
       <div className="border rounded-lg overflow-hidden">
         {isLoading ? (
           <div className="p-4 text-center text-gray-500">
-            Generating preview...
+            {t("generatingPreview")}
           </div>
         ) : error ? (
           <div className="p-4 text-center text-red-500">{error}</div>
@@ -83,8 +85,7 @@ export default function LeasePreviewStep() {
               className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
             />
             <span className="text-sm text-gray-700">
-              I have reviewed the lease agreement and confirm all information is
-              correct
+              {t("agreementVerified")}
             </span>
           </label>
           {errors.agreementVerified && (
@@ -95,8 +96,11 @@ export default function LeasePreviewStep() {
         </div>
         <div className="text-center flex flex-col items-center">
           <label className="block text-sm font-medium text-gray-700">
-            Upload Signed Lease Agreement (Optional)
+            {t("uploadLabel")}
           </label>
+          <p className="mt-1 text-sm text-gray-500 text-center">
+            {t("uploadHint")}
+          </p>
           <div className="my-1">
             <input
               type="file"
@@ -110,10 +114,7 @@ export default function LeasePreviewStep() {
                 hover:file:bg-primary/90"
             />
           </div>
-          <p className="mt-1 text-sm text-gray-500 text-center">
-            Upload the scanned copy of the signed lease agreement (PDF format
-            only)
-          </p>
+          
         </div>
       </div>
     </div>

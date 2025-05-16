@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import StepIndicator from "@/components/ui/StepIndicator";
 import Button from "@/components/ui/Button";
-import { toast } from "react-hot-toast";
+import toast, { Toaster } from 'react-hot-toast';
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { FaInfoCircle, FaListUl, FaFileSignature } from "react-icons/fa";
@@ -200,7 +200,16 @@ const NewLeaseClient = ({
     trigger,
     formState: { errors },
     watch,
+    clearErrors,
   } = methods;
+
+  // Clear errors for new tenant fields when tenantMode switches to 'existing'
+  useEffect(() => {
+    const tenantMode = watch("tenantMode");
+    if (tenantMode === "existing") {
+      clearErrors(["tenantName", "tenantEmail", "tenantPhone"]);
+    }
+  }, [watch("tenantMode"), clearErrors, watch]);
 
   const validateCurrentStep = async () => {
     let fieldsToValidate: Array<keyof LeaseFormData> = [];
@@ -244,6 +253,7 @@ const NewLeaseClient = ({
     if (!isStepValid && currentStep > 0) {
       Object.values(errors).forEach((error) => {
         if (error) {
+          console.log("SI SE DEBE MOSTRAR EL ERROR");
           toast.error(error.message as string);
         }
       });
@@ -325,6 +335,7 @@ const NewLeaseClient = ({
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <Toaster />
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-2xl font-semibold text-gray-800 mb-6">

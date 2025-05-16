@@ -413,7 +413,7 @@
       "email": "Correo electrónico",
       "phone": "Teléfono",
       "address": "Dirección",
-      "companyName": "Nombre de la Empresa",
+      "companyName": "Nombre de Empresa",
       "password": "Contraseña",
       "taxId": "Identificación Fiscal",
       "status": "Estado",
@@ -695,5 +695,28 @@
     "successMessage": "Tu cuenta ha sido creada. Redirigiendo al inicio de sesión...",
     "submitting": "Registrando...",
     "submit": "Registrarse"
+  },
+  "LeaseRulesStep": {
+    "hasExistingLease": "Ya tengo un contrato de arrendamiento existente",
+    "skipMessage": "Puede omitir la selección de reglas y cláusulas y proceder a subir su contrato de arrendamiento existente.",
+    "leaseRules": "Reglas",
+    "unselectAll": "Deseleccionar todo",
+    "selectAll": "Seleccionar todo",
+    "addNewRule": "Nueva regla",
+    "leaseClauses": "Cláusulas",
+    "addNewClause": "Nueva cláusula",
+    "loading": "Cargando...",
+    "errorLoadingData": "Error al cargar los datos",
+    "ruleAdded": "Regla agregada exitosamente",
+    "ruleAddFailed": "Error al agregar la regla",
+    "clauseAdded": "Cláusula agregada exitosamente",
+    "clauseAddFailed": "Error al agregar la cláusula"
+  },
+  "LeasePreviewStep": {
+    "generatingPreview": "Generando vista previa...",
+    "failedToLoadPreview": "Error al cargar la vista previa",
+    "agreementVerified": "He revisado el contrato de arrendamiento y confirmo que toda la información es correcta",
+    "uploadLabel": "Subir contrato de arrendamiento firmado (opcional)",
+    "uploadHint": "Sube la copia escaneada del contrato firmado (solo formato PDF)"
   }
 }

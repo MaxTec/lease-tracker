@@ -19,7 +19,7 @@ interface ListProps {
   session: Session;
 }
 
-const List = ({ tenants: initialTenants }: ListProps) => {
+const List = ({ tenants: initialTenants, session }: ListProps) => {
   const t = useTranslations();
   const { isMobile } = useDevice();
   const [tenants, setTenants] = useState<Tenant[]>(initialTenants);
@@ -29,6 +29,7 @@ const List = ({ tenants: initialTenants }: ListProps) => {
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [tenantToDelete, setTenantToDelete] = useState<number | null>(null);
+  console.log("session:tenats", session);
 
   const handleEditTenant = useCallback((tenant: Tenant) => {
     setCurrentTenant(tenant);
@@ -211,6 +212,7 @@ const List = ({ tenants: initialTenants }: ListProps) => {
           tenantId={currentTenant?.id}
           onClose={handleModalClose}
           onSuccess={handleUpdateTenants}
+          session={session}
         />
       </Modal>
       <PopConfirm

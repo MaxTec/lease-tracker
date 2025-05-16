@@ -4,6 +4,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import List from "./List";
 import Layout from "@/components/layout/Layout";
 import { Landlord } from "@/types/landlord";
+import { isMobileDevice } from "@/utils/device-detection";
 
 export default async function LandlordsPage() {
   const session = await getServerSession(authOptions);
@@ -12,8 +13,14 @@ export default async function LandlordsPage() {
   const params = new URLSearchParams();
   if (session.user.role) params.append("userRole", session.user.role);
   if (session.user.id) params.append("userId", session.user.id.toString());
+  const isMobile = await isMobileDevice();
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/landlords?${params.toString()}`, { cache: "no-store" });
+  const res = await fetch(
+    `${
+      process.env.NEXT_PUBLIC_API_URL || ""
+    }/api/landlords?${params.toString()}`,
+    { cache: "no-store" }
+  );
   if (!res.ok) {
     return (
       <Layout>
@@ -25,7 +32,7 @@ export default async function LandlordsPage() {
 
   return (
     <Layout>
-      <List landlords={landlords} session={session} />
+      <List landlords={landlords} session={session} isMobile={isMobile} />
     </Layout>
   );
 }

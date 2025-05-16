@@ -695,5 +695,28 @@
     "successMessage": "Your account has been created. Redirecting to login...",
     "submitting": "Registering...",
     "submit": "Register"
+  },
+  "LeaseRulesStep": {
+    "hasExistingLease": "I already have an existing lease agreement",
+    "skipMessage": "You can skip selecting rules and clauses and proceed to upload your existing lease agreement.",
+    "leaseRules": "Lease Rules",
+    "unselectAll": "Unselect All",
+    "selectAll": "Select All",
+    "addNewRule": "Add New Rule",
+    "leaseClauses": "Lease Clauses",
+    "addNewClause": "Add New Clause",
+    "loading": "Loading...",
+    "errorLoadingData": "Error loading data",
+    "ruleAdded": "Rule added successfully",
+    "ruleAddFailed": "Failed to add rule",
+    "clauseAdded": "Clause added successfully",
+    "clauseAddFailed": "Failed to add clause"
+  },
+  "LeasePreviewStep": {
+    "generatingPreview": "Generating preview...",
+    "failedToLoadPreview": "Failed to load preview",
+    "agreementVerified": "I have reviewed the lease agreement and confirm all information is correct",
+    "uploadLabel": "Upload Signed Lease Agreement (Optional)",
+    "uploadHint": "Upload the scanned copy of the signed lease agreement (PDF format only)"
   }
 }
