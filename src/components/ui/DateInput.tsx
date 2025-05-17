@@ -99,7 +99,7 @@ const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
               ? "Select Month"
               : "YYYY-MM-DD"
           }
-          isClearable
+          // isClearable
           showMonthDropdown={!showMonthYearPicker && !showYearPicker}
           showYearDropdown={!showMonthYearPicker && !showYearPicker}
           showMonthYearPicker={showMonthYearPicker}

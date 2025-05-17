@@ -630,8 +630,9 @@
   },
   "NotFoundPage": {
     "title": "Page Not Found",
-    "description": "Sorry, the page you are looking for does not exist.",
+    "description": "It seems this page also missed a payment…",
     "backToHome": "Back to Home",
+    "joke": "If you see the tenant, tell them to pay what they owe.",
     "ariaLabel": "404 Not Found Page"
   },
   "tenantDashboard": {
@@ -648,11 +649,13 @@
     },
     "paidPayments": {
       "title": "Paid Payments",
-      "emptyTitle": "No payments found",
-      "emptyDescription": "You have no paid payments yet.",
+      "emptyTitle": "No paid payments",
+      "emptyDescription": "You haven't made any payments yet",
       "amount": "Amount",
       "dueDate": "Due Date",
-      "paidDate": "Paid Date"
+      "paidDate": "Paid Date",
+      "voucher": "Voucher",
+      "viewVoucher": "View Voucher"
     },
     "nextPayments": {
       "title": "Next 5 Payments",

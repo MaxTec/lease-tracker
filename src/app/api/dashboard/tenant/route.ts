@@ -171,7 +171,7 @@ export async function GET() {
             console.log("schedule", schedule);
             // Filter for next 5 upcoming (PENDING or OVERDUE, dueDate >= today)
             const next = schedule
-                .filter(p => (p.status === "PENDING" || p.status === "OVERDUE") && p.dueDate >= today)
+                .filter(p => (p.status === "PENDING" || p.status === "OVERDUE"))
                 .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
                 .slice(0, 5);
             // Map ScheduledPayment to Payment type (fill required fields)

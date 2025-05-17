@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE `LeasesToClauses` ADD COLUMN `order` INTEGER NOT NULL DEFAULT 0;
-
--- AlterTable
-ALTER TABLE `LeasesToRules` ADD COLUMN `order` INTEGER NOT NULL DEFAULT 0;

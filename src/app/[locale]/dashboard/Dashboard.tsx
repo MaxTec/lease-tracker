@@ -10,7 +10,6 @@ import LandlordDashboard from "@/components/dashboard/landlord-dashboard";
 import AdminDashboard from "@/components/dashboard/admin-dashboard";
 import { Session } from "next-auth";
 import { format, startOfMonth, endOfMonth, parse, startOfYear, endOfYear } from "date-fns";
-
 interface PropertyOption {
   value: string;
   label: string;

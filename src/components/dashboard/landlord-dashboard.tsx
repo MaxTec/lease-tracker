@@ -5,7 +5,7 @@ import { OccupancyChart } from "./OccupancyChart";
 import { TicketStatusChart } from "./TicketStatusChart";
 import { useTranslations } from "next-intl";
 import type { DashboardData } from "@/types/dashboard";
-
+import { formatCurrencyMXN } from "@/utils/numberUtils";
 interface LandlordDashboardProps {
   data: DashboardData;
 }
@@ -35,7 +35,7 @@ const LandlordDashboard: React.FC<LandlordDashboardProps> = ({ data }) => {
         />
         <MetricCard
           title={t("dashboard.summary.totalPayments")}
-          value={`$${data.metrics.totalPayments.toLocaleString()}`}
+          value={formatCurrencyMXN(data.metrics.totalPayments)}
           icon={<span className="text-xl">💰</span>}
         />
         <MetricCard

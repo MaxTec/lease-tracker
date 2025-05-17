@@ -5,6 +5,7 @@ import { OccupancyChart } from "./OccupancyChart";
 import { TicketStatusChart } from "./TicketStatusChart";
 import { useTranslations } from "next-intl";
 import type { DashboardData } from "@/types/dashboard";
+import { formatCurrencyMXN } from "@/utils/numberUtils";
 
 interface AdminDashboardProps {
   data: DashboardData;
@@ -25,7 +26,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ data }) => {
       <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
         <MetricCard title={t("dashboard.summary.properties")} value={data.metrics.totalProperties} icon={<span className='text-xl'>🏢</span>} />
         <MetricCard title={t("dashboard.summary.activeLeases")} value={data.metrics.activeLeases} icon={<span className='text-xl'>📄</span>} />
-        <MetricCard title={t("dashboard.summary.totalPayments")} value={`$${data.metrics.totalPayments.toLocaleString()}`} icon={<span className='text-xl'>💰</span>} />
+        <MetricCard title={t("dashboard.summary.totalPayments")} value={formatCurrencyMXN(data.metrics.totalPayments)} icon={<span className='text-xl'>💰</span>} />
         <MetricCard title={t("dashboard.summary.occupancyRate")} value={`${data.metrics.occupancyRate.toFixed(1)}%`} icon={<span className='text-xl'>📊</span>} />
         <MetricCard title={t("dashboard.summary.totalTickets")} value={data.metrics.totalTickets} icon={<span className='text-xl'>🎫</span>} />
       </div>

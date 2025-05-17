@@ -185,17 +185,17 @@ export async function GET(request: Request) {
 
       // rentCollectionByMonth with date filtering (filtered by property through lease -> unit)
       prisma.$queryRaw`
-        SELECT DATE_FORMAT(p.paidDate, '%Y-%m') AS month, SUM(p.amount) AS totalAmount
-        FROM Payment p
-        JOIN Lease l ON p.leaseId = l.id
-        JOIN Unit u ON l.unitId = u.id
-        JOIN Property pr ON u.propertyId = pr.id
-        WHERE p.status = 'PAID'
-        ${propertyId ? Prisma.sql`AND u.propertyId = ${parseInt(propertyId)}` : Prisma.empty}
-        ${userRole === "LANDLORD" && landlordId ? Prisma.sql`AND pr.landlordId = ${landlordId}` : Prisma.empty}
-        ${startDate && endDate ? Prisma.sql`AND p.paidDate BETWEEN ${parseISO(startDate)} AND ${parseISO(endDate)}` : Prisma.empty}
-        GROUP BY month
-        ORDER BY month DESC
+        SELECT TO_CHAR(p."paidDate", 'YYYY-MM') AS "month", SUM(p."amount") AS "totalAmount"
+        FROM "Payment" p
+        JOIN "Lease" l ON p."leaseId" = l.id
+        JOIN "Unit" u ON l."unitId" = u.id
+        JOIN "Property" pr ON u."propertyId" = pr.id
+        WHERE p."status" = 'PAID'
+        ${propertyId ? Prisma.sql`AND u."propertyId" = ${parseInt(propertyId)}` : Prisma.empty}
+        ${userRole === "LANDLORD" && landlordId ? Prisma.sql`AND pr."landlordId" = ${landlordId}` : Prisma.empty}
+        ${startDate && endDate ? Prisma.sql`AND p."paidDate" BETWEEN ${parseISO(startDate)} AND ${parseISO(endDate)}` : Prisma.empty}
+        GROUP BY "month"
+        ORDER BY "month" DESC
         LIMIT 12
       `,
 

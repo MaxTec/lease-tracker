@@ -630,7 +630,8 @@
   },
   "NotFoundPage": {
     "title": "Página no encontrada",
-    "description": "Lo sentimos, la página que buscas no existe.",
+    "description": "Parece que esta página también se atrasó con el pago…",
+    "joke": "Si ves al inquilino, dile que pague lo que debe.",
     "backToHome": "Volver al inicio",
     "ariaLabel": "Página 404 no encontrada"
   },
@@ -648,11 +649,13 @@
     },
     "paidPayments": {
       "title": "Pagos Realizados",
-      "emptyTitle": "No se encontraron pagos",
-      "emptyDescription": "Aún no tienes pagos realizados.",
+      "emptyTitle": "Sin pagos realizados",
+      "emptyDescription": "Aún no has realizado ningún pago",
       "amount": "Monto",
       "dueDate": "Fecha de Vencimiento",
-      "paidDate": "Fecha de Pago"
+      "paidDate": "Fecha de Pago",
+      "voucher": "Comprobante",
+      "viewVoucher": "Ver Comprobante"
     },
     "nextPayments": {
       "title": "Próximos 5 Pagos",

@@ -33,9 +33,9 @@ export default async function TicketPage({ params }: Props) {
     }
   );
 
-  // if (!res.ok) {
-  //   notFound();
-  // }
+  if (!res.ok) {
+    notFound();
+  }
 
   const ticket = await res.json();
 
