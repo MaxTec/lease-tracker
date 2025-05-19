@@ -1,12 +1,18 @@
 import { Payment, ScheduledPayment } from "@/types/payment";
-import { Lease } from "@/types/lease";
+
+interface LeaseScheduleInfo {
+  startDate: Date;
+  endDate: Date;
+  paymentDay: number;
+  rentAmount: number;
+}
 
 /**
  * Generates a payment schedule for a lease, merging existing payments and generating missing ones.
  */
 export function generatePaymentSchedule(
   payments: Payment[],
-  leaseInfo: Lease,
+  leaseInfo: LeaseScheduleInfo,
   today: Date
 ): ScheduledPayment[] {
   const startDate = new Date(

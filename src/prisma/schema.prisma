@@ -56,6 +56,7 @@ model Tenant {
   leases           Lease[]
   payments         Payment[]
   tickets          Ticket[]
+  overdueNotifications OverduePaymentNotification[]
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 }
@@ -338,4 +339,19 @@ enum RuleCategory {
   DELIVERIES
   PEST_CONTROL
   STAFF_ACCESS
+}
+
+// Overdue payment notification model
+model OverduePaymentNotification {
+  id            Int       @id @default(autoincrement())
+  tenantId      Int
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sentAt        DateTime  @default(now())
+  nextNotificationAt DateTime  // When the next notification can be sent
+  totalAmount   Decimal   @db.Decimal(10, 2)
+  paymentCount  Int       // Number of overdue payments included in this notification
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([tenantId, nextNotificationAt])
 } 
