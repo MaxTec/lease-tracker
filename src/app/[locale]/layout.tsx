@@ -29,9 +29,29 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const validLocale = locales.includes(locale as Locale) ? locale : defaultLocale;
   await getTranslations({ locale: validLocale }); // Get translations to ensure locale is loaded
   
+  const baseUrl = "https://yourdomain.com"; // TODO: Replace with your actual domain
+  const pageUrl = `${baseUrl}/${validLocale}`;
+
   return {
-    title: "LeaseTracker",
-    description: "Property management and lease tracking solution",
+    title: "LeaseTracker – Property & Lease Management",
+    description:
+      "Easily manage your properties, tenants, and leases with LeaseTracker. Secure, modern, and efficient property management for landlords and tenants.",
+    alternates: {
+      canonical: pageUrl,
+    },
+    openGraph: {
+      title: "LeaseTracker – Property & Lease Management",
+      description:
+        "Easily manage your properties, tenants, and leases with LeaseTracker.",
+      url: pageUrl,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "LeaseTracker – Property & Lease Management",
+      description:
+        "Easily manage your properties, tenants, and leases with LeaseTracker.",
+    },
   };
 }
 

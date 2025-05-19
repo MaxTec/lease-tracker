@@ -1,6 +1,7 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import sgMail from "@sendgrid/mail";
 import { differenceInMonths, addMonths, isEqual, addDays } from "date-fns";
+import { getLeaseWelcomeEmailHTML } from "../emails/lease-welcome-template";
 
 const s3Client = new S3Client({
   region: "auto",
@@ -48,17 +49,12 @@ export async function sendLeaseEmail(
     to: tenantEmail,
     from: process.env.SENDGRID_FROM_EMAIL!,
     subject: "Su Nuevo Contrato de Arrendamiento",
-    html: `
-      <h2>Estimado/a ${tenantName},</h2>
-      <p>Su contrato de arrendamiento ha sido creado exitosamente. Puede encontrar los detalles a continuación:</p>
-      <ul>
-        <li><strong>Contrato de Arrendamiento:</strong> <a href="${leaseUrl}">Ver Contrato de Arrendamiento</a></li>
-        <li><strong>Acceso al Portal:</strong> <a href="${loginUrl}">Iniciar Sesión en Su Cuenta</a></li>
-      </ul>
-      ${registrationUrl ? `<p><strong>Para completar su registro y crear una contraseña, haga clic aquí: <a href="${registrationUrl}">Finalizar Registro</a></strong></p>` : ""}
-      <p>Por favor, revise su contrato de arrendamiento y contáctenos si tiene alguna pregunta.</p>
-      <p>Saludos cordiales,<br>Equipo de Administración de Propiedades</p>
-    `,
+    html: getLeaseWelcomeEmailHTML({
+      recipientName: tenantName,
+      leaseUrl,
+      loginUrl,
+      registrationUrl,
+    }),
   };
 
   await sgMail.send(msg);
