@@ -64,6 +64,6 @@ export const getDayOfMonthLabel = (
   }
   // Default: Spanish
   if (day === 1) return 'Primer día del mes';
-  if (day === 0) return 'Último día del mes';
+  if (day === 30 || day === 31) return 'Último día del mes';
   return `Cada ${day} del mes`;
 };

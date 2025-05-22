@@ -199,7 +199,7 @@ const VoucherItem = () => {
         show: true,
         type: 'success',
         title: 'success',
-        message: 'sendSuccess'
+        message: t('sendSuccess')
       });
       setTimeout(() => {
         setNotification(prev => ({ ...prev, show: false }));

@@ -200,13 +200,9 @@ export async function PUT(
     });
     if (updatedLease.status === "ACTIVE") {
       const registrationUrl = `${process.env.NEXT_PUBLIC_API_URL}/register/new-tenant?token=${updatedLease.tenant.user.registrationToken}`;
-      const leaseUrl = `${process.env.NEXT_PUBLIC_API_URL}/leases/${updatedLease.id}`;
-      const loginUrl = `${process.env.NEXT_PUBLIC_API_URL}/login`;
       await sendLeaseEmail(
         updatedLease.tenant.user.email,
         updatedLease.tenant.user.name,
-        leaseUrl,
-        loginUrl,
         registrationUrl
       );
     }

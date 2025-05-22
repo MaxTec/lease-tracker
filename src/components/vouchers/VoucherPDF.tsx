@@ -225,7 +225,7 @@ const VoucherPDF: React.FC<VoucherPDFProps> = memo(({ voucher, t }) => (
           </Text>
           <View style={styles.inlineContainer}>
             <Text style={styles.inlineLabel}>{t("address")}:</Text>
-            <Text style={styles.inlineText}>
+            <Text style={{...styles.inlineText, flexWrap: 'wrap', maxWidth: '200px'}}>
               {voucher.payment.lease.unit.property.address}
             </Text>
           </View>

@@ -62,13 +62,13 @@ const LeaseItem = ({ lease, payments: initialPayments }: ListProps) => {
       if (!response.ok) throw new Error("Failed to record payment");
       const newPayment = await response.json();
       setPayments((prevPayments) => [...prevPayments, newPayment]);
-      setNotification({ show: true, message: "Payment recorded successfully.", type: "success" });
+      setNotification({ show: true, message: "Pago registrado correctamente.", type: "success" });
       setTimeout(() => {
         router.push(`/vouchers/${newPayment.voucher?.voucherNumber}`);
-      }, 2000);
+      }, 1000);
     } catch (error) {
       console.error(error);
-      setNotification({ show: true, message: "Failed to record payment. Please try again.", type: "error" });
+      setNotification({ show: true, message: "Error al registrar el pago. Por favor, inténtelo de nuevo.", type: "error" });
     } finally {
       setLoading(false);
     }
@@ -80,13 +80,13 @@ const LeaseItem = ({ lease, payments: initialPayments }: ListProps) => {
       setLoading(true);
       const response = await fetch(`/api/leases/${lease.id}`, { method: "DELETE" });
       if (!response.ok) throw new Error("Failed to terminate lease");
-      setNotification({ show: true, message: "Lease terminated successfully.", type: "success" });
+      setNotification({ show: true, message: "Contrato terminado correctamente.", type: "success" });
       setTimeout(() => {
         router.push("/leases");
-      }, 2000);
+      }, 1000);
     } catch (error) {
       console.error(error);
-      setNotification({ show: true, message: "Failed to terminate lease. Please try again.", type: "error" });
+      setNotification({ show: true, message: "Error al terminar el contrato. Por favor, inténtelo de nuevo.", type: "error" });
     } finally {
       setLoading(false);
     }

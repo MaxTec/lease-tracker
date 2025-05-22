@@ -11,6 +11,8 @@ import Notification from "@/components/ui/Notification";
 import { useTranslations } from "next-intl";
 import confetti from "canvas-confetti";
 import { notFound } from "next/navigation";
+import successImage from "@public/mailing/doodle-finish-register.jpg";
+import Image from "next/image";
 
 const NewTenant: React.FC = () => {
   const t = useTranslations("registration");
@@ -87,7 +89,7 @@ const NewTenant: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow">
+    <div className={`max-w-md mx-auto mt-10 p-6 bg-white rounded ${!success ? 'shadow' : ''}`}>
       <h2 className="text-2xl font-bold mb-4">{t("title")}</h2>
       {serverError && (
         <Notification
@@ -105,7 +107,7 @@ const NewTenant: React.FC = () => {
           onClose={() => setSuccess(false)}
         />
       )}
-      {!success && (
+      {!success ? (
         <form
           onSubmit={handleSubmit(handleFormSubmit)}
           aria-label={t("formAriaLabel")}
@@ -149,6 +151,10 @@ const NewTenant: React.FC = () => {
             </Button>
           </FormGroup>
         </form>
+      ) : (
+        <div className="flex flex-col items-center justify-center">
+          <Image src={successImage} alt="Success" className="w-1/2" />
+        </div>
       )}
     </div>
   );

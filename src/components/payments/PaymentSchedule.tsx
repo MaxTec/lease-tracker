@@ -58,7 +58,11 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
     );
   }
 
-  const allScheduledPayments = generatePaymentSchedule(payments, leaseInfo, today);
+  const allScheduledPayments = generatePaymentSchedule(
+    payments,
+    leaseInfo,
+    today
+  );
   console.log("allScheduledPayments", allScheduledPayments);
   // Sort by due date
   const sortedScheduledPayments = [...allScheduledPayments].sort(
@@ -81,11 +85,7 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
 
   const futurePayments = sortedScheduledPayments
     .filter((p) => {
-      return (
-        p.dueDate > today &&
-        p.status !== "PAID" &&
-        p !== nextPayment
-      );
+      return p.dueDate > today && p.status !== "PAID" && p !== nextPayment;
     })
     .slice(0, 3); // Take the next 3 payments
 
@@ -148,7 +148,7 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
                 size="sm"
                 className="ml-2"
               >
-                Track Payment
+                Registrar Pago
               </Button>
             ) : null}
           </div>
@@ -164,9 +164,6 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
         title="No Upcoming Payments"
         description="There are no upcoming payments scheduled for this lease."
         actionLabel="Create Payment Schedule"
-        onAction={() => {
-          /* TODO: Add handler */
-        }}
       />
     );
   }
@@ -218,7 +215,7 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
       <Modal
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
-        title="Confirm Payment"
+        title="Confirmar Pago"
       >
         <PaymentForm
           onClose={() => setIsConfirmOpen(false)}
@@ -234,7 +231,11 @@ const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
               setSelectedPayment(null);
             }
           }}
-          leaseStartDate={typeof leaseInfo.startDate === 'string' ? leaseInfo.startDate : leaseInfo.startDate.toISOString()}
+          leaseStartDate={
+            typeof leaseInfo.startDate === "string"
+              ? leaseInfo.startDate
+              : leaseInfo.startDate.toISOString()
+          }
           lastPaymentDate={lastPaymentDate}
           initialData={{
             paymentMethod: "CASH",

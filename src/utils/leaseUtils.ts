@@ -34,8 +34,6 @@ export async function uploadToR2(
 export async function sendLeaseEmail(
   tenantEmail: string,
   tenantName: string,
-  leaseUrl: string,
-  loginUrl: string,
   registrationUrl?: string
 ) {
   const apiKey = process.env.SENDGRID_API_KEY;
@@ -51,8 +49,6 @@ export async function sendLeaseEmail(
     subject: "Su Nuevo Contrato de Arrendamiento",
     html: getLeaseWelcomeEmailHTML({
       recipientName: tenantName,
-      leaseUrl,
-      loginUrl,
       registrationUrl,
     }),
   };

@@ -55,6 +55,7 @@ const TenantDashboard: React.FC<TenantDashboardProps> = ({ tenantDashboardData }
   const tNext = useTranslations("tenantDashboard.nextPayments");
   const tTickets = useTranslations("tenantDashboard.tickets");
   const tDocs = useTranslations("tenantDashboard.documents");
+  const tStatus = useTranslations("common.status");
 
   const [editingPhoneLeaseId, setEditingPhoneLeaseId] = useState<number | null>(null);
   const [phoneInput, setPhoneInput] = useState<string>("");
@@ -91,6 +92,9 @@ const TenantDashboard: React.FC<TenantDashboardProps> = ({ tenantDashboardData }
     }
   };
 
+  // Map lease status to translation key
+  const getStatusTranslationKey = (status: string) => status.toLowerCase().replace(/_/g, "");
+
   return (
     <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
       {/* Lease Details Section */}
@@ -117,7 +121,7 @@ const TenantDashboard: React.FC<TenantDashboardProps> = ({ tenantDashboardData }
               { label: tLease("endDate"), children: formatDate(lease.endDate) },
               {
                 label: tLease("status"),
-                children: <Badge status={getBadgeStatus(lease.status)}>{lease.status}</Badge>,
+                children: <Badge status={getBadgeStatus(lease.status)}>{tStatus(getStatusTranslationKey(lease.status))}</Badge>,
               },
               {
                 label: tLease("paymentDay"),

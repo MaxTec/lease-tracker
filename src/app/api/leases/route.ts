@@ -54,13 +54,13 @@ export async function GET(request: NextRequest) {
         },
         payments: includePayments
           ? {
-            where: {
-              status: "PAID",
-            },
-            orderBy: {
-              dueDate: "desc",
-            },
-          }
+              where: {
+                status: "PAID",
+              },
+              orderBy: {
+                dueDate: "desc",
+              },
+            }
           : false,
         _count: {
           select: {
@@ -266,7 +266,7 @@ export async function POST(request: NextRequest) {
       const document = await prisma.document.create({
         data: {
           leaseId: lease.id,
-          name: "Signed Lease Agreement",
+          name: "Contrato de Arrendamiento",
           type: "LEASE_AGREEMENT",
           fileUrl: fileUrl,
         },
@@ -318,15 +318,7 @@ export async function POST(request: NextRequest) {
     // Send registration email if new user
     if (newUser && registrationToken && lease.status === "ACTIVE") {
       const registrationUrl = `${process.env.NEXT_PUBLIC_API_URL}/register/new-tenant?token=${registrationToken}`;
-      const leaseUrl = `${process.env.NEXT_PUBLIC_API_URL}/leases/${lease.id}`;
-      const loginUrl = `${process.env.NEXT_PUBLIC_API_URL}/login`;
-      await sendLeaseEmail(
-        tenantEmail,
-        tenantName,
-        leaseUrl,
-        loginUrl,
-        registrationUrl
-      );
+      await sendLeaseEmail(tenantEmail, tenantName, registrationUrl);
     }
 
     return NextResponse.json(lease);
