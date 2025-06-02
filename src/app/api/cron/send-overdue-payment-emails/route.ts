@@ -203,10 +203,10 @@ export const GET = async (req: NextRequest) => {
   // const token = req.nextUrl.searchParams.get('token');
   console.log("SECRET_TOKEN", SECRET_TOKEN);
   const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${SECRET_TOKEN}`) {
-    return new Response("Unauthorized", {
-      status: 401,
-    });
+  const expected = `Bearer ${process.env.CRON_SECRET}`;
+  // const authHeader = req.headers.get("authorization");
+  if (authHeader !== expected) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
   try {
