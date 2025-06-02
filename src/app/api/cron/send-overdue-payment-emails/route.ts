@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import sgMail from '@sendgrid/mail';
-import { generatePaymentSchedule } from '@/utils/paymentsUtils';
-import { Payment } from '@/types/payment';
+import { NextRequest, NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+import sgMail from "@sendgrid/mail";
+import { generatePaymentSchedule } from "@/utils/paymentsUtils";
+import { Payment } from "@/types/payment";
 
 const prisma = new PrismaClient();
 
@@ -54,7 +54,7 @@ const getOverduePayments = async (): Promise<OverduePayment[]> => {
   // Get all active leases with their payments and related information
   const leases = await prisma.lease.findMany({
     where: {
-      status: 'ACTIVE',
+      status: "ACTIVE",
     },
     include: {
       payments: {
@@ -108,7 +108,7 @@ const getOverduePayments = async (): Promise<OverduePayment[]> => {
 
     // Filter for overdue payments
     const overdue = paymentSchedule.filter(
-      (payment) => payment.status === 'OVERDUE'
+      (payment) => payment.status === "OVERDUE"
     );
 
     // Add each overdue payment to our result
@@ -132,31 +132,40 @@ const getOverduePayments = async (): Promise<OverduePayment[]> => {
 const sendOverdueEmail = async (
   to: string,
   name: string,
-  overduePayments: TenantOverduePayments['payments']
+  overduePayments: TenantOverduePayments["payments"]
 ) => {
   const apiKey = process.env.SENDGRID_API_KEY;
-  if (!apiKey) throw new Error('SendGrid API key is not configured');
+  if (!apiKey) throw new Error("SendGrid API key is not configured");
   sgMail.setApiKey(apiKey);
 
-  const totalAmount = overduePayments.reduce((sum, payment) => sum + payment.amount, 0);
+  const totalAmount = overduePayments.reduce(
+    (sum, payment) => sum + payment.amount,
+    0
+  );
   const formattedTotal = `$${totalAmount.toFixed(2)}`;
 
   const paymentsList = overduePayments
     .map(
       (payment) => `
         <tr>
-          <td style="padding: 8px; border-bottom: 1px solid #eee;">${payment.property}, Unidad ${payment.unit}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee;">${payment.dueDate.toLocaleDateString('es-MX')}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee;">$${payment.amount.toFixed(2)}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${
+            payment.property
+          }, Unidad ${payment.unit}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${payment.dueDate.toLocaleDateString(
+            "es-MX"
+          )}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">$${payment.amount.toFixed(
+            2
+          )}</td>
         </tr>
       `
     )
-    .join('');
+    .join("");
 
   const msg = {
     to,
     from: process.env.SENDGRID_FROM_EMAIL!,
-    subject: 'Recordatorio de Pagos de Renta Vencidos',
+    subject: "Recordatorio de Pagos de Renta Vencidos",
     html: `
       <div class="font-sans text-gray-800">
         <h2 class="text-lg font-bold mb-2">Hola ${name},</h2>
@@ -191,9 +200,13 @@ const sendOverdueEmail = async (
 };
 
 export const GET = async (req: NextRequest) => {
-  const token = req.nextUrl.searchParams.get('token');
-  if (!SECRET_TOKEN || token !== SECRET_TOKEN) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // const token = req.nextUrl.searchParams.get('token');
+  console.log("SECRET_TOKEN", SECRET_TOKEN);
+  const authHeader = req.headers.get("authorization");
+  if (authHeader !== `Bearer ${SECRET_TOKEN}`) {
+    return new Response("Unauthorized", {
+      status: 401,
+    });
   }
 
   try {
@@ -234,29 +247,34 @@ export const GET = async (req: NextRequest) => {
     for (const [email, tenantData] of tenantPayments) {
       try {
         // Get the tenant's ID from the first payment
-        const tenantId = overduePayments.find(p => p.tenant.user.email === email)?.tenant.id;
-        console.log('tenantId', tenantId);
+        const tenantId = overduePayments.find(
+          (p) => p.tenant.user.email === email
+        )?.tenant.id;
+        console.log("tenantId", tenantId);
         if (!tenantId) {
-          throw new Error('Tenant ID not found');
+          throw new Error("Tenant ID not found");
         }
 
         // Check if we can send a notification to this tenant
-        const lastNotification = await prisma.overduePaymentNotification.findFirst({
-          where: {
-            tenantId,
-            nextNotificationAt: {
-              gt: new Date(), // Only consider notifications that haven't expired yet
+        const lastNotification =
+          await prisma.overduePaymentNotification.findFirst({
+            where: {
+              tenantId,
+              nextNotificationAt: {
+                gt: new Date(), // Only consider notifications that haven't expired yet
+              },
             },
-          },
-          orderBy: {
-            sentAt: 'desc',
-          },
-        });
+            orderBy: {
+              sentAt: "desc",
+            },
+          });
 
-        console.log('lastNotification', lastNotification);
+        console.log("lastNotification", lastNotification);
 
         if (lastNotification) {
-          console.log(`Skipping notification for tenant ${email} - next notification allowed at ${lastNotification.nextNotificationAt}`);
+          console.log(
+            `Skipping notification for tenant ${email} - next notification allowed at ${lastNotification.nextNotificationAt}`
+          );
           skipped++;
           continue;
         }
@@ -265,9 +283,14 @@ export const GET = async (req: NextRequest) => {
         await sendOverdueEmail(email, tenantData.name, tenantData.payments);
 
         // Record the notification
-        const totalAmount = tenantData.payments.reduce((sum, p) => sum + p.amount, 0);
+        const totalAmount = tenantData.payments.reduce(
+          (sum, p) => sum + p.amount,
+          0
+        );
         const nextNotificationAt = new Date();
-        nextNotificationAt.setDate(nextNotificationAt.getDate() + NOTIFICATION_COOLDOWN_DAYS);
+        nextNotificationAt.setDate(
+          nextNotificationAt.getDate() + NOTIFICATION_COOLDOWN_DAYS
+        );
 
         await prisma.overduePaymentNotification.create({
           data: {
@@ -281,7 +304,7 @@ export const GET = async (req: NextRequest) => {
         sent++;
       } catch (err: unknown) {
         failed++;
-        const message = err instanceof Error ? err.message : 'Unknown error';
+        const message = err instanceof Error ? err.message : "Unknown error";
         errors.push(`Tenant ${email}: ${message}`);
       }
     }
@@ -295,9 +318,9 @@ export const GET = async (req: NextRequest) => {
       errors,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
+    const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });
   } finally {
     await prisma.$disconnect();
   }
-}; 
+};
