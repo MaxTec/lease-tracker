@@ -14,7 +14,7 @@ A comprehensive lease management application for tracking property leases, payme
 
 - **Frontend**: Next.js 15, React 19, TailwindCSS
 - **Backend**: Next.js API Routes
-- **Database**: MySQL with Prisma ORM
+- **Database**: PostgreSQL with Prisma ORM
 - **Containerization**: Docker for database
 
 ## Project Structure
@@ -102,7 +102,7 @@ The application uses the following main models:
 - **GET /api/payments**: Get all payments
 - **POST /api/payments**: Create a new payment
 - **GET /api/vouchers**: Get all vouchers
-- **GET /api/vouchers/[id]**: Get a specific voucher
+- **GET /api/vouchers/[voucherNumber]**: Get a specific voucher
 - **POST /api/vouchers/send**: Send a voucher via email
 
 ## License
