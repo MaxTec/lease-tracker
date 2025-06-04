@@ -1,16 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Logo from '@/components/ui/Logo';
-import RegisterForm from '@/components/auth/RegisterForm';
 import LoginForm from '@/components/auth/LoginForm';
 import { useTranslations } from 'next-intl';
 
 export default function Home() {
   const t = useTranslations();
-  const [showLogin, setShowLogin] = useState(true);
   const { status } = useSession();
   const router = useRouter();
 
@@ -20,9 +18,6 @@ export default function Home() {
     }
   }, [status, router]);
 
-  const toggleForm = () => {
-    setShowLogin(!showLogin);
-  };
 
   if (status === 'loading') {
     return (
@@ -56,11 +51,7 @@ export default function Home() {
 
       {/* Right Section */}
       <div className="w-full lg:w-1/2 bg-white p-8 lg:p-12 flex flex-col justify-center">
-        {showLogin ? (
-          <LoginForm onToggleForm={toggleForm} />
-        ) : (
-          <RegisterForm onToggleForm={toggleForm} />
-        )}
+        <LoginForm />
       </div>
     </main>
   );
