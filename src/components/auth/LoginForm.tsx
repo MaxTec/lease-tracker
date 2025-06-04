@@ -10,11 +10,7 @@ import Input from "../ui/Input";
 import { LoginInput, loginSchema } from "@/lib/validations/auth";
 import { useTranslations } from 'next-intl';
 
-export default function LoginForm({
-  onToggleForm,
-}: {
-  onToggleForm: () => void;
-}) {
+export default function LoginForm() {
   const t = useTranslations();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -96,14 +92,6 @@ export default function LoginForm({
             }}
           >
             {t('auth.login.forgotPassword')}
-          </button>
-          <span className="mx-2">|</span>
-          <button
-            type="button"
-            className="text-sm text-blue-600 hover:underline"
-            onClick={onToggleForm}
-          >
-            {t('auth.login.noAccount')} {t('auth.login.createAccount')}
           </button>
         </div>
       </form>
