@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,8 +31,10 @@ type PropertyFormData = {
 
 interface Landlord {
   id: number;
+  userId: number;
   user: {
     name: string;
+    email: string;
   };
 }
 
@@ -69,11 +72,14 @@ export default function PropertyForm({
         .min(1, t("properties.errors.atLeastOneUnit")),
     });
 
+  const { data: session } = useSession();
+
   const {
     register,
     handleSubmit,
     control,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<PropertyFormData>({
     resolver: zodResolver(getPropertySchema()),
@@ -105,6 +111,15 @@ export default function PropertyForm({
           throw new Error(t("landlords.errors.fetchFailed"));
         const landlordsData = await landlordsRes.json();
         setLandlords(landlordsData);
+
+        if (!propertyId && session?.user?.role === "LANDLORD") {
+          const myLandlord = landlordsData.find(
+            (l: Landlord) => l.userId === Number(session.user.id)
+          );
+          if (myLandlord) {
+            setValue("landlordId", String(myLandlord.id));
+          }
+        }
 
         // If editing, fetch property data
         if (propertyId) {
@@ -148,7 +163,7 @@ export default function PropertyForm({
     };
 
     fetchData();
-  }, [propertyId, append, reset, t]);
+  }, [propertyId, append, reset, t, session, setValue]);
 
   const onSubmit = async (formData: PropertyFormData) => {
     console.log("formData", formData);
@@ -251,7 +266,11 @@ export default function PropertyForm({
             <Select
               {...register("landlordId")}
               label={t("properties.form.landlord")}
-              disabled={landlords.length === 0 || propertyId !== undefined}
+              disabled={
+                landlords.length === 0 ||
+                propertyId !== undefined ||
+                session?.user?.role === "LANDLORD"
+              }
               options={landlords.map((landlord) => ({
                 value: String(landlord.id),
                 label: landlord.user.name,
